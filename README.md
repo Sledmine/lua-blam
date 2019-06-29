@@ -6,9 +6,22 @@ Is a Lua library for scripting that allows you to handle data of the game object
 ### What i can do with it?
 Manipulate objects data as scripting table/object properties.
 
-Supported game objects in this version:
+Supported game objects and properties in this version:
 - Biped:
-    -
+    - Tag ID
+    - Health, Shield
+    - X, Y, Z
+    - xVel, yVel, zVel
+    - Yaw, Pitch
+    - Animation, Animation Timer
+    - Crouch
+    - Weapon Slot
+    - Flashlight
+    - Invisible
+    - Current Nade, Frag Grenades, Plasma Grenades
+    - Zoom Level
+    - Current Weapon
+    - Region Permutation 1, 2
 
 ### Install LuaBlam
 You can download "luablam.lua" library of this repository and move it in to "Halo Custom Edition\Lua".
@@ -30,7 +43,7 @@ function onCommand(command)
     if (command == "invi") then -- If we wan to get or unget invisible then...
 
         local playerAddress = get_dynamic_player() -- Get current player memory address.
-
+        
         if (playerAddress ~= nil) then -- There are no errors getting player address then...
 
             -- Get biped data of the specified object address (giving current player address).
@@ -46,7 +59,6 @@ function onCommand(command)
 
             end
         end
-
         return false
     end
 end
