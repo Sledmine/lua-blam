@@ -1,4 +1,4 @@
-# LuaBlam 1.0 
+# LuaBlam 1.1
 
 ### What is LuaBlam?
 Is a Lua library for scripting that allows you to handle data of the game objects in memory of Halo Custom Edition.

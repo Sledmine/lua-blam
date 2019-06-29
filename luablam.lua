@@ -1,5 +1,5 @@
 -- Blam library for Chimera Lua scripting.
--- Version 1.0
+-- Version 1.1
 -- This library is intended to help and improve object memory handle using Lua, to make a standar for modding and avoid large script files.
 
 luablam = {}
