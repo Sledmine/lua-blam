@@ -53,7 +53,7 @@ function onCommand(command)
 end
 ```
 
-![Before "invi" command](https://imgur.com/W8Vyw0F)
+![Before "invi" command](https://i.imgur.com/W8Vyw0F.png)
 
-![After "invi" command](https://imgur.com/W8Vyw0F)
+![After "invi" command](https://i.imgur.com/oENJ4xG.png)
 
