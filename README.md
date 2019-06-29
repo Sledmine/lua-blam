@@ -15,7 +15,6 @@ You can download "luablam.lua" library of this repository and move it in to "Hal
 Is really recommended to install it using "Mercury - Package Manager" check more info about it in this GitHub repository.
 
 ### Implementing LuaBlam
-Add a require line into your Lua script:
 
 ```lua
 
@@ -52,8 +51,9 @@ function onCommand(command)
     end
 end
 ```
-
+### Before "invi" command
 ![Before "invi" command](https://i.imgur.com/W8Vyw0F.png)
 
+### After "invi" command
 ![After "invi" command](https://i.imgur.com/oENJ4xG.png)
 
