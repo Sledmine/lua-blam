@@ -17,7 +17,7 @@ local function biped(address, data)
     local bipd
     if (objectMemory ~= nil) then
         bipd = {
-            tag_id = read_dword(objectMemory),
+            tagId = read_dword(objectMemory),
             health = read_float(objectMemory + 0xE0),
             shield = read_float(objectMemory + 0xE4),
             x = read_float(objectMemory + 0x5C),
@@ -39,12 +39,12 @@ local function biped(address, data)
             plasmaGrenades = read_byte(objectMemory + 0x31F),
             zoomLevel = read_byte(objectMemory + 0x320),
             currentWeapon = read_dword(objectMemory + 0x118),
-            region_permutation_1 = read_char(objectMemory + 0x180),
-            region_permutation_2 = read_char(objectMemory + 0x181),
+            regionPermutation1 = read_char(objectMemory + 0x180),
+            regionPermutation2 = read_char(objectMemory + 0x181),
         }
     end
     local bipedWritableValues = {
-        tag_id = function() write_dword(objectMemory, data.tag_id) end,
+        tagId = function() write_dword(objectMemory, data.tag_id) end,
         x = function() write_float(objectMemory + 0x5C, data.x) end,
         y = function() write_float(objectMemory + 0x60, data.y) end,
         z = function() write_float(objectMemory + 0x64, data.z) end,
@@ -63,8 +63,8 @@ local function biped(address, data)
         fragGrenades = function() write_byte(objectMemory + 0x31E, data.fragGrenades) end,
         plasmaGrenades = function() write_byte(objectMemory + 0x31F, data.plasmaGrenades) end,
         zoomLevel = function() write_byte(objectMemory + 0x320, data.zoomLevel) end,
-        region_permutation_1 = function() write_char(objectMemory + 0x180, data.region_permutation_1) end,
-        region_permutation_2 = function() write_char(objectMemory + 0x181, data.region_permutation_2) end
+        regionPermutation1 = function() write_char(objectMemory + 0x180, data.region_permutation_1) end,
+        regionPermutation2 = function() write_char(objectMemory + 0x181, data.region_permutation_2) end
     }
     if (data ~= nil) then
         for i,v in pairs(data) do
