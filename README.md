@@ -33,7 +33,7 @@ You can implement luablam in your script by just adding this line:
 local blam = require("luablam")
 ```
 
-Here is an example of how you can get and set data of and object, this example shows how to make the current player biped invisible.
+Here is an example of how you can get and set data of an object, this example shows how to make the current player biped invisible.
 ```lua
 -- Blam script example for Chimera - 572/582 Lua scripting.
 
