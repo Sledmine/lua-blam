@@ -1,5 +1,5 @@
 
--- Blam example for Chimera - 572/582 Lua scripting.
+-- Blam script example for Chimera - 572/582 Lua scripting.
 
 local blam = require("luablam") -- Imported from Lua folder.
 
