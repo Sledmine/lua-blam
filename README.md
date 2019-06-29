@@ -45,7 +45,7 @@ clua_version = 2.042 -- Set API version.
 set_callback("command", "onCommand") -- Register callback, run function "onCommand" when triggered.
 
 function onCommand(command)
-    if (command == "invi") then -- If we wan to get or unget invisible then...
+    if (command == "invi") then -- If we want to get or unget invisible then...
 
         local playerAddress = get_dynamic_player() -- Get current player memory address.
 
