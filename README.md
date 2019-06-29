@@ -28,7 +28,12 @@ You can download "luablam.lua" library of this repository and move it in to "Hal
 Is really recommended to install it using "Mercury - Package Manager" check more info about it in this GitHub repository.
 
 ### Implementing LuaBlam
+You can implement luablam in your script by just adding this line:
+```lua
+local blam = require("luablam")
+```
 
+Here is an example of how you can get and set data of and object, this example shows how to make the current player invisible.
 ```lua
 
 -- Blam text example for Chimera - 572/582 Lua scripting.
@@ -43,7 +48,7 @@ function onCommand(command)
     if (command == "invi") then -- If we wan to get or unget invisible then...
 
         local playerAddress = get_dynamic_player() -- Get current player memory address.
-        
+
         if (playerAddress ~= nil) then -- There are no errors getting player address then...
 
             -- Get biped data of the specified object address (giving current player address).
