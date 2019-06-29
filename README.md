@@ -35,8 +35,7 @@ local blam = require("luablam")
 
 Here is an example of how you can get and set data of and object, this example shows how to make the current player invisible.
 ```lua
-
--- Blam text example for Chimera - 572/582 Lua scripting.
+-- Blam script example for Chimera - 572/582 Lua scripting.
 
 local blam = require("luablam") -- Imported from Lua folder.
 
@@ -64,6 +63,7 @@ function onCommand(command)
 
             end
         end
+
         return false
     end
 end
