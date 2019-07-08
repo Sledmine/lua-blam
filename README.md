@@ -23,20 +23,20 @@ Basically every spawned thing in the game is an object
 | shield | Amount of shield of the object | Float | Number |
 | x | Position of the object in X axis | Float | Number |
 | y | Position of the object in Y axis | Float | Number |
-| z | Position of the object in z axis | Float | Number |
+| z | Position of the object in Z axis | Float | Number |
 | xVel | Velocity applied to the object in X axis | Float | Number |
 | yVel | Velocity applied to the object in Y axis | Float | Number |
 | zVel | Velocity applied to the object in Z axis | Float | Number |
 | xScale | Scale in X axis of the object | Float | Number |
 | yScale | Scale in Y axis of the object | Float | Number |
 | zScale | Scale in Z axis of the object | Float | Number |
-| pitch | Object navigation angle | Float | Number |
-| yaw | Object navigation angle | Float | Number |
-| roll | Object navigation angle | Float | Number |
+| pitch | Object pitch navigation angle | Float | Number |
+| yaw | Object yaw navigation angle | Float | Number |
+| roll | Object roll navigation angle | Float | Number |
 | pitchVel | Velocity applied to the object in pitch | Float | Number |
 | yawVel | Velocity applied to the object in yaw | Float | Number |
 | rollVel | Velocity applied to the object in roll | Float | Number |
-| type | What type of object is being modified (0 = Biped) (1 = Vehicle) (2 = Weapon) (3 = Equipment) (4 = Garbage) (5 = Projectile) (6 = Scenery) (7 = Machine) (8 = Control) (9 = Light Fixture) (10 = Placeholder) (11 = Sound Scenery) | Float | Number |
+| type | What type of object is being modified (0 = Biped)\(1 = Vehicle) (2 = Weapon) (3 = Equipment) (4 = Garbage) (5 = Projectile) (6 = Scenery) (7 = Machine) (8 = Control) (9 = Light Fixture) (10 = Placeholder) (11 = Sound Scenery) | Float | Number |
 
 ### Install LuaBlam
 You can download "luablam.lua" library of this repository and move it in to "Halo Custom Edition\Lua".
