@@ -14,11 +14,29 @@ Basically every spawned thing in the game is an object
 | Property Name | Description | Takes | Returns |
 | ------------- | ------------- | ------------- | ------------- |
 | tagId | Index ID of the tag that the object is loading. | DWORD | Number |
-| collision | If there is collision for the object or not | Boolean / 1-0 | Boolean |
+| collision | Enable/disable collision geometry of the object | Boolean / 1-0 | Boolean |
 | isOnGround | If the object is in contact with the BSP | Nothing | Boolean |
-| ignoreGravity | Object will be available to stay in air | Boolean / 1-0 | Boolean |
+| ignoreGravity | Object will be available to stay in the air | Boolean / 1-0 | Boolean |
 | isOutSideMap | If an object gets out of the BSP | Nothing | Boolean |
 | collideable | If other objects can pass through the object (the collision still present for bullets and stuff) | Boolean / 1-0 | Boolean |
+| health | Amount of health of the object | Float | Number |
+| shield | Amount of shield of the object | Float | Number |
+| x | Position of the object in X axis | Float | Number |
+| y | Position of the object in Y axis | Float | Number |
+| z | Position of the object in z axis | Float | Number |
+| xVel | Velocity applied to the object in X axis | Float | Number |
+| yVel | Velocity applied to the object in Y axis | Float | Number |
+| zVel | Velocity applied to the object in Z axis | Float | Number |
+| xScale | Scale in X axis of the object | Float | Number |
+| yScale | Scale in Y axis of the object | Float | Number |
+| zScale | Scale in Z axis of the object | Float | Number |
+| pitch | Object navigation angle | Float | Number |
+| yaw | Object navigation angle | Float | Number |
+| roll | Object navigation angle | Float | Number |
+| pitchVel | Velocity applied to the object in pitch | Float | Number |
+| yawVel | Velocity applied to the object in yaw | Float | Number |
+| rollVel | Velocity applied to the object in roll | Float | Number |
+| type | What type of object is being modified (0 = Biped) (1 = Vehicle) (2 = Weapon) (3 = Equipment) (4 = Garbage) (5 = Projectile) (6 = Scenery) (7 = Machine) (8 = Control) (9 = Light Fixture) (10 = Placeholder) (11 = Sound Scenery) | Float | Number |
 
 ### Install LuaBlam
 You can download "luablam.lua" library of this repository and move it in to "Halo Custom Edition\Lua".
