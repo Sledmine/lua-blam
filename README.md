@@ -6,9 +6,9 @@ Is a Lua library for scripting that allows you to handle data of the game object
 ### What i can do with it?
 Manipulate objects data as scripting table/object properties.
 
-## Supported game objects and properties in this version:
+### Supported game objects and properties in this version:
 
-### Object Generic - Basically every spawned thing in the game is an object
+## Object Generic - Basically every spawned thing in the game is an object
 
 | Property Name | Description | Takes | Returns |
 | ------------- | ------------- | ------------- | ------------- |
