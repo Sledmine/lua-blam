@@ -1,4 +1,4 @@
-# LuaBlam 1.1
+# LuaBlam 2.0 - Development Branch
 
 ### What is LuaBlam?
 Is a Lua library for scripting that allows you to handle data of the game objects in memory of Halo Custom Edition.
@@ -7,21 +7,17 @@ Is a Lua library for scripting that allows you to handle data of the game object
 Manipulate objects data as scripting table/object properties.
 
 Supported game objects and properties in this version:
-- Biped:
-    - Tag ID
-    - Health, Shield
-    - X, Y, Z
-    - xVel, yVel, zVel
-    - Yaw, Pitch
-    - Animation, Animation Timer
-    - Crouch
-    - Weapon Slot
-    - Flashlight
-    - Invisible
-    - Current Nade, Frag Grenades, Plasma Grenades
-    - Zoom Level
-    - Current Weapon
-    - Region Permutation 1, 2
+
+| Generic Object |
+| Practically every spawned thing in the game is an object |
+| ------------- | ------------- |
+| Property Name | Description | Takes | Returns |
+| tagId | Index ID of the tag that the object is loading. | DWORD | Number |
+| collision | If there is collision for the object or not | Boolean / 1-0 | Boolean |
+| isOnGround | If the object is in contact with the BSP | Nothing | Boolean |
+| ignoreGravity | Object will be available to stay in air | Boolean / 1-0 | Boolean |
+| isOutSideMap | If an object gets out of the BSP | Nothing | Boolean |
+| collideable | If other objects can pass through the object (the collision still present for bullets and stuff) | Boolean / 1-0 | Boolea
 
 ### Install LuaBlam
 You can download "luablam.lua" library of this repository and move it in to "Halo Custom Edition\Lua".
