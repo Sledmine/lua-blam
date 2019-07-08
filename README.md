@@ -15,8 +15,8 @@ Supported game objects and properties in this version:
 
 | Generic Object |
 | Practically every spawned thing in the game is an object |
-| ------------- | ------------- | ------------- | ------------- |
 | Property Name | Description | Takes | Returns |
+| ------------- | ------------- | ------------- | ------------- |
 | tagId | Index ID of the tag that the object is loading. | DWORD | Number |
 | collision | If there is collision for the object or not | Boolean / 1-0 | Boolean |
 | isOnGround | If the object is in contact with the BSP | Nothing | Boolean |
