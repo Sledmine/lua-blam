@@ -17,7 +17,7 @@ Supported game objects and properties in this version:
 | isOnGround | If the object is in contact with the BSP | Nothing | Boolean |
 | ignoreGravity | Object will be available to stay in air | Boolean / 1-0 | Boolean |
 | isOutSideMap | If an object gets out of the BSP | Nothing | Boolean |
-| collideable | If other objects can pass through the object (the collision still present for bullets and stuff) | Boolean / 1-0 | Boolea
+| collideable | If other objects can pass through the object (the collision still present for bullets and stuff) | Boolean / 1-0 | Boolean |
 
 ### Install LuaBlam
 You can download "luablam.lua" library of this repository and move it in to "Halo Custom Edition\Lua".
