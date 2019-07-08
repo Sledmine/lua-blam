@@ -8,9 +8,14 @@ Manipulate objects data as scripting table/object properties.
 
 Supported game objects and properties in this version:
 
+| Command | Description |
+| --- | --- |
+| `git status` | List all *new or modified* files |
+| `git diff` | Show file differences that **haven't been** staged |
+
 | Generic Object |
 | Practically every spawned thing in the game is an object |
-| ------------- | ------------- |
+| ------------- | ------------- | ------------- | ------------- |
 | Property Name | Description | Takes | Returns |
 | tagId | Index ID of the tag that the object is loading. | DWORD | Number |
 | collision | If there is collision for the object or not | Boolean / 1-0 | Boolean |
