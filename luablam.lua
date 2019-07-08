@@ -81,8 +81,7 @@ local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich
         end
     else -- Looking for reading
         if (dataReclaimer[2] == 0) then -- Is bit type
-            return bit2bool(read_bit(dataReclaimer[1],
-                                     dataReclaimer[#dataReclaimer]))
+            return bit2bool(read_bit(dataReclaimer[1],dataReclaimer[#dataReclaimer]))
         elseif (dataReclaimer[2] == 1) then -- Byte
             return read_byte(dataReclaimer[1])
         elseif (dataReclaimer[2] == 2) then -- Short
