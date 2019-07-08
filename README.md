@@ -36,7 +36,7 @@ Basically every spawned thing in the game is an object
 | pitchVel | Velocity applied to the object in pitch | Float | Number |
 | yawVel | Velocity applied to the object in yaw | Float | Number |
 | rollVel | Velocity applied to the object in roll | Float | Number |
-| type | What type of object is being modified<br>(0 = Biped)<br>(1 = Vehicle)<br>(2 = Weapon)<br>(3 = Equipment)<br>(4 = Garbage)<br>(5 = Projectile)<br>(6 = Scenery)<br>(7 = Machine)<br>(8 = Control)<br>(9 = Light Fixture)<br>(10 = Placeholder)<br>(11 = Sound Scenery)<br>| WORD | Number |
+| type | What type of object is being modified:<br>0 = Biped<br>1 = Vehicle<br>2 = Weapon<br>3 = Equipment<br>4 = Garbage<br>5 = Projectile<br>6 = Scenery<br>7 = Machine<br>8 = Control<br>9 = Light Fixture<br>10 = Placeholder<br>11 = Sound Scenery<br>| Nothing | Number |
 
 ### Install LuaBlam
 You can download "luablam.lua" library of this repository and move it in to "Halo Custom Edition\Lua".
