@@ -13,8 +13,6 @@ Supported game objects and properties in this version:
 | `git status` | List all *new or modified* files |
 | `git diff` | Show file differences that **haven't been** staged |
 
-| Generic Object |
-| Practically every spawned thing in the game is an object |
 | Property Name | Description | Takes | Returns |
 | ------------- | ------------- | ------------- | ------------- |
 | tagId | Index ID of the tag that the object is loading. | DWORD | Number |
