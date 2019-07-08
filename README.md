@@ -10,6 +10,7 @@ Manipulate objects data as scripting table/object properties.
 
 ### Object Generic
 Basically every spawned thing in the game is an object
+
 | Property Name | Description | Takes | Returns |
 | ------------- | ------------- | ------------- | ------------- |
 | tagId | Index ID of the tag that the object is loading. | DWORD | Number |
