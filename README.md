@@ -15,10 +15,10 @@ Basically every spawned thing in the game is an object
 | ------------- | ------------- | ------------- | ------------- |
 | tagId | Index ID of the tag that the object is loading. | DWORD | Number |
 | collision | Enable/disable collision geometry of the object | Boolean / 1-0 | Boolean |
-| isOnGround | If the object is in contact with the BSP | Nothing | Boolean |
-| ignoreGravity | Object will be available to stay in the air | Boolean / 1-0 | Boolean |
-| isOutSideMap | If an object gets out of the BSP | Nothing | Boolean |
 | collideable | If other objects can pass through the object (the collision still present for bullets and stuff) | Boolean / 1-0 | Boolean |
+| ignoreGravity | Object will be available to stay in the air | Boolean / 1-0 | Boolean |
+| isOnGround | If the object is in contact with the BSP | Nothing | Boolean |
+| isOutSideMap | If an object gets out of the BSP | Nothing | Boolean |
 | health | Amount of health of the object | Float | Number |
 | shield | Amount of shield of the object | Float | Number |
 | x | Position of the object in X axis | Float | Number |
@@ -41,6 +41,17 @@ Basically every spawned thing in the game is an object
 | animationTimer | Frame of the actual animation of the object | WORD | Number |
 | regionPermutation1 | Permutation index of the first model region of the object | WORD | Number |
 | regionPermutation2..3..4 | Same as a above until region 8 | WORD | Number |
+
+### Biped
+Bipeds are usually players, enemies, and rarely some kind of vehicles
+
+| Property Name | Description | Takes | Returns |
+| ------------- | ------------- | ------------- | ------------- |
+| invisible | Makes the biped invisible | Boolean / 1-0 | Boolean |
+| noDropItems | If the biped is able to drop his items at dying | Boolean / 1-0 | Boolean |
+| flashlight | Current state of biped flashlight | Boolean / 1-0 | Boolean |
+| crouchHold | If biped is being controlled by a player and holding the crouch button | Boolean / 1-0 | Boolean |
+| jumpHold | If biped is being controlled by a player and holding the jump button | Boolean / 1-0 | Boolean |
 
 ### Install LuaBlam
 You can download "luablam.lua" library of this repository and move it in to "Halo Custom Edition\Lua".
