@@ -44,28 +44,28 @@ Basically every spawned thing in the game is an **object**.
 ### Biped
 Bipeds are usually **players**, **enemies**, and RARELY some kind of **vehicles**.
 
-| Property Name  | Description                                                           | Takes         | Returns |
-| -------------- | --------------------------------------------------------------------- | ------------- | ------- |
-| invisible      | Current invisible state of the biped                                  | Boolean / 1-0 | Boolean |
-| noDropItems    | Biped is able to drop his items at dying                              | Boolean / 1-0 | Boolean |
-| flashlight     | Current state of biped flashlight                                     | Boolean / 1-0 | Boolean |
-| crouchHold     | Player controlling the biped is holding the crouch button             | Nothing       | Boolean |
-| jumpHold       | Player controlling the biped is holding the jump button               | Nothing       | Boolean |
-| flashlightKey  | Returns true or false if flashlight key was pressed                   | Nothing       | Boolean |
-| actionKey      | Returns true or false if action key was pressed                       | Nothing       | Boolean |
-| meleeKey       | Returns true or false if melee key was pressed                        | Nothing       | Boolean |
-| reloadKey      | Returns true or false if reload key was pressed                       | Nothing       | Boolean |
-| weaponPTH      | Primary trigger state of the current weapon of the biped              | Nothing       | Boolean |
-| weaponSTH      | Secondary trigger state of the current weapon of the biped            | Nothing       | Boolean |
-| grenadeHold    | Player controlling the biped is holding the grenade button            | Nothing       | Boolean |
-| actionKeyHold  | Player controlling the biped is holding the action button             | Nothing       | Boolean |
-| crouch         | Current crouch state of the biped                                     | Nothing       | Boolean |
-| shooting       | Returns 0.0 or 1.0 if the biped is shooting                           | Nothing       | Number  |
-| weaponSlot     | Current weapon slot of the biped, starts from 0 to 3.                 | Byte          | Number  |
-| zoomLevel      | Current level of zoom of the biped, 255 means no zoom, starts from 0. | Byte          | Number  |
-| invisibleScale | Scale amount of the invisibility.                                     | Float         | Number  |
-| primaryNades   | Count of current primary nades of the biped.                          | Byte          | Number  |
-| secondaryNades | Count of current secondary nades nades of the biped.                  | Byte          | Number  |
+| Property Name  | Description                                                          | Takes         | Returns |
+| -------------- | -------------------------------------------------------------------- | ------------- | ------- |
+| invisible      | Current invisible state of the biped                                 | Boolean / 1-0 | Boolean |
+| noDropItems    | Biped is able to drop his items at dying                             | Boolean / 1-0 | Boolean |
+| flashlight     | Current state of biped flashlight                                    | Boolean / 1-0 | Boolean |
+| crouchHold     | Player controlling the biped is holding the crouch button            | Nothing       | Boolean |
+| jumpHold       | Player controlling the biped is holding the jump button              | Nothing       | Boolean |
+| flashlightKey  | Returns true or false if flashlight key was pressed                  | Nothing       | Boolean |
+| actionKey      | Returns true or false if action key was pressed                      | Nothing       | Boolean |
+| meleeKey       | Returns true or false if melee key was pressed                       | Nothing       | Boolean |
+| reloadKey      | Returns true or false if reload key was pressed                      | Nothing       | Boolean |
+| weaponPTH      | Primary trigger state of the current weapon of the biped             | Nothing       | Boolean |
+| weaponSTH      | Secondary trigger state of the current weapon of the biped           | Nothing       | Boolean |
+| grenadeHold    | Player controlling the biped is holding the grenade button           | Nothing       | Boolean |
+| actionKeyHold  | Player controlling the biped is holding the action button            | Nothing       | Boolean |
+| crouch         | Current crouch state of the biped                                    | Nothing       | Boolean |
+| shooting       | Returns 0.0 or 1.0 if the biped is shooting                          | Nothing       | Number  |
+| weaponSlot     | Current weapon slot of the biped, starts from 0 to 3                 | Byte          | Number  |
+| zoomLevel      | Current level of zoom of the biped, 255 means no zoom, starts from 0 | Byte          | Number  |
+| invisibleScale | Scale amount of the invisibility                                     | Float         | Number  |
+| primaryNades   | Count of current primary nades of the biped                          | Byte          | Number  |
+| secondaryNades | Count of current secondary nades nades of the biped                  | Byte          | Number  |
 
 
 ### Installing luablam
