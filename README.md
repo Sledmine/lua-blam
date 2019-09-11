@@ -9,7 +9,8 @@ Manipulate data of game objects as scripting table/object properties.
 # Supported game objects and properties in this version:
 
 ### Object Generic
-Basically every spawned thing in the game is an **object**.
+Basically every spawned thing in the game is an **object**.<br>
+**These properties are shared between different types of objects.**
 
 | Property Name            | Description                                                                                                                                                                                                                                        | Takes         | Returns |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------- |
@@ -76,7 +77,7 @@ mercury install luablam
 ```
 Use the line above to download and install it from the **Mercury** repository.
 
-We really recommend you to use **Mercury** to install it, otherway you can download "luablam.lua" library from this repository and move it in to "Halo Custom Edition\lua".
+We really recommend you to use **Mercury** to install it, otherwise you can download the "luablam.lua" library from this repository and move it in to "Halo Custom Edition\lua".
 
 ### Implementing LuaBlam
 You can implement luablam in your script by just adding this line:
