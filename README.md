@@ -6,10 +6,24 @@ Is a Lua library for scripting that allows you to handle game objects memory dat
 ### What is intended for?
 Manipulate data of game objects as scripting table/object properties.
 
-# Supported game objects and properties in this version:
+***
+## Installing LuaBlam
+
+You can install LuaBlam into Halo Custom Edition using [Mercury - Package Manager](https://github.com/Sledmine/Mercury).<br>
+```
+mercury install luablam
+```
+**WARNING!!!**: LuaBlam package from **Mercury** repository is minified, if you want to look at source code comments and readable sentences you need to use the files from this branch.
+
+Use the line above to download and install it from the **Mercury** repository.
+
+We really recommend you to use **Mercury** to install it, otherwise you can download the "luablam.lua" library from this repository and move it in to "Halo Custom Edition\lua".
+***
+
+## Supported game objects and properties in this version:
 
 ### Object Generic
-Basically every spawned thing in the game is an **object**.<br>
+> Basically every spawned thing in the game is an **object**.<br>
 **These properties are shared between different types of objects.**
 
 | Property Name            | Description                                                                                                                                                                                                                                        | Takes         | Returns |
@@ -43,7 +57,7 @@ Basically every spawned thing in the game is an **object**.<br>
 | regionPermutation[Index] | Permutation index of the first model region of the object, from 1 to 8.                                                                                                                                                                            | WORD          | Number  |
 
 ### Biped
-Bipeds are usually **players**, **enemies**, and RARELY some kind of **vehicles**.
+> Bipeds are usually **players**, **enemies**, and RARELY some kind of **vehicles**.
 
 | Property Name  | Description                                                          | Takes         | Returns |
 | -------------- | -------------------------------------------------------------------- | ------------- | ------- |
@@ -69,17 +83,7 @@ Bipeds are usually **players**, **enemies**, and RARELY some kind of **vehicles*
 | secondaryNades | Count of current secondary nades nades of the biped                  | Byte          | Number  |
 
 
-### Installing luablam
-
-You can install luablam using [Mercury - Package Manager](https://github.com/Sledmine/Mercury).<br>
-```
-mercury install luablam
-```
-Use the line above to download and install it from the **Mercury** repository.
-
-We really recommend you to use **Mercury** to install it, otherwise you can download the "luablam.lua" library from this repository and move it in to "Halo Custom Edition\lua".
-
-### Implementing LuaBlam
+## Implementing LuaBlam
 You can implement luablam in your script by just adding this line:
 ```lua
 local blam = require("luablam")
@@ -125,4 +129,3 @@ end
 
 ### After "invi" command
 ![After "invi" command](https://i.imgur.com/oENJ4xG.png)
-

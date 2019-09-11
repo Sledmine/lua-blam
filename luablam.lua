@@ -3,12 +3,10 @@
 -- This library is intended to help and improve object memory handle using Lua, to make a standar for modding and avoid large script files.
 
 --[[
+[Changelog]
 
-        THIS IS AN UNNOFICIAL VERSION, JUST FOR TESTING, DO NOT DISTRIBUTE THIS LIBRARY
-
-Changelog:
-
-2.0: Insane optimization, expanded object structures and available properties, better implentation for reading and writing data
+2.0:
+    Insane optimization, expanded object structures and available properties, better implentation for reading and writing data
     - Introducing "dataReclaimer", this is an array with specific values for structure fields
     - Improved bit2bool convertion now only 1 as bit value is being interpreted as true any other value will be always false.
 
@@ -43,20 +41,22 @@ Changelog:
     dataReclaimer = {0x213, 0, 8}
 
     This means the position of the bit that is being intented to read/write.
-    
 
-1.1: Changes for writable and readable biped properties.
+1.1:
+    Changes for writable and readable biped properties.
 
-1.0: First realease for Flood 09, biped handle ready.
+1.0:
+    First realease for Flood 09, biped handle ready.
+]]
 
-]] luablam = {}
+luablam = {}
 
-local function bit2bool(bit) -- Convert bits into boolean values (Writing true or false is equal to 1 or 0 but not when reading)
+local function bit2bool(bit)-- Convert bits into boolean values (Writing true or false is equal to 1 or 0 but not when reading)
     if (bit == 1) then return true end
     return false
 end
 
-local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich operation will be performed by the the "reclaimer" object
+local function dispatchOperation(dataReclaimer, operation, value)-- Decide wich operation will be performed by the the "reclaimer" object
     if (operation == true) then -- Looking for writing
         if (dataReclaimer[2] == 0) then -- Bit
             write_bit(dataReclaimer[1], dataReclaimer[#dataReclaimer], value)
@@ -81,7 +81,7 @@ local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich
         end
     else -- Looking for reading
         if (dataReclaimer[2] == 0) then -- Is bit type
-            return bit2bool(read_bit(dataReclaimer[1],dataReclaimer[#dataReclaimer]))
+            return bit2bool(read_bit(dataReclaimer[1], dataReclaimer[#dataReclaimer]))
         elseif (dataReclaimer[2] == 1) then -- Byte
             return read_byte(dataReclaimer[1])
         elseif (dataReclaimer[2] == 2) then -- Short
@@ -138,7 +138,7 @@ local objectStructure = {
     regionPermutation5 = {0x184, 1}, -- WORKING
     regionPermutation6 = {0x185, 1}, -- WORKING
     regionPermutation7 = {0x186, 1}, -- WORKING
-    regionPermutation8 = {0x187, 1} -- WORKING
+    regionPermutation8 = {0x187, 1}-- WORKING
 }
 
 local bipedStructure = {
@@ -150,7 +150,7 @@ local bipedStructure = {
     flashlightKey = {0x208, 0, 4}, --WORKING
     actionKey = {0x208, 0, 6}, -- WORKING
     meleeKey = {0x208, 0, 7}, -- WORKING
-    reloadKey = {0x208, 0, 10},  -- WORKING
+    reloadKey = {0x208, 0, 10}, -- WORKING
     weaponPTH = {0x208, 0, 11}, -- WORKING
     weaponSTH = {0x208, 0, 12}, -- WORKING
     grenadeHold = {0x208, 0, 13}, -- WORKING, similar to weaponSTH.
@@ -161,7 +161,7 @@ local bipedStructure = {
     zoomLevel = {0x320, 1}, -- WORKING, 255 if there is no actual zoom, zoom levels starts from 0.
     invisibleScale = {0x37C, 6}, -- WORKING
     primaryNades = {0x31E, 1}, -- WORKING
-    secondaryNades = {0x31F, 1} -- WORKING
+    secondaryNades = {0x31F, 1}-- WORKING
 }
 
 local availableObjectTypes = {
@@ -215,4 +215,3 @@ end
 luablam.biped = biped
 luablam.object = object
 return luablam
-
