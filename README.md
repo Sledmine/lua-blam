@@ -1,61 +1,82 @@
 # LuaBlam 2.0 - Development Branch
 
 ### What is LuaBlam?
-Is a Lua library for scripting that allows you to handle data of the game objects in memory of Halo Custom Edition.
+Is a Lua library for scripting that allows you to handle game objects memory data of Halo Custom Edition.
 
-### What i can do with it?
-Manipulate objects data as scripting table/object properties.
+### What is intended for?
+Manipulate data of game objects as scripting table/object properties.
 
 # Supported game objects and properties in this version:
 
 ### Object Generic
-Basically every spawned thing in the game is an object
+Basically every spawned thing in the game is an **object**.
 
-| Property Name | Description | Takes | Returns |
-| ------------- | ------------- | ------------- | ------------- |
-| tagId | Index ID of the tag that the object is loading. | DWORD | Number |
-| collision | Enable/disable collision geometry of the object | Boolean / 1-0 | Boolean |
-| collideable | If other objects can pass through the object (the collision still present for bullets and stuff) | Boolean / 1-0 | Boolean |
-| ignoreGravity | Object will be available to stay in the air | Boolean / 1-0 | Boolean |
-| isOnGround | If the object is in contact with the BSP | Nothing | Boolean |
-| isOutSideMap | If an object gets out of the BSP | Nothing | Boolean |
-| health | Amount of health of the object | Float | Number |
-| shield | Amount of shield of the object | Float | Number |
-| x | Position of the object in X axis | Float | Number |
-| y | Position of the object in Y axis | Float | Number |
-| z | Position of the object in Z axis | Float | Number |
-| xVel | Velocity applied to the object in X axis | Float | Number |
-| yVel | Velocity applied to the object in Y axis | Float | Number |
-| zVel | Velocity applied to the object in Z axis | Float | Number |
-| xScale | Scale in X axis of the object | Float | Number |
-| yScale | Scale in Y axis of the object | Float | Number |
-| zScale | Scale in Z axis of the object | Float | Number |
-| pitch | Object pitch navigation angle | Float | Number |
-| yaw | Object yaw navigation angle | Float | Number |
-| roll | Object roll navigation angle | Float | Number |
-| pitchVel | Velocity applied to the object in pitch | Float | Number |
-| yawVel | Velocity applied to the object in yaw | Float | Number |
-| rollVel | Velocity applied to the object in roll | Float | Number |
-| type | What type of object is being modified:<br>0 = Biped<br>1 = Vehicle<br>2 = Weapon<br>3 = Equipment<br>4 = Garbage<br>5 = Projectile<br>6 = Scenery<br>7 = Machine<br>8 = Control<br>9 = Light Fixture<br>10 = Placeholder<br>11 = Sound Scenery<br>| Nothing | Number |
-| animation | Index of the animation that the object is playing | WORD | Number |
-| animationTimer | Frame of the actual animation of the object | WORD | Number |
-| regionPermutation1 | Permutation index of the first model region of the object | WORD | Number |
-| regionPermutation2..3..4 | Same as a above until region 8 | WORD | Number |
+| Property Name            | Description                                                                                                                                                                                                                                        | Takes         | Returns |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------- |
+| tagId                    | Index ID of the tag that the object is loading.                                                                                                                                                                                                    | DWORD         | Number  |
+| collision                | Enable/disable collision geometry of the object                                                                                                                                                                                                    | Boolean / 1-0 | Boolean |
+| collideable              | If other objects can pass through the object (the collision still present for bullets and stuff)                                                                                                                                                   | Boolean / 1-0 | Boolean |
+| ignoreGravity            | Object will be available to stay in the air                                                                                                                                                                                                        | Boolean / 1-0 | Boolean |
+| isOnGround               | If the object is in contact with the BSP                                                                                                                                                                                                           | Nothing       | Boolean |
+| isOutSideMap             | If an object gets out of the BSP                                                                                                                                                                                                                   | Nothing       | Boolean |
+| health                   | Amount of health of the object                                                                                                                                                                                                                     | Float         | Number  |
+| shield                   | Amount of shield of the object                                                                                                                                                                                                                     | Float         | Number  |
+| x                        | Position of the object in X axis                                                                                                                                                                                                                   | Float         | Number  |
+| y                        | Position of the object in Y axis                                                                                                                                                                                                                   | Float         | Number  |
+| z                        | Position of the object in Z axis                                                                                                                                                                                                                   | Float         | Number  |
+| xVel                     | Velocity applied to the object in X axis                                                                                                                                                                                                           | Float         | Number  |
+| yVel                     | Velocity applied to the object in Y axis                                                                                                                                                                                                           | Float         | Number  |
+| zVel                     | Velocity applied to the object in Z axis                                                                                                                                                                                                           | Float         | Number  |
+| xScale                   | Scale in X axis of the object                                                                                                                                                                                                                      | Float         | Number  |
+| yScale                   | Scale in Y axis of the object                                                                                                                                                                                                                      | Float         | Number  |
+| zScale                   | Scale in Z axis of the object                                                                                                                                                                                                                      | Float         | Number  |
+| pitch                    | Object pitch navigation angle                                                                                                                                                                                                                      | Float         | Number  |
+| yaw                      | Object yaw navigation angle                                                                                                                                                                                                                        | Float         | Number  |
+| roll                     | Object roll navigation angle                                                                                                                                                                                                                       | Float         | Number  |
+| pitchVel                 | Velocity applied to the object in pitch                                                                                                                                                                                                            | Float         | Number  |
+| yawVel                   | Velocity applied to the object in yaw                                                                                                                                                                                                              | Float         | Number  |
+| rollVel                  | Velocity applied to the object in roll                                                                                                                                                                                                             | Float         | Number  |
+| type                     | What type of object is being modified:<br>0 = Biped<br>1 = Vehicle<br>2 = Weapon<br>3 = Equipment<br>4 = Garbage<br>5 = Projectile<br>6 = Scenery<br>7 = Machine<br>8 = Control<br>9 = Light Fixture<br>10 = Placeholder<br>11 = Sound Scenery<br> | Nothing       | Number  |
+| animation                | Index of the animation that the object is playing                                                                                                                                                                                                  | WORD          | Number  |
+| animationTimer           | Frame of the actual animation of the object                                                                                                                                                                                                        | WORD          | Number  |
+| regionPermutation[Index] | Permutation index of the first model region of the object, from 1 to 8.                                                                                                                                                                            | WORD          | Number  |
 
 ### Biped
-Bipeds are usually players, enemies, and rarely some kind of vehicles
+Bipeds are usually **players**, **enemies**, and RARELY some kind of **vehicles**.
 
-| Property Name | Description | Takes | Returns |
-| ------------- | ------------- | ------------- | ------------- |
-| invisible | Makes the biped invisible | Boolean / 1-0 | Boolean |
-| noDropItems | If the biped is able to drop his items at dying | Boolean / 1-0 | Boolean |
-| flashlight | Current state of biped flashlight | Boolean / 1-0 | Boolean |
-| crouchHold | If biped is being controlled by a player and holding the crouch button | Boolean / 1-0 | Boolean |
-| jumpHold | If biped is being controlled by a player and holding the jump button | Boolean / 1-0 | Boolean |
+| Property Name  | Description                                                           | Takes         | Returns |
+| -------------- | --------------------------------------------------------------------- | ------------- | ------- |
+| invisible      | Current invisible state of the biped                                  | Boolean / 1-0 | Boolean |
+| noDropItems    | Biped is able to drop his items at dying                              | Boolean / 1-0 | Boolean |
+| flashlight     | Current state of biped flashlight                                     | Boolean / 1-0 | Boolean |
+| crouchHold     | Player controlling the biped is holding the crouch button             | Nothing       | Boolean |
+| jumpHold       | Player controlling the biped is holding the jump button               | Nothing       | Boolean |
+| flashlightKey  | Returns true or false if flashlight key was pressed                   | Nothing       | Boolean |
+| actionKey      | Returns true or false if action key was pressed                       | Nothing       | Boolean |
+| meleeKey       | Returns true or false if melee key was pressed                        | Nothing       | Boolean |
+| reloadKey      | Returns true or false if reload key was pressed                       | Nothing       | Boolean |
+| weaponPTH      | Primary trigger state of the current weapon of the biped              | Nothing       | Boolean |
+| weaponSTH      | Secondary trigger state of the current weapon of the biped            | Nothing       | Boolean |
+| grenadeHold    | Player controlling the biped is holding the grenade button            | Nothing       | Boolean |
+| actionKeyHold  | Player controlling the biped is holding the action button             | Nothing       | Boolean |
+| crouch         | Current crouch state of the biped                                     | Nothing       | Boolean |
+| shooting       | Returns 0.0 or 1.0 if the biped is shooting                           | Nothing       | Number  |
+| weaponSlot     | Current weapon slot of the biped, starts from 0 to 3.                 | Byte          | Number  |
+| zoomLevel      | Current level of zoom of the biped, 255 means no zoom, starts from 0. | Byte          | Number  |
+| invisibleScale | Scale amount of the invisibility.                                     | Float         | Number  |
+| primaryNades   | Count of current primary nades of the biped.                          | Byte          | Number  |
+| secondaryNades | Count of current secondary nades nades of the biped.                  | Byte          | Number  |
 
-### Install LuaBlam
-You can download "luablam.lua" library of this repository and move it in to "Halo Custom Edition\Lua".
-Is really recommended to install it using "Mercury - Package Manager" check more info about it in this GitHub repository.
+
+### Installing luablam
+
+You can install luablam using [Mercury - Package Manager](https://github.com/Sledmine/Mercury).<br>
+```
+mercury install luablam
+```
+Use the line above to download and install it from the **Mercury** repository.
+
+We really recommend you to use **Mercury** to install it, otherway you can download "luablam.lua" library from this repository and move it in to "Halo Custom Edition\lua".
 
 ### Implementing LuaBlam
 You can implement luablam in your script by just adding this line:
