@@ -164,6 +164,10 @@ local bipedStructure = {
     secondaryNades = {0x31F, 1}-- WORKING
 }
 
+local vehicleStructure = {
+    
+}
+
 local availableObjectTypes = {
     object = {objectStructure},
     biped = {objectStructure, bipedStructure}
