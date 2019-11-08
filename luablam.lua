@@ -1,25 +1,29 @@
 ------------------------------------------------------------------------------
 -- Blam library for Chimera/SAPP Lua scripting.
--- Authors: Gelatinoso, Sledmine
--- Version: 1.0
+-- Authors: Sledmine
+-- Version: 2.1
 -- This library is intended to help and improve object memory handle using Lua, to make a standar for modding and avoid large script files.
 ------------------------------------------------------------------------------
 
 --[[
 
-        THIS IS AN UNNOFICIAL VERSION, JUST FOR TESTING, DO NOT DISTRIBUTE THIS LIBRARY
-
 Changelog:
 
-2.1: New tag data handle added, implemented string metable.
+2.1: New tag data handle added, implemented string index metatable.
 
-    - Added support for ui widgets definition (UNCOMPLETE, MORE VALUES REQUIRED).
-    - Added support for weapon hud interfaces (UNSTABLE, HARDCODED TO FIRST CROSSHAIR ELEMENT).
-    - Added support for unicode string lists.
-    - Added playerIsLookingAt function.
-    - Object dataReclaimer now supports unicode string list (10 = UStringL).
-    - Object dataReclaimer now supports scenery palette list (11 = SceneryPL). -- Only for reading
-    - Object dataReclaimer now supports child ui widgets list (12 = ChildWL). -- Only for reading
+    - Added playerIsLookingAt function (NEEDS REFACTOR, Thanks to Devieth, IceCrow14).
+
+    - Added support for unicode string list tags.
+    - Now dataReclaimer supports unicode string list (10 = UStringL).
+
+    - Added support for scenario tags (UNCOMPLETE, MORE VALUES REQUIRED).
+    - Now dataReclaimer supports scenery palette list (11 = SceneryPL). -- Only for reading
+
+    - Added support for weapon hud interface tags (UNSTABLE, HARDCODED TO FIRST CROSSHAIR ELEMENT, TODO CROSSHAIRLISTS ?).
+
+    - Added support for ui widgets definition tags (UNCOMPLETE, MORE VALUES REQUIRED).
+    - Now dataReclaimer supports child ui widgets list (12 = ChildWL). -- Only for reading
+
 
 2.0: Insane optimization, expanded object structures and available properties, better implentation for reading and writing data.
 
@@ -47,8 +51,6 @@ Changelog:
     dataReclaimer = {0x213, 0, 8}
 
     This means the position of the bit that is being intented to read/write.
-    
-     (0 = Biped) (1 = Vehicle) (2 = Weapon) (3 = Equipment) (4 = Garbage) (5 = Projectile) (6 = Scenery) (7 = Machine) (8 = Control) (9 = Light Fixture) (10 = Placeholder) (11 = Sound Scenery)
 
 1.1: Changes for writable and readable biped properties.
 
@@ -58,7 +60,7 @@ Changelog:
 
 luablam = {}
 
-getmetatable("").__index = function(str,i) -- Allow the script to handle strings as an array
+getmetatable("").__index = function(str,i) -- Allow scripts to handle strings as an array
     if type(i) == 'number' then
         return string.sub(str,i,i)
     else
