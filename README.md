@@ -20,11 +20,11 @@ Use the line above to download and install it from the **Mercury** repository.
 We really recommend you to use **Mercury** to install it, otherwise you can download the "luablam.lua" library from this repository and move it in to "Halo Custom Edition\lua".
 ***
 
-## Supported game objects and properties in this version:
+## Supported game objects and properties:
 
 ### Object Generic
-> Basically every spawned thing in the game is an **object**.<br>
-**These properties are shared between different types of objects.**
+> Basically every kind of thing that can be spawned in a map is a **game object**.<br>
+**These properties are shared between different types of game objects.**
 
 | Property Name            | Description                                                                                                                                                                                                                                        | Takes         | Returns |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------- |
@@ -81,6 +81,16 @@ We really recommend you to use **Mercury** to install it, otherwise you can down
 | invisibleScale | Scale amount of the invisibility                                     | Float         | Number  |
 | primaryNades   | Count of current primary nades of the biped                          | Byte          | Number  |
 | secondaryNades | Count of current secondary nades nades of the biped                  | Byte          | Number  |
+
+## Supported tags objects and properties:
+
+### Unicode String List Tag
+> Can contain text about the name of **weapons, vehicles, ui widgets, huds, etc**.
+
+| Property Name | Description                                          | Takes         | Returns       |
+| ------------- | ---------------------------------------------------- | ------------- | ------------- |
+| count         | Quantity of strings on the tag                       | Nothing       | Number        |
+| stringList    | Array containing the text of every string on the tag | Array[string] | Array[string] |
 
 
 ## Implementing LuaBlam
