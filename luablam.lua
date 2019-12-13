@@ -1,29 +1,24 @@
 ------------------------------------------------------------------------------
 -- Blam library for Chimera/SAPP Lua scripting.
 -- Authors: Sledmine
--- Version: 2.1
--- This library is intended to help and improve object memory handle using Lua, to make a standar for modding and avoid large script files.
-------------------------------------------------------------------------------
-
+-- Version: 3
+-- Improves memory handle and gives standard functions for scripting
 --[[
+Library changelog:
 
-Changelog:
+3.0: Added global compatibility API functions for SAPP and Chimera.
+    - Extra standard functions were added (get_tag_id, get_tag_path)
 
-2.1: New tag data handle added, implemented string index metatable.
+2.1: New tag data handle added, implemented string metable.
 
-    - Added playerIsLookingAt function (NEEDS REFACTOR, Thanks to Devieth, IceCrow14).
-
-    - Added support for unicode string list tags.
-    - Now dataReclaimer supports unicode string list (10 = UStringL).
-
-    - Added support for scenario tags (UNCOMPLETE, MORE VALUES REQUIRED).
-    - Now dataReclaimer supports scenery palette list (11 = SceneryPL). -- Only for reading
-
-    - Added support for weapon hud interface tags (UNSTABLE, HARDCODED TO FIRST CROSSHAIR ELEMENT, TODO CROSSHAIRLISTS ?).
-
-    - Added support for ui widgets definition tags (UNCOMPLETE, MORE VALUES REQUIRED).
-    - Now dataReclaimer supports child ui widgets list (12 = ChildWL). -- Only for reading
-
+    - Added support for ui widgets definition (UNCOMPLETE, MORE VALUES REQUIRED).
+    - Added support for weapon hud interfaces (UNSTABLE, HARDCODED TO FIRST CROSSHAIR ELEMENT).
+    - Added support for unicode string lists.
+    - Added playerIsLookingAt function.
+    - Object dataReclaimer now supports unicode string list (10 = UStringL).
+    - Object dataReclaimer now supports scenery palette list (11 = SceneryPL). -- Only for reading
+    - Object dataReclaimer now supports child ui widgets list (12 = ChildWL). -- Only for reading
+    - Object dataReclaimer now supports player starting locations list (13 = SpawnPL).
 
 2.0: Insane optimization, expanded object structures and available properties, better implentation for reading and writing data.
 
@@ -51,6 +46,8 @@ Changelog:
     dataReclaimer = {0x213, 0, 8}
 
     This means the position of the bit that is being intented to read/write.
+    
+     (0 = Biped) (1 = Vehicle) (2 = Weapon) (3 = Equipment) (4 = Garbage) (5 = Projectile) (6 = Scenery) (7 = Machine) (8 = Control) (9 = Light Fixture) (10 = Placeholder) (11 = Sound Scenery)
 
 1.1: Changes for writable and readable biped properties.
 
@@ -60,7 +57,45 @@ Changelog:
 
 luablam = {}
 
-getmetatable("").__index = function(str,i) -- Allow scripts to handle strings as an array
+if (api_version) then
+    -- SAPP is importing the library
+    -- Create and bind Chimera functions to the ones in SAPP
+    function get_tag(typeOrTagId, path)
+        if (not path) then
+            return lookup_tag(typeOrTagId)
+        else
+            return lookup_tag(typeOrTagId, path)
+        end
+    end
+
+    function get_object(objectId)
+        local object_memory = get_object_memory(objectId)
+        if (object_memory == 0) then
+            return nil
+        end
+        return object_memory
+    end
+    
+    function delete_object(objectId)
+        destroy_object(objectId)
+    end
+
+    print("Chimera API functions are available now with LuaBlam!")
+end
+
+print("LuaBlam extra API functions were loaded!")
+--
+function get_tag_id(type, path)
+	local global_tag_address = get_tag(type, path) + 0xC
+	return read_dword(global_tag_address)
+end
+
+function get_tag_path(tagId)
+	local tag_string_path_address = read_dword(get_tag(tagId) + 0x10)
+	return read_string(tag_string_path_address)
+end
+
+getmetatable("").__index = function(str,i) -- Allow the script to handle strings as an array
     if type(i) == 'number' then
         return string.sub(str,i,i)
     else
@@ -114,6 +149,22 @@ local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich
                     end
                 end
                 stringListAddress = stringListAddress + 0x14
+            end
+        elseif (dataReclaimer[2] == 13) then -- SpawnLL
+            local spawnLocationCount = read_dword(dataReclaimer[1] - 0x4)
+            local spawnLocationListAddress = read_dword(dataReclaimer[1])
+            for i = 1,spawnLocationCount do
+                -- Entity creation for every spawn location
+                local spawnLocation = value[i]
+                write_float(spawnLocationListAddress, spawnLocation.x)
+                write_float(spawnLocationListAddress + 0x4, spawnLocation.y)
+                write_float(spawnLocationListAddress + 0x8, spawnLocation.z)
+                write_byte(spawnLocationListAddress + 0x14, spawnLocation.type)
+                -- MUST ADD FACING THING!!!!!!!!!!
+                --[[spawnLocation.teamIndex = read_short(spawnLocationListAddress + 0x10)
+                spawnLocation.bspIndex = read_short(spawnLocationListAddress + 0x12)
+                spawnLocation.type = ]]
+                spawnLocationListAddress = spawnLocationListAddress + 0x34
             end
         end
     else -- Looking for reading
@@ -175,6 +226,29 @@ local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich
                 childWidgetListAddress = childWidgetListAddress + 0x50
             end
             return childWidgetList
+        elseif (dataReclaimer[2] == 13) then -- SpawnLL
+            local spawnLocationCount = read_dword(dataReclaimer[1] - 0x4)
+            local spawnLocationListAddress = read_dword(dataReclaimer[1])
+
+            -- Entities list for spawns
+            local spawnLocationList = {}
+
+            for i = 1,spawnLocationCount do
+                -- Entity creation for every spawn location
+                local spawnLocation = {}
+                spawnLocation.x = read_float(spawnLocationListAddress)
+                spawnLocation.y = read_float(spawnLocationListAddress + 0x4)
+                spawnLocation.z = read_float(spawnLocationListAddress + 0x8)
+                -- MUST ADD FACING THING!!!!!!!!!!
+                spawnLocation.teamIndex = read_short(spawnLocationListAddress + 0x10)
+                spawnLocation.bspIndex = read_short(spawnLocationListAddress + 0x12)
+                spawnLocation.type = read_byte(spawnLocationListAddress + 0x14)
+                
+                spawnLocationList[i] = spawnLocation
+                spawnLocationListAddress = spawnLocationListAddress + 0x34
+            end
+
+            return spawnLocationList
         end
     end
 end
@@ -272,7 +346,9 @@ local weaponHudInterfaceStructure = {
 
 local scenarioStructure = {
     sceneryPaletteCount = {0x021C, 5},
-    sceneryPaletteList = {0x220, 11}
+    sceneryPaletteList = {0x220, 11},
+    spawnLocationCount = {0x354, 5},
+    spawnLocationList = {0x358, 13}
 }
 
 local availableObjectTypes = {
