@@ -1,12 +1,17 @@
 ------------------------------------------------------------------------------
 -- Blam library for Chimera/SAPP Lua scripting.
 -- Authors: Sledmine
--- Version: 3.3
+-- Version: 3.5
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
 --[[
 
 Changelog:
+
+3.5:
+    Added model animations type. (16 = FPWAnimL)
+
+3.4: Added sound class type.
 
 3.3: Added vertex list reading for collision geometries.
     - Added dataReclaimer for collsions vertices. (15 = VertexL)
@@ -96,8 +101,6 @@ if (api_version) then
     print('Chimera API functions are available now with LuaBlam!')
 end
 
-print('LuaBlam extra API functions were loaded!')
-
 function get_tag_id(type, path)
     local global_tag_address = get_tag(type, path)
     if (global_tag_address) then
@@ -112,7 +115,32 @@ function get_tag_path(tagId)
     return read_string(tag_string_path_address)
 end
 
-getmetatable('').__index = function(str, i) -- Allow the script to handle strings as an array
+function get_tag_type(tagId)
+    local type = ''
+    for i = 0, 3 do
+        type = type .. string.char(read_char(get_tag(tagId) + i))
+    end
+    return type:reverse()
+end
+
+function get_tags_count()
+    return read_word(0x4044000C)
+end
+---@return table objectsList
+function get_objects()
+    local objectsList = {}
+    for i = 0, 1023 do
+        if (get_object(i)) then
+            objectsList[#objectsList + 1] = i
+        end
+    end
+    return objectsList
+end
+
+print('LuaBlam extra API functions were loaded!')
+    
+-- Allow the script to handle strings as an array
+getmetatable('').__index = function(str, i)
     if type(i) == 'number' then
         return string.sub(str, i, i)
     else
@@ -200,6 +228,16 @@ local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich
                 write_float(vehicleListAddress + 0x18, vehicle.pitch)
                 write_float(vehicleListAddress + 0x1C, vehicle.roll)
                 vehicleListAddress = vehicleListAddress + 0x78
+            end
+        elseif (dataReclaimer[2] == 16) then -- MEEEEEEE
+            local fpAnimationCount = read_word(dataReclaimer[1])
+            local fpAnimationAddressList = read_dword(dataReclaimer[1] + 0x4)
+
+            local fpAnimationList = {}
+
+            for i = 1, fpAnimationCount do
+                write_byte(fpAnimationAddressList, value[i])
+                fpAnimationAddressList = fpAnimationAddressList + 0x2
             end
         end
     else -- Looking for reading
@@ -311,11 +349,9 @@ local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich
             local vertexCount = read_dword(dataReclaimer[1] - 0x4)
             local vertexAdressList = read_dword(dataReclaimer[1])
 
-            -- Entities list for spawns
             local vertexList = {}
 
             for i = 1, vertexCount do
-                -- Entity creation for every spawn location
                 local vertex = {}
                 vertex.x = read_float(vertexAdressList)
                 vertex.y = read_float(vertexAdressList + 0x4)
@@ -324,6 +360,35 @@ local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich
                 vertexAdressList = vertexAdressList + 0x10
             end
             return vertexList
+        elseif (dataReclaimer[2] == 16) then -- FPAnimL
+            local fpAnimationCount = read_word(dataReclaimer[1])
+            local fpAnimationAddressList = read_dword(dataReclaimer[1] + 0x4)
+            local fpAnimationList = {}
+
+            for i = 1, fpAnimationCount do
+                local value = read_byte(fpAnimationAddressList)
+                fpAnimationList[i] = value
+                fpAnimationAddressList = fpAnimationAddressList + 0x2
+            end
+            return fpAnimationList
+        elseif (dataReclaimer[2] == 17) then -- AnimL
+            local animationCount = read_word(dataReclaimer[1] - 0x4)
+            local animationAddressList = read_dword(dataReclaimer[1])
+            local animationList = {}
+
+            for i = 1, animationCount do
+                local animation = {}
+
+                animation.name = read_string(animationAddressList)
+                animation.type = read_word(animationAddressList + 0x20)
+                animation.frameCount = read_byte(animationAddressList + 0x22)
+                animation.nextAnimation = read_byte(animationAddressList + 0x38)
+                animation.sound = read_byte(animationAddressList + 0x3C)
+
+                animationList[i] = animation
+                animationAddressList = animationAddressList + 0xB4
+            end
+            return animationList
         end
     end
 end
@@ -337,6 +402,9 @@ local objectStructure = {
     collideable = {0x10, 0, 4},
     health = {0xE0, 6},
     shield = {0xE4, 6},
+    redA = {0x1B8, 6},
+    greenA = {0x1BC, 6},
+    blueA = {0x1C0, 6},
     x = {0x5C, 6},
     y = {0x60, 6},
     z = {0x64, 6},
@@ -452,6 +520,16 @@ local collisionGeometryStructure = {
     vertexList = {0x40C, 15}
 }
 
+local modelAnimations = {
+    fpAnimationList = {0x90, 16},
+    animationCount = {0x74, 5},
+    animationList = {0x78, 17}
+}
+
+local sound = {
+    class = {0x4, 0x2}
+}
+
 local availableObjectTypes = {
     object = {objectStructure},
     biped = {objectStructure, bipedStructure},
@@ -460,7 +538,9 @@ local availableObjectTypes = {
     unicodeStringList = {unicodeStringListStructure},
     scenario = {scenarioStructure},
     scenery = {sceneryStructure},
-    collisionGeometry = {collisionGeometryStructure}
+    collisionGeometry = {collisionGeometryStructure},
+    sound = {sound},
+    modelAnimations = {modelAnimations}
 }
 
 local function proccessRequestedObject(desiredObject, address, properties)
@@ -498,84 +578,98 @@ local function proccessRequestedObject(desiredObject, address, properties)
     return outputProperties
 end
 
+---@param address number
+---@param properties nil | table
 function luablam.object(address, properties)
-    return proccessRequestedObject('object', address, properties)
+    if (address and address ~= 0) then
+        return proccessRequestedObject('object', address, properties)
+    end
+    return nil
 end
 
+---@param address number
+---@param properties nil | table
 function luablam.biped(address, properties)
-    return proccessRequestedObject('biped', address, properties)
+    if (address and address ~= 0) then
+        return proccessRequestedObject('biped', address, properties)
+    end
+    return nil
 end
 
+---@param address number
+---@param properties nil | table
 function luablam.uiWidgetDefinition(address, properties)
-    local tagDataAddress = read_dword(address + 0x14)
-    return proccessRequestedObject('uiWidgetDefinition', tagDataAddress, properties)
+    if (address and address ~= 0) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('uiWidgetDefinition', tagDataAddress, properties)
+    end
+    return nil
 end
 
 function luablam.weaponHudInterface(address, properties)
-    local tagDataAddress = read_dword(address + 0x14)
-    return proccessRequestedObject('weaponHudInterface', tagDataAddress, properties)
+    if (address and address ~= 0) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('weaponHudInterface', tagDataAddress, properties)
+    end
+    return nil
 end
 
+---@param address number
+---@param properties nil | table
 function luablam.unicodeStringList(address, properties)
-    local tagDataAddress = read_dword(address + 0x14)
-    return proccessRequestedObject('unicodeStringList', tagDataAddress, properties)
+    if (address and address ~= 0) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('unicodeStringList', tagDataAddress, properties)
+    end
+    return nil
 end
 
+---@param address number
+---@param properties nil | table
 function luablam.scenario(address, properties)
-    local tagDataAddress = read_dword(address + 0x14)
-    return proccessRequestedObject('scenario', tagDataAddress, properties)
+    if (address and address ~= nil) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('scenario', tagDataAddress, properties)
+    end
 end
 
+---@param address number
+---@param properties nil | table
 function luablam.scenery(address, properties)
-    local tagDataAddress = read_dword(address + 0x14)
-    return proccessRequestedObject('scenery', tagDataAddress, properties)
+    if (address and address ~= 0) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('scenery', tagDataAddress, properties)
+    end
+    return nil
 end
 
-
+---@param address number
+---@param properties nil | table
 function luablam.collisionGeometry(address, properties)
-    local tagDataAddress = read_dword(address + 0x14)
-    return proccessRequestedObject('collisionGeometry', tagDataAddress, properties)
+    if (address and address ~= 0) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('collisionGeometry', tagDataAddress, properties)
+    end
+
+    return nil
 end
 
--- Credits to Devieth and IceCrow14
-function luablam.playerIsLookingAt(target, sensitivity, zOffset)
-    local baseline_sensitivity = 0.012 -- Minimum for distance scaling.
-    local function read_vector3d(Address)
-        return read_float(Address), read_float(Address + 0x4), read_float(Address + 0x8)
+---@param address number
+---@param properties nil | table
+function luablam.sound(address, properties)
+    if (address and address ~= 0) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('sound', tagDataAddress, properties)
     end
-    local m_object = get_dynamic_player()
-    local m_target_object = get_object(target)
-    if m_target_object and m_object then -- Both objects must exist.
-        local player_x, player_y, player_z = read_vector3d(m_object + 0xA0)
-        local camera_x, camera_y, camera_z = read_vector3d(m_object + 0x230)
-        local target_x, target_y, target_z = read_vector3d(m_target_object + 0x5C) -- target Location2
-        local distance = math.sqrt((target_x - player_x) ^ 2 + (target_y - player_y) ^ 2 + (target_z - player_z) ^ 2) -- 3D distance
-        local local_x = target_x - player_x
-        local local_y = target_y - player_y
-        local local_z = (target_z + zOffset) - player_z
-        local point_x = 1 / distance * local_x
-        local point_y = 1 / distance * local_y
-        local point_z = 1 / distance * local_z
-        local x_diff = math.abs(camera_x - point_x)
-        local y_diff = math.abs(camera_y - point_y)
-        local z_diff = math.abs(camera_z - point_z)
-        local average = (x_diff + y_diff + z_diff) / 3
-        local scaler = 0
-        if distance > 10 then
-            scaler = math.floor(distance) / 1000
-        end
-        local auto_aim = sensitivity - scaler
-        if auto_aim < baseline_sensitivity then
-            auto_aim = baseline_sensitivity
-        end
-        if average < auto_aim then
-            return true
-        end
-    end
-    return false
+    return nil
 end
 
---[[local function playerIsLookingAt(target)
-    return true
-end]]
+function luablam.modelAnimations(address, properties)
+    if (address and address ~= 0) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('modelAnimations', tagDataAddress, properties)
+    end
+    return nil
+end
+
 return luablam
