@@ -87,15 +87,21 @@ if (api_version) then
     end
 
     function get_object(objectId)
-        local object_memory = get_object_memory(objectId)
-        if (object_memory == 0) then
-            return nil
+        if (objectId) then
+            local object_memory = get_object_memory(objectId)
+            if (object_memory ~= 0) then
+                return object_memory
+            end
         end
-        return object_memory
+        return nil
     end
 
     function delete_object(objectId)
         destroy_object(objectId)
+    end
+
+    function console_out(message)
+        print(message)
     end
 
     print('Chimera API functions are available now with LuaBlam!')
@@ -103,7 +109,7 @@ end
 
 function get_tag_id(type, path)
     local global_tag_address = get_tag(type, path)
-    if (global_tag_address) then
+    if (global_tag_address and global_tag_address ~= 0) then
         local tag_id = global_tag_address + 0xC
         return read_dword(tag_id)
     end
@@ -126,6 +132,8 @@ end
 function get_tags_count()
     return read_word(0x4044000C)
 end
+
+-- ONLY WORKS FOR CHIMERA!!!
 ---@return table objectsList
 function get_objects()
     local objectsList = {}
@@ -138,7 +146,7 @@ function get_objects()
 end
 
 print('LuaBlam extra API functions were loaded!')
-    
+
 -- Allow the script to handle strings as an array
 getmetatable('').__index = function(str, i)
     if type(i) == 'number' then
@@ -486,7 +494,9 @@ local uiWidgetDefinitionStructure = {
     boundsX = {0x26, 2},
     height = {0x28, 2},
     width = {0x2A, 2},
+    backgroundBitmap = {0x44, 3},
     eventType = {0x03F0, 1},
+    tagReference = {0x400, 3},
     childWidgetsCount = {0x03E0, 5},
     childWidgetsList = {0x03E4, 12}
 }
