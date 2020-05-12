@@ -107,6 +107,7 @@ if (api_version) then
     print('Chimera API functions are available now with LuaBlam!')
 end
 
+-- Return the id of a tag given tag type and tag path
 function get_tag_id(type, path)
     local global_tag_address = get_tag(type, path)
     if (global_tag_address and global_tag_address ~= 0) then
