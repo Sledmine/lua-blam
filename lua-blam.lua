@@ -132,6 +132,8 @@ end
 function get_tags_count()
     return read_word(0x4044000C)
 end
+
+-- ONLY WORKS FOR CHIMERA!!!
 ---@return table objectsList
 function get_objects()
     local objectsList = {}
@@ -492,6 +494,7 @@ local uiWidgetDefinitionStructure = {
     boundsX = {0x26, 2},
     height = {0x28, 2},
     width = {0x2A, 2},
+    backgroundBitmap = {0x44, 3},
     eventType = {0x03F0, 1},
     tagReference = {0x400, 3},
     childWidgetsCount = {0x03E0, 5},
