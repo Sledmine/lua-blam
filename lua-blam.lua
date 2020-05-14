@@ -1,79 +1,104 @@
 ------------------------------------------------------------------------------
--- Blam library for Chimera/SAPP Lua scripting.
+-- Blam library for Chimera/SAPP scripting.
 -- Authors: Sledmine
--- Version: 3.5
+-- Version: 4.0
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
---[[
 
-Changelog:
+local luablam = {}
 
-3.5:
-    Added model animations type. (16 = FPWAnimL)
+-- Provide global tag classes by default
+tagClasses = {
+    actorVariant = 'actv',
+    actor = 'actr',
+    antenna = 'ant!',
+    biped = 'bipd',
+    bitmap = 'bitm',
+    cameraTrack = 'trak',
+    colorTable = 'colo',
+    continuousDamageEffect = 'cdmg',
+    contrail = 'cont',
+    damageEffect = 'jpt!',
+    decal = 'deca',
+    detailObjectCollection = 'dobc',
+    deviceControl = 'ctrl',
+    deviceLightFixture = 'lifi',
+    deviceMachine = 'mach',
+    device = 'devi',
+    dialogue = 'udlg',
+    effect = 'effe',
+    equipment = 'eqip',
+    flag = 'flag',
+    fog = 'fog ',
+    font = 'font',
+    garbage = 'garb',
+    gbxmodel = 'mod2',
+    globals = 'matg',
+    glow = 'glw!',
+    grenadeHudInterface = 'grhi',
+    hudGlobals = 'hudg',
+    hudMessageText = 'hmt ',
+    hudNumber = 'hud#',
+    itemCollection = 'itmc',
+    item = 'item',
+    lensFlare = 'lens',
+    lightVolume = 'mgs2',
+    light = 'ligh',
+    lightning = 'elec',
+    materialEffects = 'foot',
+    meter = 'metr',
+    modelAnimations = 'antr',
+    modelCollisiionGeometry = 'coll',
+    model = 'mode',
+    multiplayerScenarioDescription = 'mply',
+    object = 'obje',
+    particleSystem = 'pctl',
+    particle = 'part',
+    physics = 'phys',
+    placeHolder = 'plac',
+    pointPhysics = 'pphy',
+    preferencesNetworkGame = 'ngpr',
+    projectile = 'proj',
+    scenarioStructureBsp = 'sbsp',
+    scenario = 'scnr',
+    scenery = 'scen',
+    shaderEnvironment = 'senv',
+    shaderModel = 'soso',
+    shaderTransparentChicagoExtended = 'scex',
+    shaderTransparentChicago = 'schi',
+    shaderTransparentGeneric = 'sotr',
+    shaderTransparentGlass = 'sgla',
+    shaderTransparentMeter = 'smet',
+    shaderTransparentPlasma = 'spla',
+    shaderTransparentWater = 'swat',
+    shader = 'shdr',
+    sky = 'sky ',
+    soundEnvironment = 'snde',
+    soundLooping = 'lsnd',
+    soundScenery = 'ssce',
+    sound = 'snd!',
+    spheroid = 'boom',
+    stringList = 'str#',
+    tagCollection = 'tagc',
+    uiWidgetCollection = 'Soul',
+    uiWidgetDefinition = 'DeLa',
+    unicodeStringList = 'ustr',
+    unitHudInterface = 'unhi',
+    unit = 'unit',
+    vehicle = 'vehi',
+    virtualKeyboard = 'vcky',
+    weaponHudInterface = 'wphi',
+    weapon = 'weap',
+    weatherParticleSystem = 'rain',
+    wind = 'wind'
+}
 
-3.4: Added sound class type.
-
-3.3: Added vertex list reading for collision geometries.
-    - Added dataReclaimer for collsions vertices. (15 = VertexL)
-
-3.2: Fixed vehicle list rotation, added new unified API function.
-    - Added binding for "execute_script" function from Chimera to SAPP.
-
-3.1: Scenario vehicle list is available now.
-    - Object dataReclaimer now supports scenario vehicles list (14 = VehicleL).
-
-3.0: Added global compatibility API functions for SAPP and Chimera.
-    - Extra standard functions were added (get_tag_id, get_tag_path)
-
-2.1: New tag data handle added, implemented string metable.
-    - Added support for ui widgets definition (UNCOMPLETE, MORE VALUES REQUIRED).
-    - Added support for weapon hud interfaces (UNSTABLE, HARDCODED TO FIRST CROSSHAIR ELEMENT).
-    - Added support for unicode string lists.
-    - Added playerIsLookingAt function.
-    - Object dataReclaimer now supports unicode string list (10 = UStringL).
-    - Object dataReclaimer now supports scenery palette list (11 = SceneryPL). -- Only for reading
-    - Object dataReclaimer now supports child ui widgets list (12 = ChildWL). -- Only for reading
-    - Object dataReclaimer now supports player starting locations list (13 = PlayerSLL).
-
-2.0: Insane optimization, expanded object structures and available properties, better implentation for reading and writing data.
-
-    - Introducing "dataReclaimer", this is an array with specific values for structure fields
-    - Improved bit2bool convertion now only 1 as bit value is being interpreted as true any other value will be always false.
-
-    dataReclaimer is an array with a specific ordered data:
-
-    dataReclaimer[0] -- Memory address to read/write a value
-    dataReclaimer[1] -- Specify the type of value to read/write
-
-    0 = Bit
-    1 = Byte
-    2 = Short
-    3 = Word
-    4 = Int
-    5 = Dword
-    6 = Float
-    7 = Double
-    8 = Char
-    9 = String
-
-    In case of reading/writing a bit value we can set a specific bit position sending an extra value in the array:
-
-    dataReclaimer = {0x213, 0, 8}
-                                ^
-                                |
-                                |
-                                This means the position of the bit that we are seeking to read/write.
-
-1.1: Changes for writable and readable biped properties.
-
-1.0: First realease for Flood 09, biped handle ready.
-
-]]
-luablam = {}
-
+-- Check if SAPP is importing the library
 if (api_version) then
-    -- SAPP is importing the library
     -- Create and bind Chimera functions to the ones in SAPP
+
+    ---@param typeOrTagId string | number
+    ---@param path string
     function get_tag(typeOrTagId, path)
         if (not path) then
             return lookup_tag(typeOrTagId)
@@ -82,10 +107,12 @@ if (api_version) then
         end
     end
 
+    ---@param command string
     function execute_script(command)
         execute_command(command)
     end
 
+    ---@param objectId number
     function get_object(objectId)
         if (objectId) then
             local object_memory = get_object_memory(objectId)
@@ -96,18 +123,22 @@ if (api_version) then
         return nil
     end
 
+    ---@param objectId number
     function delete_object(objectId)
         destroy_object(objectId)
     end
 
+    ---@param message string
     function console_out(message)
-        print(message)
+        cprint(message)
     end
 
     print('Chimera API functions are available now with LuaBlam!')
 end
 
--- Return the id of a tag given tag type and tag path
+--- Return the id of a tag given tag type and tag path
+---@param type string
+---@param path string
 function get_tag_id(type, path)
     local global_tag_address = get_tag(type, path)
     if (global_tag_address and global_tag_address ~= 0) then
@@ -117,6 +148,9 @@ function get_tag_id(type, path)
     return nil
 end
 
+--- Return the tag path given tag id
+---@param tagId number
+---@return string
 function get_tag_path(tagId)
     local tag_string_path_address = read_dword(get_tag(tagId) + 0x10)
     return read_string(tag_string_path_address)
