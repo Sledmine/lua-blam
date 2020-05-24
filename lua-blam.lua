@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 -- Blam library for Chimera/SAPP scripting.
 -- Authors: Sledmine
--- Version: 4.0
+-- Version: 3.5
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
 
@@ -156,19 +156,29 @@ function get_tag_path(tagId)
     return read_string(tag_string_path_address)
 end
 
+--- Return the type of a tag given tag id
+---@param tagId number
+---@return string
 function get_tag_type(tagId)
     local type = ''
     for i = 0, 3 do
-        type = type .. string.char(read_char(get_tag(tagId) + i))
+        local charValue = read_char(get_tag(tagId) + i)
+        if (charValue > -1) then
+            type = type .. string.char(charValue)
+        else
+            return nil
+        end
     end
     return type:reverse()
 end
 
+--- Return the count of tags in the current map
+---@return number
 function get_tags_count()
     return read_word(0x4044000C)
 end
 
--- ONLY WORKS FOR CHIMERA!!!
+--- Return the current existing objects in the current map, ONLY WORKS FOR CHIMERA!!!
 ---@return table objectsList
 function get_objects()
     local objectsList = {}
