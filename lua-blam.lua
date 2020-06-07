@@ -93,12 +93,30 @@ tagClasses = {
     wind = 'wind'
 }
 
+-- Provide global object classes by default
+objectClasses = {
+    biped = 0,
+    vehicle = 1,
+    weapon = 2,
+    equipment = 3,
+    garbage = 4,
+    projectile = 5,
+    scenery = 6,
+    machine = 7,
+    control = 8,
+    lightFixture = 9,
+    placeHolder = 10,
+    soundScenery = 11
+}
+
 -- Check if SAPP is importing the library
 if (api_version) then
     -- Create and bind Chimera functions to the ones in SAPP
 
+    --- Return the memory address of a tag given tag id or type and path
     ---@param typeOrTagId string | number
     ---@param path string
+    ---@return number
     function get_tag(typeOrTagId, path)
         if (not path) then
             return lookup_tag(typeOrTagId)
@@ -107,12 +125,15 @@ if (api_version) then
         end
     end
 
+    --- Execute a game command or script block
     ---@param command string
     function execute_script(command)
-        execute_command(command)
+        return execute_command(command)
     end
 
+    --- Return the address of the object memory given object id
     ---@param objectId number
+    ---@return number
     function get_object(objectId)
         if (objectId) then
             local object_memory = get_object_memory(objectId)
@@ -123,11 +144,13 @@ if (api_version) then
         return nil
     end
 
+    --- Delete an object given object id
     ---@param objectId number
     function delete_object(objectId)
         destroy_object(objectId)
     end
 
+    --- Prints text into console
     ---@param message string
     function console_out(message)
         cprint(message)
@@ -139,11 +162,27 @@ end
 --- Return the id of a tag given tag type and tag path
 ---@param type string
 ---@param path string
+---@return number
 function get_tag_id(type, path)
     local global_tag_address = get_tag(type, path)
     if (global_tag_address and global_tag_address ~= 0) then
         local tag_id = global_tag_address + 0xC
         return read_dword(tag_id)
+    end
+    return nil
+end
+
+--- Return the simple id of a tag given tag type and tag path
+---@param type string
+---@param path string
+---@return number
+function get_simple_tag_id(type, path)
+    local global_tag_address = get_tag(type, path)
+    for tagId = 0, get_tags_count() - 1 do
+        local tagPath = get_tag_path(tagId)
+        if (tagPath == path) then
+            return tagId
+        end
     end
     return nil
 end
@@ -181,13 +220,13 @@ end
 --- Return the current existing objects in the current map, ONLY WORKS FOR CHIMERA!!!
 ---@return table objectsList
 function get_objects()
-    local objectsList = {}
-    for i = 0, 1023 do
+    local currentObjectsList = {}
+    for i = 0, 2047 do
         if (get_object(i)) then
-            objectsList[#objectsList + 1] = i
+            currentObjectsList[#currentObjectsList + 1] = i
         end
     end
-    return objectsList
+    return currentObjectsList
 end
 
 print('LuaBlam extra API functions were loaded!')
@@ -201,17 +240,25 @@ getmetatable('').__index = function(str, i)
     end
 end
 
-local function bit2bool(bit) -- Convert bits into boolean values (Writing true or false is equal to 1 or 0 but not when reading)
-    if (bit == 1) then
+--- Convert bits into boolean and boolean into bits
+local function b2b(value)
+    if (value == 1) then
         return true
+    elseif (value == 0) then
+        return false
+    elseif (value == true) then
+        return 1
+    elseif (value == false) then
+        return 0
     end
-    return false
+    return 0
 end
 
-local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich operation will be performed by the the "reclaimer" object
+ -- Decide wich operation will be performed by the the "reclaimer" object
+local function dispatchOperation(dataReclaimer, operation, value)
     if (operation == true) then -- Looking for writing
         if (dataReclaimer[2] == 0) then -- Bit
-            write_bit(dataReclaimer[1], dataReclaimer[#dataReclaimer], value)
+            write_bit(dataReclaimer[1], dataReclaimer[#dataReclaimer], b2b(value))
         elseif (dataReclaimer[2] == 1) then -- Byte
             write_byte(dataReclaimer[1], value)
         elseif (dataReclaimer[2] == 2) then -- Short
@@ -295,7 +342,7 @@ local function dispatchOperation(dataReclaimer, operation, value) -- Decide wich
         end
     else -- Looking for reading
         if (dataReclaimer[2] == 0) then -- Is bit type
-            return bit2bool(read_bit(dataReclaimer[1], dataReclaimer[#dataReclaimer]))
+            return b2b(read_bit(dataReclaimer[1], dataReclaimer[#dataReclaimer]))
         elseif (dataReclaimer[2] == 1) then -- Byte
             return read_byte(dataReclaimer[1])
         elseif (dataReclaimer[2] == 2) then -- Short
@@ -448,11 +495,15 @@ end
 
 local objectStructure = {
     tagId = {0x0, 5},
-    collision = {0x10, 0, 0},
+    hasCollision = {0x10, 0, 0},
     isOnGround = {0x10, 0, 1},
     ignoreGravity = {0x10, 0, 2},
-    isOutSideMap = {0x12, 0, 5},
-    collideable = {0x10, 0, 4},
+    isInWater = {0x10, 0, 3},
+    dynamicShading = {0x10, 0, 14},
+    isNotCastingShadow = {0x10, 0, 18},
+    frozen = {0x10, 0, 20},
+    isOutSideMap = {0x10, 0, 21},
+    isCollideable = {0x10, 0, 24},
     health = {0xE0, 6},
     shield = {0xE4, 6},
     redA = {0x1B8, 6},
@@ -474,20 +525,6 @@ local objectStructure = {
     yawVel = {0x90, 6},
     rollVel = {0x94, 6},
     type = {0xB4, 3},
-    --[[
-     (0 = Biped)
-     (1 = Vehicle)
-     (2 = Weapon)
-     (3 = Equipment)
-     (4 = Garbage)
-     (5 = Projectile)
-     (6 = Scenery)
-     (7 = Machine)
-     (8 = Control)
-     (9 = Light Fixture)
-     (10 = Placeholder)
-     (11 = Sound Scenery)
-    ]]
     animation = {0xD0, 3},
     animationTimer = {0xD2, 3},
     regionPermutation1 = {0x180, 1},
@@ -503,6 +540,7 @@ local objectStructure = {
 local bipedStructure = {
     invisible = {0x204, 0, 4},
     noDropItems = {0x204, 0, 20},
+    ignoreCollision = {0x4CC, 0, 3},
     flashlight = {0x204, 0, 19},
     cameraX = {0x230, 6},
     cameraY = {0x234, 6},
@@ -583,6 +621,10 @@ local modelAnimations = {
 
 local sound = {
     class = {0x4, 0x2}
+}
+
+local tagCollectionStructure = {
+    count = {0, 1},
 }
 
 local availableObjectTypes = {
