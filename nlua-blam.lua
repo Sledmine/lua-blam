@@ -188,6 +188,38 @@ end
 
 
 ------------------------------------------------------------------------------
+-- Generic functions
+------------------------------------------------------------------------------
+
+--- Verify if the given variable is a string
+---@param var any
+---@return boolean
+local function isString(var)
+    return (type(var) == "string")
+end
+
+--- Verify if the given variable is a boolean
+---@param var any
+---@return boolean
+local function isBoolean(var)
+    return (type(var) == "boolean")
+end
+
+--- Verify if the given variable is a table
+---@param var any
+---@return boolean
+local function isTable(var)
+    return (type(var) == "table")
+end
+
+--- Remove spaces and tabs from the beginning and the end of a string
+---@param var string
+---@return string
+local function trim(string)
+    return string:match"^%s*(.*)":match"(.-)%s*$"
+end
+
+------------------------------------------------------------------------------
 -- Utilities
 ------------------------------------------------------------------------------
 
