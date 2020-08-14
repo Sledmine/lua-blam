@@ -132,6 +132,30 @@ local cameraTypes = {
     deadCamera = 5      -- 23776
 }
 
+-- Console colors
+local colorsRGB = {
+    success = {
+        r = 0.235,
+        g = 0.82,
+        b = 0
+    },
+    warning = {
+        r = 0.94,
+        g = 0.75,
+        b = 0.098
+    },
+    error = {
+        r = 1,
+        g = 0.2,
+        b = 0.2
+    },
+    unknow = {
+        r = 0.66,
+        g = 0.66,
+        b = 0.66
+    }
+}
+
 
 ------------------------------------------------------------------------------
 -- SAPP API bindings
@@ -316,6 +340,68 @@ local function getTag(tag, class)
         return nil
     else
         return get_tag(class, tag)
+    end
+end
+
+-- Create a reference to the original console out function
+local console_out = console_out
+
+--- Print a console message. It also supports multi-line messages!
+---@param message string
+---@param singleLine boolean
+---@param color table
+local function consoleOutput(message, ...)    
+    -- Params
+    local singleLine = nil
+    local color = nil
+
+    -- Put the extra arguments into a table
+    local args = {...}
+
+    if (message == nil or #args > 2) then
+        consoleOutput(debug.traceback("Wrong number of arguments on console out function", 2), colorsRGB.error)
+    end
+
+    -- Get the arguments from table
+    for i, v in ipairs(args) do
+        if (isBoolean(v)) then
+            singleLine = v
+        elseif (isTable(v)) then
+            color = v
+        end
+    end
+
+    -- Set the default color
+    local r = 1
+    local g = 1
+    local b = 1
+    
+    -- Lookup for a custom color
+    if (color ~= nil) then
+        r = color.r
+        g = color.g
+        b = color.b
+    end
+
+    local buffer = ""
+
+    -- Explode the string!!
+    for line in message:gmatch("([^\n]+)") do
+        -- Trim the line
+        local trimmedLine = trim(line)
+
+        if (singleLine) then
+            -- Store the line in the buffer
+            buffer = buffer .. trimmedLine .. " "
+        else
+            -- Print the line
+            console_out(trimmedLine, r, g, b)
+        end
+    end
+
+    -- Print the single-line message
+    if (singleLine) then
+        console_out(buffer, r, g, b)
     end
 end
 
@@ -1072,6 +1158,7 @@ luablam.addressList = addressList
 luablam.tagClasses = tagClasses
 luablam.objectClasses = objectClasses
 luablam.cameraTypes = cameraTypes
+luablam.colorsRGB = colorsRGB
 
 luablam.tagDataHeader = {}
 
@@ -1098,6 +1185,7 @@ luablam.getTagClass = getTagClass
 luablam.getTagId = getTagId
 luablam.getTagPath = getTagPath
 luablam.getObjects = getObjects
+luablam.consoleOutput = consoleOutput
 luablam.dumpObject = dumpObject
 
 --- Returns the camera type
