@@ -484,7 +484,8 @@ local dataBindingMetaTable = {
                 operation[2](object.address + propertyData.offset, value)
             end
         else
-            error("Cannot write into a invalid property '" .. property .. "'")
+            local errorMessage = "Unable to write an invalid property ('" .. property .. "')"
+            consoleOutput(debug.traceback(errorMessage, 2), colorsRGB.error)
         end
     end,
     __index = function(object, property)
@@ -529,7 +530,8 @@ local dataBindingMetaTable = {
                 return operation[1](object.address + propertyData.offset)
             end
         else
-            error("Cannot read from a invalid property '" .. property .. "'")
+            local errorMessage = "Unable to read an invalid property ('" .. property .. "')"
+            consoleOutput(debug.traceback(errorMessage, 2), colorsRGB.error)
         end
     end
 }
