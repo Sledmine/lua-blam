@@ -489,6 +489,16 @@ local function dispatchOperation(dataReclaimer, operation, value)
                 animationAddressList = animationAddressList + 0xB4
             end
             return animationList
+        elseif (dataReclaimer[2] == 18) then
+            local tagCount = read_dword(dataReclaimer[1] - 0x4)
+            local tagListAddress = read_dword(dataReclaimer[1])
+            local tagList = {}
+            for i = 1, tagCount do
+                local tagIndex = read_dword(tagListAddress + 0xC)
+                tagList[i] = tagIndex
+                tagListAddress = tagListAddress + 0x10
+            end
+            return tagList
         end
     end
 end
@@ -625,6 +635,7 @@ local sound = {
 
 local tagCollectionStructure = {
     count = {0, 1},
+    tagList = {0x4, 18}
 }
 
 local availableObjectTypes = {
@@ -637,7 +648,8 @@ local availableObjectTypes = {
     scenery = {sceneryStructure},
     collisionGeometry = {collisionGeometryStructure},
     sound = {sound},
-    modelAnimations = {modelAnimations}
+    modelAnimations = {modelAnimations},
+    tagCollection = {tagCollectionStructure}
 }
 
 local function proccessRequestedObject(desiredObject, address, properties)
@@ -765,6 +777,16 @@ function luablam.modelAnimations(address, properties)
     if (address and address ~= 0) then
         local tagDataAddress = read_dword(address + 0x14)
         return proccessRequestedObject('modelAnimations', tagDataAddress, properties)
+    end
+    return nil
+end
+
+---@param address number
+---@param properties nil | table
+function luablam.tagCollection(address) --read only
+    if (address and address ~= 0) then
+        local tagDataAddress = read_dword(address + 0x14)
+        return proccessRequestedObject('tagCollection', tagDataAddress)
     end
     return nil
 end
