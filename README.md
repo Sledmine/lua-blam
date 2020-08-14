@@ -17,10 +17,11 @@ LuaBlam aims to make easier and more understandable scripts providing simple syn
 ### Example with lua-blam:
 
 ```lua
+-- Make current player invisible with flashlight key
 local player = blam.biped(get_dynamic_player())
 if (player) then
     if (player.flaslightKey) then
-        -- Do awesome stuff!!
+        player.invisible = true
     end
 end
 ```
@@ -28,13 +29,14 @@ end
 ### Example without lua-blam:
 
 ```lua
+-- Make current player invisible with flashlight key
 local playerAddress = get_dynamic_player()
 if (playerAddress) then
     local player = get_object(playerAddress)
     if (player) then
         local playerFlashlightKey = read_bit(player + 0x208, 8)
         if (playerFlashlightKey == 1) then
-            -- Do probaly less awesome stuff!!
+            write_bit(player + 0x204, 4, 1)
         end
     end
 end
