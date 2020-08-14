@@ -716,42 +716,43 @@ local modelStructure = {
 
 ---@class ObjectClass
 ---@field address number
----@field tagId number Tag ID of the object
----@field hasCollision boolean Does the object have collision?
----@field isOnGround boolean Is the object on the ground?
----@field ignoreGravity boolean Does the object ignore gravity?
----@field isInWater boolean Is the object in the water?
----@field dynamicShading boolean Does the object cast shadow?
----@field frozen boolean Is the object static? (it's not moving)
----@field isOutSideMap boolean Is the object outside of the map?
----@field isCollideable boolean Is the object collideable?
----@field model number Model tag ID
+---@field tagId number Object tag ID
+---@field hasCollision boolean Check if object has or has not collision
+---@field isOnGround boolean Is the object touching ground
+---@field ignoreGravity boolean Make object to ignore gravity
+---@field isInWater boolean Is the object touching on water
+---@field dynamicShading boolean Enable disable dynamic shading for lightmaps
+---@field isNotCastingShadow boolean Enable/disable object shadow casting
+---@field frozen boolean Freeze/unfreeze object existence
+---@field isOutSideMap boolean Is object outside/inside bsp
+---@field isCollideable boolean Enable/disable object shadow casting
+---@field model number Gbxmodel tag ID
 ---@field health number Current health of the object
 ---@field shield number Current shield of the object
----@field redA number 
----@field greenA number
----@field blueA number
----@field x number Current position of the object on the X axis
----@field y number Current position of the object on the Y axis
----@field z number Current position of the object on the Z axis
----@field xVel number Current velocity of the object on the X axis
----@field yVel number Current velocity of the object on the Y axis
----@field zVel number Current velocity of the object on the Z axis
----@field pitch number Current rotation of the object on the X axis
----@field yaw number Current rotation of the object on the Y axis
----@field roll number Current rotation of the object on the Z axis
----@field xScale number
----@field yScale number
----@field zScale number
----@field pitchVel number
----@field yawVel number
----@field rollVel number
+---@field redA number Red color channel for A modifier
+---@field greenA number Green color channel for A modifier
+---@field blueA number Blue color channel for A modifier
+---@field x number Current position of the object on X axis
+---@field y number Current position of the object on Y axis
+---@field z number Current position of the object on Z axis
+---@field xVel number Current velocity of the object on X axis
+---@field yVel number Current velocity of the object on Y axis
+---@field zVel number Current velocity of the object on Z axis
+---@field pitch number Current rotation of the object on pitch
+---@field yaw number Current rotation of the object on yaw
+---@field roll number Current rotation of the object on roll
+---@field xScale number PROVIDE DESCRIPTION
+---@field yScale number PROVIDE DESCRIPTION
+---@field zScale number PROVIDE DESCRIPTION
+---@field yawVel number Current velocity of the object in yaw
+---@field pitchVel number Current velocity of the object in pitch
+---@field rollVel number Current velocity of the object in roll
 ---@field type number Object type
 ---@field animationTagId number Current animation tag ID
 ---@field animation number Current animation index
----@field animationFrame number
+---@field animationFrame number Current animation frame
 ---@field weapon number Current weapon tag ID
----@field parent number Parent object
+---@field parent number Parent object id
 ---@field regionPermutation1 number
 ---@field regionPermutation2 number
 ---@field regionPermutation3 number
@@ -773,30 +774,30 @@ function objectClass.new(address)
 end
 
 ---@class bipedClass : ObjectClass
----@field invisible boolean Is the biped invisible?
----@field noDropItems boolean Does the biped drop items?
+---@field invisible boolean Biped invisible state
+---@field noDropItems boolean Biped ability to drop items at dead
 ---@field ignoreCollision boolean Does the biped ignore the collision?
 ---@field flashlight boolean Does the biped have the flashlight enabled?
----@field cameraX number Current position of the biped on the X axis
----@field cameraY number Current position of the biped on the Y axis
----@field cameraZ number Current position of the biped on the Z axis
----@field crouchHold boolean
----@field jumpHold boolean
----@field actionKeyHold boolean
----@field actionKey boolean
----@field meleeKey boolean
----@field reloadKey boolean
----@field weaponPTH boolean
----@field weaponSTH boolean
----@field flashlightKey boolean
----@field grenadeHold boolean
----@field crouch number Is the biped crouching? (actitud agazapada)
----@field shooting number Is the biped shooting?
----@field weaponSlot number Current weapon slot.
----@field zoomLevel number Current zoom level of the weapon a biped is holding. -1 represents no zoom, and any other zoom level will increaste until a maximum of 255.
----@field invisibleScale number
----@field primaryNades number
----@field secondaryNades number
+---@field cameraX number Current position of the biped  X axis
+---@field cameraY number Current position of the biped  Y axis
+---@field cameraZ number Current position of the biped  Z axis
+---@field crouchHold boolean Biped is holding crouch action
+---@field jumpHold boolean Biped is holding jump action
+---@field actionKeyHold boolean Biped is holding action key
+---@field actionKey boolean Biped pressed action key
+---@field meleeKey boolean Biped pressed melee key
+---@field reloadKey boolean Biped pressed reload key
+---@field weaponPTH boolean Biped is holding primary weapon trigger
+---@field weaponSTH boolean Biped is holding secondary weapon trigger
+---@field flashlightKey boolean Biped pressed flashlight key
+---@field grenadeHold boolean Biped is holding grenade action
+---@field crouch number Is biped crouch
+---@field shooting number Is biped shooting, 0 when not, 1 when shooting
+---@field weaponSlot number Current biped weapon slot
+---@field zoomLevel number Current biped weapon zoom level, 0xFF when no zoom, up to 255 when zoomed
+---@field invisibleScale number Opacity amount of biped invisiblity
+---@field primaryNades number Primary grenades count
+---@field secondaryNades number Secondary grenades count
 local bipedClass = {}
 
 function bipedClass.new(address)
@@ -931,7 +932,7 @@ end
 ---@field sceneryPaletteList table Tag ID list of scenerys in the scenery palette
 ---@field spawnLocationCount number Number of spawns in the scenario
 ---@field spawnLocationList table List of spawns in the scenario
----@field vehicleLocationCount numebr Number of vehicles locations in the scenario
+---@field vehicleLocationCount number Number of vehicles locations in the scenario
 ---@field vehicleLocationList table List of vehicles locations in the scenario
 local scenarioClass = {}
 
