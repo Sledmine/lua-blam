@@ -541,6 +541,24 @@ local dataBindingMetaTable = {
 -- Object functions
 ------------------------------------------------------------------------------
 
+--- Create a LuaBlam object
+---@param address number
+---@param struct table
+---@return table
+local function createObject(address, struct)
+    -- Create object
+    local object = {}
+    
+    -- Set up 'legacy' values
+    object.address = address
+    object.structure = struct
+
+    -- Set mechanisim to bind properties to memory
+    setmetatable(object, dataBindingMetaTable)
+
+    return object
+end
+
 --- Remove unused properties for game execution
 -- NOTE: DO NOT REMOVE THIS, it will be usefull...
 ---@param object table
@@ -884,13 +902,7 @@ local modelStructure = {
 local objectClass = {}
 
 function objectClass.new(address)
-    local object = {}
-
-    -- Legacy values
-    object.address = address
-    object.structure = objectStructure
-
-    return object
+    return createObject(address, objectStructure)
 end
 
 ---@class bipedClass : ObjectClass
@@ -921,15 +933,7 @@ end
 local bipedClass = {}
 
 function bipedClass.new(address)
-    -- Create object "instance"
-    ---@class bipedObject
-    local biped = {}
-
-    -- Legacy values
-    biped.address = address
-    biped.structure = bipedStructure
-
-    return biped
+    return createObject(address, bipedStructure)
 end
 
 ---@class tagClass
@@ -940,14 +944,7 @@ end
 local tagClass = {}
 
 function tagClass.new(address)
-    -- Create tag "instance"
-    local tag = {}
-
-    -- Legacy values
-    tag.address = address
-    tag.structure = tagStructure
-
-    return tag
+    return createObject(address, tagStructure)
 end
 
 ---@class tagCollectionClass
@@ -956,14 +953,7 @@ end
 local tagCollectionClass = {}
 
 function tagCollectionClass.new(address)
-    -- Create object "instance"
-    local tagCollection = {}
-
-    -- Legacy values
-    tagCollection.address = address
-    tagCollection.structure = tagCollectionStructure
-
-    return tagCollection
+    return createObject(address, tagCollectionStructure)
 end
 
 ---@class unicodeStringListClass
@@ -972,14 +962,7 @@ end
 local unicodeStringListClass = {}
 
 function unicodeStringListClass.new(address)
-    -- Create object "instance"
-    local unicodeStringList = {}
-
-    -- Legacy values
-    unicodeStringList.address = address
-    unicodeStringList.structure = unicodeStringListStructure
-
-    return unicodeStringList
+    return createObject(address, unicodeStringListStructure)
 end
 
 ---@class uiWidgetDefinitionClass
@@ -998,14 +981,7 @@ end
 local uiWidgetDefinitionClass = {}
 
 function uiWidgetDefinitionClass.new(address)
-    -- Create object "instance"
-    local uiWidgetDefinition = {}
-
-    -- Legacy values
-    uiWidgetDefinition.address = address
-    uiWidgetDefinition.structure = uiWidgetDefinitionStructure
-
-    return uiWidgetDefinition
+    return createObject(address, uiWidgetDefinitionStructure)
 end
 
 ---@class uiWidgetCollectionClass
@@ -1014,14 +990,7 @@ end
 local uiWidgetCollectionClass = {}
 
 function uiWidgetCollectionClass.new(address)
-    -- Create object "instance"
-    local uiWidgetCollection = {}
-
-    -- Legacy values
-    uiWidgetCollection.address = address
-    uiWidgetCollection.structure = uiWidgetCollectionStructure
-
-    return uiWidgetCollection
+    return createObject(address, uiWidgetCollectionStructure)
 end
 
 ---@class weaponHudInterfaceClass
@@ -1034,14 +1003,7 @@ end
 local weaponHudInterfaceClass = {}
 
 function weaponHudInterfaceClass.new(address)
-    -- Create object "instance"
-    local weaponHudInterface = {}
-    
-    -- Legacy values
-    weaponHudInterface.address = address
-    weaponHudInterface.structure = weaponHudInterfaceStructure
-
-    return weaponHudInterface
+    return createObject(address, weaponHudInterfaceStructure)
 end
 
 ---@class scenerioClass
@@ -1054,14 +1016,7 @@ end
 local scenarioClass = {}
 
 function scenarioClass.new(address)
-    -- Create object "instance"
-    local scenario = {}
-    
-    -- Legacy values
-    scenario.address = address
-    scenario.structure = scenarioStructure
-
-    return scenario
+    return createObject(address, scenarioStructure)
 end
 
 ---@class sceneryClass
@@ -1070,14 +1025,7 @@ end
 local sceneryClass = {}
 
 function sceneryClass.new(address)
-    -- Create object "instance"
-    local scenery = {}
-    
-    -- Legacy values
-    scenery.address = address
-    scenery.structure = sceneryStructure
-
-    return scenery
+    return createObject(address, sceneryStructure)
 end
 
 ---@class collisionGeometryClass
@@ -1086,14 +1034,7 @@ end
 local collisionGeometryClass = {}
 
 function collisionGeometryClass.new(address)
-    -- Create object "instance"
-    local collisionGeometry = {}
-    
-    -- Legacy values
-    collisionGeometry.address = address
-    collisionGeometry.structure = collisionGeometryStructure
-
-    return collisionGeometry
+    return createObject(address, collisionGeometryStructure)
 end
 
 ---@class modelAnimationsClass
@@ -1104,14 +1045,7 @@ end
 local modelAnimationsClass = {}
 
 function modelAnimationsClass.new(address)
-    -- Create object "instance"
-    local modelAnimations = {}
-    
-    -- Legacy values
-    modelAnimations.address = address
-    modelAnimations.structure = modelAnimationsStructure
-
-    return modelAnimations
+    return createObject(address, modelAnimationsStructure)
 end
 
 ---@class weaponClass
@@ -1119,14 +1053,7 @@ end
 local weaponClass = {}
 
 function weaponClass.new(address)
-    -- Create object "instance"
-    local weapon = {}
-    
-    -- Legacy values
-    weapon.address = address
-    weapon.structure = weaponStructure
-
-    return weapon
+    return createObject(address, weaponStructure)
 end
 
 ---@class modelClass
@@ -1137,14 +1064,7 @@ end
 local modelClass = {}
 
 function modelClass.new(address)
-    -- Create object "instance"
-    local model = {}
-    
-    -- Legacy values
-    model.address = address
-    model.structure = modelStructure
-
-    return model
+    return createObject(address, modelStructure)
 end
 
 
@@ -1218,14 +1138,7 @@ end
 function luablam.object(address)
     if (address and address ~= 0) then
         -- Generate a new object from class
-        local newObject = objectClass.new(address)
-
-        -- Set mechanisim to bind properties to memory
-        setmetatable(newObject, dataBindingMetaTable)
-
-        cleanObject(newObject)
-
-        return newObject
+        return objectClass.new(address)
     end
     return nil
 end
@@ -1236,14 +1149,7 @@ end
 function luablam.tag(address)
     if (address and address ~= 0) then
         -- Generate a new object from class
-        local newObject = tagClass.new(address)
-
-        -- Set mechanisim to bind properties to memory
-        setmetatable(newObject, dataBindingMetaTable)
-
-        cleanObject(newObject)
-
-        return newObject
+        return tagClass.new(address)
     end
     return nil
 end
@@ -1254,14 +1160,7 @@ end
 function luablam.biped(address)
     if (address and address ~= 0) then
         -- Generate a new object from class
-        local newBiped = bipedClass.new(address)
-
-        -- Set mechanisim to bind properties to memory
-        setmetatable(newBiped, dataBindingMetaTable)
-
-        cleanObject(newBiped)
-
-        return newBiped
+        return bipedClass.new(address)
     end
     return nil
 end
@@ -1274,15 +1173,9 @@ function luablam.unicodeStringList(tag)
         local tagAddress = getTag(tag, tagClasses.unicodeStringList)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+            
             -- Generate a new object from class
-            local newUnicodeStringList = unicodeStringListClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newUnicodeStringList, dataBindingMetaTable)
-
-            cleanObject(newUnicodeStringList)
-
-            return newUnicodeStringList
+            return unicodeStringListClass.new(address)
         end
     end
     return nil
@@ -1296,15 +1189,9 @@ function luablam.uiWidgetDefinition(tag)
         local tagAddress = getTag(tag, tagClasses.uiWidgetDefinition)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+
             -- Generate a new object from class
-            local newUiWidgetDefinition = uiWidgetDefinitionClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newUiWidgetDefinition, dataBindingMetaTable)
-
-            cleanObject(newUiWidgetDefinition)
-
-            return newUiWidgetDefinition
+            return uiWidgetDefinitionClass.new(address)
         end
     end
     return nil
@@ -1318,15 +1205,9 @@ function luablam.uiWidgetCollection(tag)
         local tagAddress = getTag(tag, tagClasses.uiWidgetCollection)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+            
             -- Generate a new object from class
-            local newUiWidgetCollection = uiWidgetCollectionClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newUiWidgetCollection, dataBindingMetaTable)
-
-            cleanObject(newUiWidgetCollection)
-
-            return newUiWidgetCollection
+            return uiWidgetCollectionClass.new(address)
         end
     end
     return nil
@@ -1340,15 +1221,9 @@ function luablam.tagCollection(tag)
         local tagAddress = getTag(tag, tagClasses.tagCollection)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+            
             -- Generate a new object from class
-            local newTagCollection = tagCollectionClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newTagCollection, dataBindingMetaTable)
-
-            cleanObject(newTagCollection)
-
-            return newTagCollection
+            return tagCollectionClass.new(address)
         end
     end
     return nil
@@ -1362,15 +1237,9 @@ function luablam.weaponHudInterface(tag)
         local tagAddress = getTag(tag, tagClasses.weaponHudInterface)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+
             -- Generate a new object from class
-            local newWeaponHudInterface = weaponHudInterfaceClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newWeaponHudInterface, dataBindingMetaTable)
-
-            cleanObject(newWeaponHudInterface)
-
-            return newWeaponHudInterface
+            return weaponHudInterfaceClass.new(address)
         end
     end
     return nil
@@ -1380,15 +1249,9 @@ end
 ---@return scenerioClass
 function luablam.scenario()
     local address = read_dword(getTag(0, tagClasses.scenario) + 0x14)
+    
     -- Generate a new object from class
-    local newScenario = scenarioClass.new(address)
-
-    -- Set mechanisim to bind properties to memory
-    setmetatable(newScenario, dataBindingMetaTable)
-
-    cleanObject(newScenario)
-
-    return newScenario
+    return scenarioClass.new(address)
 end
 
 --- Create a Scenery object from a tag path or id
@@ -1399,15 +1262,9 @@ function luablam.scenery(tag)
         local tagAddress = getTag(tag, tagClasses.scenery)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+
             -- Generate a new object from class
-            local newScenery = sceneryClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newScenery, dataBindingMetaTable)
-
-            cleanObject(newScenery)
-
-            return newScenery
+            return sceneryClass.new(address)
         end
     end
     return nil
@@ -1421,15 +1278,9 @@ function luablam.collisionGeometry(tag)
         local tagAddress = getTag(tag, tagClasses.collisionGeometry)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+
             -- Generate a new object from class
-            local newCollisionGeometry = collisionGeometryClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newCollisionGeometry, dataBindingMetaTable)
-
-            cleanObject(newCollisionGeometry)
-
-            return newCollisionGeometry
+            return collisionGeometryClass.new(address)
         end
     end
     return nil
@@ -1443,15 +1294,9 @@ function luablam.modelAnimations(tag)
         local tagAddress = getTag(tag, tagClasses.modelAnimations)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+            
             -- Generate a new object from class
-            local newModelAnimations = modelAnimationsClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newModelAnimations, dataBindingMetaTable)
-
-            cleanObject(newModelAnimations)
-
-            return newModelAnimations
+            return modelAnimationsClass.new(address)
         end
     end
     return nil
@@ -1465,15 +1310,9 @@ function luablam.weapon(tag)
         local tagAddress = getTag(tag, tagClasses.weapon)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+            
             -- Generate a new object from class
-            local newweapon = weaponClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newweapon, dataBindingMetaTable)
-
-            cleanObject(newweapon)
-
-            return newweapon
+            return weaponClass.new(address)
         end
     end
     return nil
@@ -1487,15 +1326,9 @@ function luablam.model(tag)
         local tagAddress = getTag(tag, tagClasses.model)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
+            
             -- Generate a new object from class
-            local newmodel = modelClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newModel, dataBindingMetaTable)
-
-            cleanObject(newModel)
-
-            return newModel
+            return modelClass.new(address)
         end
     end
     return nil
