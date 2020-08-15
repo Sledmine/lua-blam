@@ -4,12 +4,10 @@
 -- Version: 4.0
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-
 local luablam = {}
 
 -- LuaBlam version
-luablam.version = 4.0
-
+luablam.version = 4.1
 
 ------------------------------------------------------------------------------
 -- Blam! engine data
@@ -18,93 +16,93 @@ luablam.version = 4.0
 -- Address list
 local addressList = {
     tagDataHeader = 0x40440000,
-    cameraType = 0x00647498 -- from Giraffe
+    cameraType = 0x00647498, -- from Giraffe
 }
 
 -- Provide global tag classes by default
 local tagClasses = {
-    actorVariant = 'actv',
-    actor = 'actr',
-    antenna = 'ant!',
-    biped = 'bipd',
-    bitmap = 'bitm',
-    cameraTrack = 'trak',
-    colorTable = 'colo',
-    continuousDamageEffect = 'cdmg',
-    contrail = 'cont',
-    damageEffect = 'jpt!',
-    decal = 'deca',
-    detailObjectCollection = 'dobc',
-    deviceControl = 'ctrl',
-    deviceLightFixture = 'lifi',
-    deviceMachine = 'mach',
-    device = 'devi',
-    dialogue = 'udlg',
-    effect = 'effe',
-    equipment = 'eqip',
-    flag = 'flag',
-    fog = 'fog ',
-    font = 'font',
-    garbage = 'garb',
-    gbxmodel = 'mod2',
-    globals = 'matg',
-    glow = 'glw!',
-    grenadeHudInterface = 'grhi',
-    hudGlobals = 'hudg',
-    hudMessageText = 'hmt ',
-    hudNumber = 'hud#',
-    itemCollection = 'itmc',
-    item = 'item',
-    lensFlare = 'lens',
-    lightVolume = 'mgs2',
-    light = 'ligh',
-    lightning = 'elec',
-    materialEffects = 'foot',
-    meter = 'metr',
-    modelAnimations = 'antr',
-    modelCollisiionGeometry = 'coll',
-    model = 'mode',
-    multiplayerScenarioDescription = 'mply',
-    object = 'obje',
-    particleSystem = 'pctl',
-    particle = 'part',
-    physics = 'phys',
-    placeHolder = 'plac',
-    pointPhysics = 'pphy',
-    preferencesNetworkGame = 'ngpr',
-    projectile = 'proj',
-    scenarioStructureBsp = 'sbsp',
-    scenario = 'scnr',
-    scenery = 'scen',
-    shaderEnvironment = 'senv',
-    shaderModel = 'soso',
-    shaderTransparentChicagoExtended = 'scex',
-    shaderTransparentChicago = 'schi',
-    shaderTransparentGeneric = 'sotr',
-    shaderTransparentGlass = 'sgla',
-    shaderTransparentMeter = 'smet',
-    shaderTransparentPlasma = 'spla',
-    shaderTransparentWater = 'swat',
-    shader = 'shdr',
-    sky = 'sky ',
-    soundEnvironment = 'snde',
-    soundLooping = 'lsnd',
-    soundScenery = 'ssce',
-    sound = 'snd!',
-    spheroid = 'boom',
-    stringList = 'str#',
-    tagCollection = 'tagc',
-    uiWidgetCollection = 'Soul',
-    uiWidgetDefinition = 'DeLa',
-    unicodeStringList = 'ustr',
-    unitHudInterface = 'unhi',
-    unit = 'unit',
-    vehicle = 'vehi',
-    virtualKeyboard = 'vcky',
-    weaponHudInterface = 'wphi',
-    weapon = 'weap',
-    weatherParticleSystem = 'rain',
-    wind = 'wind'
+    actorVariant = "actv",
+    actor = "actr",
+    antenna = "ant!",
+    biped = "bipd",
+    bitmap = "bitm",
+    cameraTrack = "trak",
+    colorTable = "colo",
+    continuousDamageEffect = "cdmg",
+    contrail = "cont",
+    damageEffect = "jpt!",
+    decal = "deca",
+    detailObjectCollection = "dobc",
+    deviceControl = "ctrl",
+    deviceLightFixture = "lifi",
+    deviceMachine = "mach",
+    device = "devi",
+    dialogue = "udlg",
+    effect = "effe",
+    equipment = "eqip",
+    flag = "flag",
+    fog = "fog ",
+    font = "font",
+    garbage = "garb",
+    gbxmodel = "mod2",
+    globals = "matg",
+    glow = "glw!",
+    grenadeHudInterface = "grhi",
+    hudGlobals = "hudg",
+    hudMessageText = "hmt ",
+    hudNumber = "hud#",
+    itemCollection = "itmc",
+    item = "item",
+    lensFlare = "lens",
+    lightVolume = "mgs2",
+    light = "ligh",
+    lightning = "elec",
+    materialEffects = "foot",
+    meter = "metr",
+    modelAnimations = "antr",
+    modelCollisiionGeometry = "coll",
+    model = "mode",
+    multiplayerScenarioDescription = "mply",
+    object = "obje",
+    particleSystem = "pctl",
+    particle = "part",
+    physics = "phys",
+    placeHolder = "plac",
+    pointPhysics = "pphy",
+    preferencesNetworkGame = "ngpr",
+    projectile = "proj",
+    scenarioStructureBsp = "sbsp",
+    scenario = "scnr",
+    scenery = "scen",
+    shaderEnvironment = "senv",
+    shaderModel = "soso",
+    shaderTransparentChicagoExtended = "scex",
+    shaderTransparentChicago = "schi",
+    shaderTransparentGeneric = "sotr",
+    shaderTransparentGlass = "sgla",
+    shaderTransparentMeter = "smet",
+    shaderTransparentPlasma = "spla",
+    shaderTransparentWater = "swat",
+    shader = "shdr",
+    sky = "sky ",
+    soundEnvironment = "snde",
+    soundLooping = "lsnd",
+    soundScenery = "ssce",
+    sound = "snd!",
+    spheroid = "boom",
+    stringList = "str#",
+    tagCollection = "tagc",
+    uiWidgetCollection = "Soul",
+    uiWidgetDefinition = "DeLa",
+    unicodeStringList = "ustr",
+    unitHudInterface = "unhi",
+    unit = "unit",
+    vehicle = "vehi",
+    virtualKeyboard = "vcky",
+    weaponHudInterface = "wphi",
+    weapon = "weap",
+    weatherParticleSystem = "rain",
+    wind = "wind",
 }
 
 -- Provide global object classes by default
@@ -120,18 +118,17 @@ local objectClasses = {
     control = 8,
     lightFixture = 9,
     placeHolder = 10,
-    soundScenery = 11
+    soundScenery = 11,
 }
 
 -- Camera types
 local cameraTypes = {
-    scripted = 1,       -- 22192
-    firstPerson = 2,    -- 30400
-    devcam = 3,         -- 30704
-    thirdPerson = 4,    -- 31952
-    deadCamera = 5      -- 23776
+    scripted = 1, -- 22192
+    firstPerson = 2, -- 30400
+    devcam = 3, -- 30704
+    thirdPerson = 4, -- 31952
+    deadCamera = 5, -- 23776
 }
-
 
 ------------------------------------------------------------------------------
 -- SAPP API bindings
@@ -183,9 +180,8 @@ if (api_version) then
         cprint(message)
     end
 
-    print('Chimera API functions are available now with LuaBlam!')
+    print("Chimera API functions are available now with LuaBlam!")
 end
-
 
 ------------------------------------------------------------------------------
 -- Utilities
@@ -196,10 +192,14 @@ end
 ---@return string
 local function getTagClass(tagAddress)
     if (tagAddress) then
-        local tagClass = ''
-        for i=0, 3 do
-            local byte = read_byte(tagAddress + i)
-            tagClass = string.char(byte) .. tagClass
+        local tagClass = ""
+        for i = 0, 3 do
+            local byte = read_char(tagAddress + i)
+            if (byte and byte > -1) then
+                tagClass = string.char(byte) .. tagClass
+            else
+                return nil
+            end
         end
         return tagClass
     else
@@ -244,10 +244,10 @@ end
 local function readUnicodeString(address)
     local stringAddress = read_dword(address)
     local length = stringAddress / 2
-    local output = ''
+    local output = ""
     for i = 1, length do
-        local char = read_string(stringAddress + (i-1) * 0x2)
-        if (char == '') then
+        local char = read_string(stringAddress + (i - 1) * 0x2)
+        if (char == "") then
             break
         end
         output = output .. char
@@ -261,7 +261,7 @@ end
 local function writeUnicodeString(address, newString)
     local stringAddress = read_dword(address)
     for i = 1, #newString do
-        write_string(stringAddress + (i-1) * 0x2, newString:sub(i,i))
+        write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
         if (i == #newString) then
             write_byte(stringAddress + #newString * 0x2, 0x0)
         end
@@ -273,7 +273,7 @@ end
 ---@param class string
 ---@return number
 local function getTag(tag, class)
-    if (type(tag) == 'number') then
+    if (type(tag) == "number") then
         local tagAddress = get_tag(tag)
         if (tagAddress) then
             local tagClass = luablam.getTagClass(tagAddress)
@@ -298,7 +298,6 @@ local function b2b(bit)
     return false
 end
 
-
 ------------------------------------------------------------------------------
 -- Objects data binding
 ------------------------------------------------------------------------------
@@ -313,7 +312,10 @@ local dataOperations = {
     dword = {read_dword, write_dword},
     float = {read_float, write_float},
     string = {read_string, write_string},
-    ustring = {readUnicodeString, writeUnicodeString}
+    ustring = {
+        readUnicodeString,
+        writeUnicodeString,
+    },
 }
 
 -- Magic luablam metatable
@@ -323,34 +325,35 @@ local dataBindingMetaTable = {
         if (propertyData) then
             local dataType = propertyData.type
             local operation = dataOperations[dataType]
-            if (dataType == 'bit') then
+            if (dataType == "bit") then
                 local bitLevel = propertyData.bitLevel
                 operation[2](object.address + propertyData.offset, bitLevel, value)
-            elseif (dataType == 'list') then
+            elseif (dataType == "list") then
                 operation = dataOperations[propertyData.elementsType]
                 local listCount = read_byte(object.address + propertyData.offset - 0x4)
                 local listAddress = read_dword(object.address + propertyData.offset)
                 for i = 1, listCount do
                     if (value[i] ~= nil) then
-                        operation[2](listAddress + 0xC + propertyData.jump * (i-1), value[i])
+                        operation[2](listAddress + 0xC + propertyData.jump * (i - 1), value[i])
                     else
                         if (i > #value) then
                             break
                         end
                     end
                 end
-            elseif (dataType == 'table') then
+            elseif (dataType == "table") then
                 local elementsCount = read_byte(object.address + propertyData.offset - 0x4)
                 local firstElement = read_dword(object.address + propertyData.offset)
-                for i=1, elementsCount do
-                    local elementAddress = firstElement + (i-1) * propertyData.jump
+                for i = 1, elementsCount do
+                    local elementAddress = firstElement + (i - 1) * propertyData.jump
                     if (value[i] ~= nil) then
-                        for k,v in pairs(value[i]) do
+                        for k, v in pairs(value[i]) do
                             local fieldData = propertyData.rows[k]
                             if (fieldData ~= nil) then
                                 operation = dataOperations[fieldData.type]
-                                if (fieldData.type == 'bit') then
-                                    operation[2](elementAddress + fieldData.offset, fieldData.bitLevel, v)
+                                if (fieldData.type == "bit") then
+                                    operation[2](elementAddress + fieldData.offset,
+                                                 fieldData.bitLevel, v)
                                 else
                                     operation[2](elementAddress + fieldData.offset, v)
                                 end
@@ -371,34 +374,34 @@ local dataBindingMetaTable = {
     end,
     __index = function(object, property)
         local objectStructure = object.structure
-        
+
         local propertyData = objectStructure[property]
 
         if (propertyData) then
             local dataType = propertyData.type
             local operation = dataOperations[dataType]
-            if (dataType == 'bit') then
+            if (dataType == "bit") then
                 local bitLevel = propertyData.bitLevel
                 return b2b(operation[1](object.address + propertyData.offset, bitLevel))
-            elseif (dataType == 'list') then
+            elseif (dataType == "list") then
                 operation = dataOperations[propertyData.elementsType]
                 local listCount = read_byte(object.address + propertyData.offset - 0x4)
                 local listAddress = read_dword(object.address + propertyData.offset)
                 local list = {}
                 for i = 1, listCount do
-                    list[i] = operation[1](listAddress + 0xC + propertyData.jump * (i-1))
+                    list[i] = operation[1](listAddress + 0xC + propertyData.jump * (i - 1))
                 end
                 return list
-            elseif (dataType == 'table') then
+            elseif (dataType == "table") then
                 local table = {}
                 local elementsCount = read_byte(object.address + propertyData.offset - 0x4)
                 local firstElement = read_dword(object.address + propertyData.offset)
-                for i=1, elementsCount do
-                    local elementAddress = firstElement + (i-1) * propertyData.jump
+                for i = 1, elementsCount do
+                    local elementAddress = firstElement + (i - 1) * propertyData.jump
                     table[i] = {}
-                    for k,v in pairs(propertyData.rows) do
+                    for k, v in pairs(propertyData.rows) do
                         operation = dataOperations[v.type]
-                        if (v.type == 'bit') then
+                        if (v.type == "bit") then
                             table[i][k] = b2b(operation[1](elementAddress + v.offset, v.bitLevel))
                         else
                             table[i][k] = operation[1](elementAddress + v.offset)
@@ -413,9 +416,8 @@ local dataBindingMetaTable = {
         else
             error("Cannot read from a invalid property '" .. property .. "'")
         end
-    end
+    end,
 }
-
 
 ------------------------------------------------------------------------------
 -- Object functions
@@ -445,7 +447,6 @@ local function dumpObject(object)
     return dump
 end
 
-
 ------------------------------------------------------------------------------
 -- Object structures
 ------------------------------------------------------------------------------
@@ -456,10 +457,10 @@ end
 ---@return table
 local function extendStructure(parent, structure)
     local extendedStructure = {}
-    for k,v in pairs(parent) do
+    for k, v in pairs(parent) do
         extendedStructure[k] = v
     end
-    for k,v in pairs(structure) do
+    for k, v in pairs(structure) do
         extendedStructure[k] = v
     end
     return extendedStructure
@@ -467,248 +468,463 @@ end
 
 -- ObjectClass structure
 local objectStructure = {
-    tagId = {type = 'dword', offset = 0x0},
-    hasCollision = {type = 'bit', offset = 0x10, bitLevel = 0},
-    isOnGround = {type = 'bit', offset = 0x10, bitLevel = 1},
-    ignoreGravity = {type = 'bit', offset = 0x10, bitLevel = 2},
-    isInWater = {type = 'bit', offset = 0x10, bitLevel = 3},
-    isStationary = {type = 'bit', offset = 0x10, bitLevel = 5},
-    dynamicShading = {type = 'bit', offset = 0x10, bitLevel = 14},
-    isNotCastingShadow = {type = 'bit', offset = 0x10, bitLevel = 18},
-    frozen = {type = 'bit', offset = 0x10, bitLevel = 20},
-    isOutSideMap = {type = 'bit', offset = 0x10, bitLevel = 21},
-    isCollideable = {type = 'bit', offset = 0x10, bitLevel = 24},
-    model = {type = 'dword', offset = 0x34},
-    health = {type = 'float', offset = 0xE0},
-    shield = {type = 'float', offset = 0xE4},
-    redA = {type = 'float', offset = 0x1B8},
-    greenA = {type = 'float', offset = 0x1BC},
-    blueA = {type = 'float', offset = 0x1C0},
-    x = {type = 'float', offset = 0x5C},
-    y = {type = 'float', offset = 0x60},
-    z = {type = 'float', offset = 0x64},
-    xVel = {type = 'float', offset = 0x68},
-    yVel = {type = 'float', offset = 0x6C},
-    zVel = {type = 'float', offset = 0x70},
-    pitch = {type = 'float', offset = 0x74},
-    yaw = {type = 'float', offset = 0x78},
-    roll = {type = 'float', offset = 0x7C},
-    xScale = {type = 'float', offset = 0x80},
-    yScale = {type = 'float', offset = 0x84},
-    zScale = {type = 'float', offset = 0x88},
-    pitchVel = {type = 'float', offset = 0x8C},
-    yawVel = {type = 'float', offset = 0x90},
-    rollVel = {type = 'float', offset = 0x94},
-    type = {type = 'word', offset = 0xB4},
-    animationTagId = {type = 'dword', offset = 0xCC},
-    animation = {type = 'word', offset = 0xD0},
-    animationFrame = {type = 'word', offset = 0xD2},
-    weapon = {type = 'dword', offset = 0x11E},
-    parent = {type = 'dword', offset = 0x122},
-    regionPermutation1 = {type = 'byte', offset = 0x180},
-    regionPermutation2 = {type = 'byte', offset = 0x181},
-    regionPermutation3 = {type = 'byte', offset = 0x182},
-    regionPermutation4 = {type = 'byte', offset = 0x183},
-    regionPermutation5 = {type = 'byte', offset = 0x184},
-    regionPermutation6 = {type = 'byte', offset = 0x185},
-    regionPermutation7 = {type = 'byte', offset = 0x186},
-    regionPermutation8 = {type = 'byte', offset = 0x187}
+    tagId = {type = "dword", offset = 0x0},
+    hasCollision = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 0,
+    },
+    isOnGround = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 1,
+    },
+    ignoreGravity = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 2,
+    },
+    isInWater = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 3,
+    },
+    isStationary = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 5,
+    },
+    dynamicShading = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 14,
+    },
+    isNotCastingShadow = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 18,
+    },
+    frozen = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 20,
+    },
+    isOutSideMap = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 21,
+    },
+    isCollideable = {
+        type = "bit",
+        offset = 0x10,
+        bitLevel = 24,
+    },
+    model = {type = "dword", offset = 0x34},
+    health = {type = "float", offset = 0xE0},
+    shield = {type = "float", offset = 0xE4},
+    redA = {type = "float", offset = 0x1B8},
+    greenA = {type = "float", offset = 0x1BC},
+    blueA = {type = "float", offset = 0x1C0},
+    x = {type = "float", offset = 0x5C},
+    y = {type = "float", offset = 0x60},
+    z = {type = "float", offset = 0x64},
+    xVel = {type = "float", offset = 0x68},
+    yVel = {type = "float", offset = 0x6C},
+    zVel = {type = "float", offset = 0x70},
+    pitch = {type = "float", offset = 0x74},
+    yaw = {type = "float", offset = 0x78},
+    roll = {type = "float", offset = 0x7C},
+    xScale = {type = "float", offset = 0x80},
+    yScale = {type = "float", offset = 0x84},
+    zScale = {type = "float", offset = 0x88},
+    pitchVel = {type = "float", offset = 0x8C},
+    yawVel = {type = "float", offset = 0x90},
+    rollVel = {type = "float", offset = 0x94},
+    type = {type = "word", offset = 0xB4},
+    animationTagId = {
+        type = "dword",
+        offset = 0xCC,
+    },
+    animation = {type = "word", offset = 0xD0},
+    animationFrame = {
+        type = "word",
+        offset = 0xD2,
+    },
+    weapon = {type = "dword", offset = 0x11E},
+    parent = {type = "dword", offset = 0x122},
+    regionPermutation1 = {
+        type = "byte",
+        offset = 0x180,
+    },
+    regionPermutation2 = {
+        type = "byte",
+        offset = 0x181,
+    },
+    regionPermutation3 = {
+        type = "byte",
+        offset = 0x182,
+    },
+    regionPermutation4 = {
+        type = "byte",
+        offset = 0x183,
+    },
+    regionPermutation5 = {
+        type = "byte",
+        offset = 0x184,
+    },
+    regionPermutation6 = {
+        type = "byte",
+        offset = 0x185,
+    },
+    regionPermutation7 = {
+        type = "byte",
+        offset = 0x186,
+    },
+    regionPermutation8 = {
+        type = "byte",
+        offset = 0x187,
+    },
 }
 
 -- Biped structure (extends object structure)
 local bipedStructure = extendStructure(objectStructure, {
-    invisible = {type = 'bit', offset = 0x204, bitLevel = 4},
-    noDropItems = {type = 'bit', offset = 0x204, bitLevel = 20},
-    ignoreCollision = {type = 'bit', offset = 0x4CC, bitLevel = 3},
-    flashlight = {type = 'bit', offset = 0x204, bitLevel = 19},
-    cameraX = {type = 'float', offset = 0x230},
-    cameraY = {type = 'float', offset = 0x234},
-    cameraZ = {type = 'float', offset = 0x238},
-    crouchHold = {type = 'bit', offset = 0x208, bitLevel = 0},
-    jumpHold = {type = 'bit', offset = 0x208, bitLevel = 1},
-    actionKeyHold = {type = 'bit', offset = 0x208, bitLevel = 14},
-    actionKey = {type = 'bit', offset = 0x208, bitLevel = 6},
-    meleeKey = {type = 'bit', offset = 0x208, bitLevel = 7},
-    reloadKey = {type = 'bit', offset = 0x208, bitLevel = 10},
-    weaponPTH = {type = 'bit', offset = 0x208, bitLevel = 11},
-    weaponSTH = {type = 'bit', offset = 0x208, bitLevel = 12},
-    flashlightKey = {type = 'bit', offset = 0x208, bitLevel = 4},
-    grenadeHold = {type = 'bit', offset = 0x208, bitLevel = 13},
-    crouch = {type = 'byte', offset = 0x2A0},
-    shooting = {type = 'float', offset = 0x284},
-    weaponSlot = {type = 'byte', offset = 0x2A1},
-    zoomLevel = {type = 'byte', offset = 0x320},
-    invisibleScale = {type = 'byte', offset = 0x37C},
-    primaryNades = {type = 'byte', offset = 0x31E},
-    secondaryNades = {type = 'byte', offset = 0x31F}
+    invisible = {
+        type = "bit",
+        offset = 0x204,
+        bitLevel = 4,
+    },
+    noDropItems = {
+        type = "bit",
+        offset = 0x204,
+        bitLevel = 20,
+    },
+    ignoreCollision = {
+        type = "bit",
+        offset = 0x4CC,
+        bitLevel = 3,
+    },
+    flashlight = {
+        type = "bit",
+        offset = 0x204,
+        bitLevel = 19,
+    },
+    cameraX = {type = "float", offset = 0x230},
+    cameraY = {type = "float", offset = 0x234},
+    cameraZ = {type = "float", offset = 0x238},
+    crouchHold = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 0,
+    },
+    jumpHold = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 1,
+    },
+    actionKeyHold = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 14,
+    },
+    actionKey = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 6,
+    },
+    meleeKey = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 7,
+    },
+    reloadKey = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 10,
+    },
+    weaponPTH = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 11,
+    },
+    weaponSTH = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 12,
+    },
+    flashlightKey = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 4,
+    },
+    grenadeHold = {
+        type = "bit",
+        offset = 0x208,
+        bitLevel = 13,
+    },
+    crouch = {type = "byte", offset = 0x2A0},
+    shooting = {type = "float", offset = 0x284},
+    weaponSlot = {type = "byte", offset = 0x2A1},
+    zoomLevel = {type = "byte", offset = 0x320},
+    invisibleScale = {
+        type = "byte",
+        offset = 0x37C,
+    },
+    primaryNades = {type = "byte", offset = 0x31E},
+    secondaryNades = {
+        type = "byte",
+        offset = 0x31F,
+    },
 })
 
 -- Tag data header structure
 local tagDataHeaderStructure = {
-    array = {type = 'dword', offset = 0x0},
-    scenario = {type = 'dword', offset = 0x4},
-    count = {type = 'dword', offset = 0xC}
+    array = {type = "dword", offset = 0x0},
+    scenario = {type = "dword", offset = 0x4},
+    count = {type = "dword", offset = 0xC},
 }
 
 -- Tag structure
 local tagStructure = {
-    class = {type = 'dword', offset = 0x0},
-    id = {type = 'dword', offset = 0xC},
-    path = {type = 'string', offset = 0x10},
-    _data = {type = 'dword', offset = 0x14},
-    indexed = {type = 'dword', offset = 0x18}
+    class = {type = "dword", offset = 0x0},
+    id = {type = "dword", offset = 0xC},
+    path = {type = "string", offset = 0x10},
+    _data = {type = "dword", offset = 0x14},
+    indexed = {type = "dword", offset = 0x18},
 }
 
 -- tagCollection structure
 local tagCollectionStructure = {
-    count = {type = 'byte', offset = 0x0},
-    tagList = {type = 'list', offset = 0x4, elementsType = 'dword', jump = 0x10}
+    count = {type = "byte", offset = 0x0},
+    tagList = {
+        type = "list",
+        offset = 0x4,
+        elementsType = "dword",
+        jump = 0x10,
+    },
 }
 
 -- UnicodeStringList structure
 local unicodeStringListStructure = {
-    count = {type = 'byte', offset = 0x0},
-    stringList = {type = 'list', offset = 0x4, elementsType = 'ustring', jump = 0x14}
+    count = {type = "byte", offset = 0x0},
+    stringList = {
+        type = "list",
+        offset = 0x4,
+        elementsType = "ustring",
+        jump = 0x14,
+    },
 }
 
 -- UI Widget Definition structure
 local uiWidgetDefinitionStructure = {
-    type = {type = 'word', offset = 0x0},
-    controllerIndex = {type = 'word', offset = 0x2},
-    name = {type = 'string', offset = 0x4},
-    boundsY = {type = 'short', offset = 0x24},
-    boundsX = {type = 'short', offset = 0x26},
-    height = {type = 'short', offset = 0x28},
-    width = {type = 'short', offset = 0x2A},
-    backgroundBitmap = {type = 'word', offset = 0x44},
-    eventType = {type = 'byte', offset = 0x03F0},
-    tagReference = {type = 'word', offset = 0x400},
-    childWidgetsCount = {type = 'dword', offset = 0x03E0},
-    childWidgetsList = {type = 'list', offset = 0x03E4, elementsType = 'dword', jump = 0x50}
+    type = {type = "word", offset = 0x0},
+    controllerIndex = {
+        type = "word",
+        offset = 0x2,
+    },
+    name = {type = "string", offset = 0x4},
+    boundsY = {type = "short", offset = 0x24},
+    boundsX = {type = "short", offset = 0x26},
+    height = {type = "short", offset = 0x28},
+    width = {type = "short", offset = 0x2A},
+    backgroundBitmap = {
+        type = "word",
+        offset = 0x44,
+    },
+    eventType = {type = "byte", offset = 0x03F0},
+    tagReference = {type = "word", offset = 0x400},
+    childWidgetsCount = {
+        type = "dword",
+        offset = 0x03E0,
+    },
+    childWidgetsList = {
+        type = "list",
+        offset = 0x03E4,
+        elementsType = "dword",
+        jump = 0x50,
+    },
 }
 
 -- tagCollection structure
 local uiWidgetCollectionStructure = {
-    count = {type = 'byte', offset = 0x0},
-    tagList = {type = 'list', offset = 0x4, elementsType = 'dword', jump = 0x10}
+    count = {type = "byte", offset = 0x0},
+    tagList = {
+        type = "list",
+        offset = 0x4,
+        elementsType = "dword",
+        jump = 0x10,
+    },
 }
 
 -- Weapon HUD Interface structure
 local weaponHudInterfaceStructure = {
-    crosshairs = {type = 'word', offset = 0x84},
-    defaultBlue = {type = 'byte', offset = 0x208},
-    defaultGreen = {type = 'byte', offset = 0x209},
-    defaultRed = {type = 'byte', offset = 0x20A},
-    defaultAlpha = {type = 'byte', offset = 0x20B},
-    sequenceIndex = {type = 'short', offset = 0x22A}
+    crosshairs = {type = "word", offset = 0x84},
+    defaultBlue = {type = "byte", offset = 0x208},
+    defaultGreen = {type = "byte", offset = 0x209},
+    defaultRed = {type = "byte", offset = 0x20A},
+    defaultAlpha = {type = "byte", offset = 0x20B},
+    sequenceIndex = {
+        type = "short",
+        offset = 0x22A,
+    },
 }
 
 -- Scenario structure
 local scenarioStructure = {
-    sceneryPaletteCount = {type = 'byte', offset = 0x021C},
-    sceneryPaletteList = {type = 'list', offset = 0x0220, elementsType = 'dword', jump = 0x30},
-    spawnLocationCount = {type = 'byte', offset = 0x354},
-    spawnLocationList = { 
-        type = 'table',
+    sceneryPaletteCount = {
+        type = "byte",
+        offset = 0x021C,
+    },
+    sceneryPaletteList = {
+        type = "list",
+        offset = 0x0220,
+        elementsType = "dword",
+        jump = 0x30,
+    },
+    spawnLocationCount = {
+        type = "byte",
+        offset = 0x354,
+    },
+    spawnLocationList = {
+        type = "table",
         offset = 0x358,
         jump = 0x34,
         rows = {
-            x = {type = 'float', offset = 0x0},
-            y = {type = 'float', offset = 0x4},
-            z = {type = 'float', offset = 0x8},
-            rotation = {type = 'float', offset = 0xC},
-            teamIndex = {type = 'byte', offset = 0x10},
-            bspIndex = {type = 'short', offset = 0x12},
-            type = {type = 'byte', offset = 0x14}
-        }
+            x = {type = "float", offset = 0x0},
+            y = {type = "float", offset = 0x4},
+            z = {type = "float", offset = 0x8},
+            rotation = {
+                type = "float",
+                offset = 0xC,
+            },
+            teamIndex = {
+                type = "byte",
+                offset = 0x10,
+            },
+            bspIndex = {
+                type = "short",
+                offset = 0x12,
+            },
+            type = {type = "byte", offset = 0x14},
+        },
     },
-    vehicleLocationCount = {type = 'byte', offset = 0x240},
+    vehicleLocationCount = {
+        type = "byte",
+        offset = 0x240,
+    },
     vehicleLocationList = {
-        type = 'table',
+        type = "table",
         offset = 0x244,
         jump = 0x78,
         rows = {
-            type = {type = 'word', offset = 0x0},
-            nameIndex = {type = 'word', offset = 0x2},
-            x = {type = 'float', offset = 0x8},
-            y = {type = 'float', offset = 0xC},
-            z = {type = 'float', offset = 0x10},
-            yaw = {type = 'float', offset = 0x14},
-            pitch = {type = 'float', offset = 0x18},
-            roll = {type = 'float', offset = 0x1C}
-        }
-    }
+            type = {type = "word", offset = 0x0},
+            nameIndex = {
+                type = "word",
+                offset = 0x2,
+            },
+            x = {type = "float", offset = 0x8},
+            y = {type = "float", offset = 0xC},
+            z = {type = "float", offset = 0x10},
+            yaw = {type = "float", offset = 0x14},
+            pitch = {
+                type = "float",
+                offset = 0x18,
+            },
+            roll = {type = "float", offset = 0x1C},
+        },
+    },
 }
 
 -- Scenery structure
 local sceneryStructure = {
-    model = {type = 'word', offset = 0x28 + 0xC},
-    modifierShader = {type = 'word', offset = 0x90 + 0xC}
+    model = {type = "word", offset = 0x28 + 0xC},
+    modifierShader = {
+        type = "word",
+        offset = 0x90 + 0xC,
+    },
 }
 
 -- Collision Model structure
 local collisionGeometryStructure = {
-    vertexCount = {type = 'byte', offset = 0x408},
+    vertexCount = {type = "byte", offset = 0x408},
     vertexList = {
-        type = 'table',
+        type = "table",
         offset = 0x40C,
         jump = 0x10,
         rows = {
-            x = {type = 'float', offset = 0x0},
-            y = {type = 'float', offset = 0x4},
-            z = {type = 'float', offset = 0x8},
-        }
+            x = {type = "float", offset = 0x0},
+            y = {type = "float", offset = 0x4},
+            z = {type = "float", offset = 0x8},
+        },
     },
 }
 
 -- Model Animation structure
 local modelAnimationsStructure = {
-    fpAnimationCount = {type = 'byte', offset = 0x90},
-    fpAnimationList = {type = 'list', offset = 0x94, elementsType = 'byte', jump = 0x2},
-    animationCount = {type = 'byte', offset = 0x74},
+    fpAnimationCount = {
+        type = "byte",
+        offset = 0x90,
+    },
+    fpAnimationList = {
+        type = "list",
+        offset = 0x94,
+        elementsType = "byte",
+        jump = 0x2,
+    },
+    animationCount = {
+        type = "byte",
+        offset = 0x74,
+    },
     animationList = {
-        type = 'table',
+        type = "table",
         offset = 0x78,
         jump = 0xB4,
         rows = {
-            name = {type = 'string', offset = 0x0},
-            type = {type = 'word', offset = 0x20},
-            frameCount = {type = 'byte', offset = 0x22},
-            nextAnimation = {type = 'byte', offset = 0x38},
-            sound = {type = 'byte', offset = 0x3C}
-        }
-    }
+            name = {type = "string", offset = 0x0},
+            type = {type = "word", offset = 0x20},
+            frameCount = {
+                type = "byte",
+                offset = 0x22,
+            },
+            nextAnimation = {
+                type = "byte",
+                offset = 0x38,
+            },
+            sound = {type = "byte", offset = 0x3C},
+        },
+    },
 }
 
 -- Weapon structure
 local weaponStructure = {
-    model = {type = 'dword', offset = 0x34}
+    model = {type = "dword", offset = 0x34},
 }
 
 -- Model structure
 local modelStructure = {
-    nodeCount = {type = 'dword', offset = 0xB8},
+    nodeCount = {type = "dword", offset = 0xB8},
     nodeList = {
-        type = 'table',
+        type = "table",
         offset = 0xBC,
         jump = 0x9C,
         rows = {
-            x = {type = 'float', offset = 0x28},
-            y = {type = 'float', offset = 0x2C},
-            z = {type = 'float', offset = 0x30}
-        }
+            x = {type = "float", offset = 0x28},
+            y = {type = "float", offset = 0x2C},
+            z = {type = "float", offset = 0x30},
+        },
     },
-    regionCount = {type = 'dword', offset = 0xC4},
+    regionCount = {type = "dword", offset = 0xC4},
     regionList = {
-        type = 'table',
+        type = "table",
         offset = 0xC8,
         jump = 76,
         rows = {
-            permutationCount = {type = 'dword', offset = 0x40}
-        }
-    }
+            permutationCount = {
+                type = "dword",
+                offset = 0x40,
+            },
+        },
+    },
 }
-
 
 ------------------------------------------------------------------------------
 -- Object classes
@@ -919,7 +1135,7 @@ local weaponHudInterfaceClass = {}
 function weaponHudInterfaceClass.new(address)
     -- Create object "instance"
     local weaponHudInterface = {}
-    
+
     -- Legacy values
     weaponHudInterface.address = address
     weaponHudInterface.structure = weaponHudInterfaceStructure
@@ -939,7 +1155,7 @@ local scenarioClass = {}
 function scenarioClass.new(address)
     -- Create object "instance"
     local scenario = {}
-    
+
     -- Legacy values
     scenario.address = address
     scenario.structure = scenarioStructure
@@ -955,7 +1171,7 @@ local sceneryClass = {}
 function sceneryClass.new(address)
     -- Create object "instance"
     local scenery = {}
-    
+
     -- Legacy values
     scenery.address = address
     scenery.structure = sceneryStructure
@@ -971,7 +1187,7 @@ local collisionGeometryClass = {}
 function collisionGeometryClass.new(address)
     -- Create object "instance"
     local collisionGeometry = {}
-    
+
     -- Legacy values
     collisionGeometry.address = address
     collisionGeometry.structure = collisionGeometryStructure
@@ -989,7 +1205,7 @@ local modelAnimationsClass = {}
 function modelAnimationsClass.new(address)
     -- Create object "instance"
     local modelAnimations = {}
-    
+
     -- Legacy values
     modelAnimations.address = address
     modelAnimations.structure = modelAnimationsStructure
@@ -1004,7 +1220,7 @@ local weaponClass = {}
 function weaponClass.new(address)
     -- Create object "instance"
     local weapon = {}
-    
+
     -- Legacy values
     weapon.address = address
     weapon.structure = weaponStructure
@@ -1022,14 +1238,13 @@ local modelClass = {}
 function modelClass.new(address)
     -- Create object "instance"
     local model = {}
-    
+
     -- Legacy values
     model.address = address
     model.structure = modelStructure
 
     return model
 end
-
 
 ------------------------------------------------------------------------------
 -- LuaBlam globals
@@ -1043,7 +1258,7 @@ luablam.cameraTypes = cameraTypes
 
 luablam.tagDataHeader = {}
 
-function updateTagDataHeaderGlobal() 
+function updateTagDataHeaderGlobal()
     local headerData = {}
 
     headerData.address = addressList.tagDataHeader
@@ -1054,8 +1269,9 @@ function updateTagDataHeaderGlobal()
     luablam.tagDataHeader = luablam.dumpObject(headerData)
 end
 
-set_callback('map load', 'updateTagDataHeaderGlobal')
-
+if (server_type ~= "sapp") then
+    set_callback("map load", "updateTagDataHeaderGlobal")
+end
 
 ------------------------------------------------------------------------------
 -- LuaBlam API
@@ -1073,7 +1289,7 @@ luablam.dumpObject = dumpObject
 function luablam.getCameraType()
     local camera = read_word(addressList.cameraType)
     local cameraType = nil
-    
+
     if (camera == 22192) then
         cameraType = 1
     elseif (camera == 30400) then
@@ -1147,7 +1363,7 @@ end
 ---@param tag string | number
 ---@return unicodeStringListClass
 function luablam.unicodeStringList(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.unicodeStringList)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1169,7 +1385,7 @@ end
 ---@param tag string | number
 ---@return uiWidgetDefinitionClass
 function luablam.uiWidgetDefinition(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.uiWidgetDefinition)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1191,7 +1407,7 @@ end
 ---@param tag string | number
 ---@return uiWidgetCollectionClass
 function luablam.uiWidgetCollection(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.uiWidgetCollection)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1213,7 +1429,7 @@ end
 ---@param tag string | number
 ---@return tagCollectionClass
 function luablam.tagCollection(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.tagCollection)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1235,7 +1451,7 @@ end
 ---@param tag string | number
 ---@return weaponHudInterfaceClass
 function luablam.weaponHudInterface(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.weaponHudInterface)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1255,8 +1471,8 @@ end
 
 --- Create a Scenario object from a tag path or id
 ---@return scenerioClass
-function luablam.scenario()
-    local address = read_dword(getTag(0, tagClasses.scenario) + 0x14)
+function luablam.scenario(tag)
+    local address = read_dword(getTag(tag or 0, tagClasses.scenario) + 0x14)
     -- Generate a new object from class
     local newScenario = scenarioClass.new(address)
 
@@ -1272,7 +1488,7 @@ end
 ---@param tag string | number
 ---@return sceneryClass
 function luablam.scenery(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.scenery)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1294,7 +1510,7 @@ end
 ---@param tag string | number
 ---@return collisionGeometryClass
 function luablam.collisionGeometry(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.collisionGeometry)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1316,7 +1532,7 @@ end
 ---@param tag string | number
 ---@return modelAnimationsClass
 function luablam.modelAnimations(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.modelAnimations)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1338,7 +1554,7 @@ end
 ---@param tag string | number
 ---@return weaponClass
 function luablam.weapon(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.weapon)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1360,7 +1576,7 @@ end
 ---@param tag string | number
 ---@return modelClass
 function luablam.model(tag)
-    if (tag and tag ~= '') then
+    if (tag and tag ~= "") then
         local tagAddress = getTag(tag, tagClasses.model)
         if (tagAddress and tagAddress ~= 0) then
             local address = read_dword(tagAddress + 0x14)
@@ -1397,7 +1613,7 @@ function proccessRequestedObject(class, param, properties)
     if (properties == nil) then
         return dumpObject(object)
     else
-        for k,v in pairs(properties) do
+        for k, v in pairs(properties) do
             object[k] = v
         end
     end
@@ -1408,7 +1624,7 @@ end
 ---@return ObjectClass
 function luablam35.object(address, properties)
     if (address and address ~= 0) then
-        return proccessRequestedObject('object', address, properties)
+        return proccessRequestedObject("object", address, properties)
     end
     return nil
 end
@@ -1418,7 +1634,7 @@ end
 ---@return bipedClass
 function luablam35.biped(address, properties)
     if (address and address ~= 0) then
-        return proccessRequestedObject('biped', address, properties)
+        return proccessRequestedObject("biped", address, properties)
     end
     return nil
 end
@@ -1429,7 +1645,7 @@ end
 function luablam35.uiWidgetDefinition(address, properties)
     if (address and address ~= 0) then
         local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('uiWidgetDefinition', tagPath, properties)
+        return proccessRequestedObject("uiWidgetDefinition", tagPath, properties)
     end
     return nil
 end
@@ -1440,7 +1656,7 @@ end
 function luablam35.weaponHudInterface(address, properties)
     if (address and address ~= 0) then
         local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('weaponHudInterface', tagPath, properties)
+        return proccessRequestedObject("weaponHudInterface", tagPath, properties)
     end
     return nil
 end
@@ -1451,7 +1667,7 @@ end
 function luablam35.unicodeStringList(address, properties)
     if (address and address ~= 0) then
         local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('unicodeStringList', tagPath, properties)
+        return proccessRequestedObject("unicodeStringList", tagPath, properties)
     end
     return nil
 end
@@ -1462,7 +1678,7 @@ end
 function luablam35.scenario(address, properties)
     if (address and address ~= nil) then
         local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('scenario', tagPath, properties)
+        return proccessRequestedObject("scenario", tagPath, properties)
     end
 end
 
@@ -1472,7 +1688,7 @@ end
 function luablam35.scenery(address, properties)
     if (address and address ~= 0) then
         local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('scenery', tagPath, properties)
+        return proccessRequestedObject("scenery", tagPath, properties)
     end
     return nil
 end
@@ -1483,7 +1699,7 @@ end
 function luablam35.collisionGeometry(address, properties)
     if (address and address ~= 0) then
         local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('collisionGeometry', tagPath, properties)
+        return proccessRequestedObject("collisionGeometry", tagPath, properties)
     end
 
     return nil
@@ -1495,7 +1711,7 @@ end
 function luablam35.modelAnimations(address, properties)
     if (address and address ~= 0) then
         local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('modelAnimations', tagPath, properties)
+        return proccessRequestedObject("modelAnimations", tagPath, properties)
     end
     return nil
 end
@@ -1506,7 +1722,7 @@ end
 function luablam35.tagCollection(address, properties)
     if (address and address ~= 0) then
         local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('tagCollection', tagPath, properties)
+        return proccessRequestedObject("tagCollection", tagPath, properties)
     end
     return nil
 end
