@@ -215,6 +215,13 @@ end
 -- Generic functions
 ------------------------------------------------------------------------------
 
+--- Verify if the given variable is a number
+---@param var any
+---@return boolean
+local function isNumber(var)
+    return (type(var) == "number")
+end
+
 --- Verify if the given variable is a string
 ---@param var any
 ---@return boolean
@@ -243,43 +250,34 @@ local function trim(string)
     return string:match"^%s*(.*)":match"(.-)%s*$"
 end
 
+--- Verify if the value is valid
+---@param var any
+---@return boolean
+local function isValid(var)
+    return (var and var ~= '' and var ~= 0)
+end
+
 ------------------------------------------------------------------------------
 -- Utilities
 ------------------------------------------------------------------------------
 
---- Return the type of a tag given tag address
----@param tagAddress number
+--- Convert tag class int to string
+---@param tagClassInt number
 ---@return string
-local function getTagClass(tagAddress)
-    if (tagAddress) then
-        local tagClass = ''
-        for i=0, 3 do
-            local byte = read_byte(tagAddress + i)
-            tagClass = string.char(byte) .. tagClass
+local function tagClassFromInt(tagClassInt)
+    if (tagClassInt) then
+        local tagClass = ""
+        local buffer = 0
+        
+        for i = 3, 0, -1 do
+            local byte = (tagClassInt >> (i * 8)) ~ (buffer << 8)
+            buffer = (buffer << 8) + byte
+            tagClass =  tagClass .. string.char(byte)
         end
         return tagClass
     else
         return nil
     end
-end
-
---- Return the id of a tag given tag type and tag path
----@param tagAddress number
----@return number
-local function getTagId(tagAddress)
-    if (tagAddress and tagAddress ~= 0) then
-        local tagId = tagAddress + 0xC
-        return read_dword(tagId)
-    end
-    return nil
-end
-
---- Return the tag path given tag id
----@param tagAddress number
----@return string
-local function getTagPath(tagAddress)
-    local tagPathAddress = read_dword(tagAddress + 0x10)
-    return read_string(tagPathAddress)
 end
 
 --- Return the current existing objects in the current map, ONLY WORKS FOR CHIMERA!!!
@@ -321,25 +319,6 @@ local function writeUnicodeString(address, newString)
         if (i == #newString) then
             write_byte(stringAddress + #newString * 0x2, 0x0)
         end
-    end
-end
-
---- Return the address of a tag given tag path (or id) and tag type
----@param tag string | number
----@param class string
----@return number
-local function getTag(tag, class)
-    if (type(tag) == 'number') then
-        local tagAddress = get_tag(tag)
-        if (tagAddress) then
-            local tagClass = luablam.getTagClass(tagAddress)
-            if (tagClass == class) then
-                return tagAddress
-            end
-        end
-        return nil
-    else
-        return get_tag(class, tag)
     end
 end
 
@@ -689,11 +668,11 @@ local tagDataHeaderStructure = {
 }
 
 -- Tag structure
-local tagStructure = {
+local tagHeaderStructure = {
     class = {type = 'dword', offset = 0x0},
     id = {type = 'dword', offset = 0xC},
-    path = {type = 'string', offset = 0x10},
-    _data = {type = 'dword', offset = 0x14},
+    path = {type = 'dword', offset = 0x10},
+    data = {type = 'dword', offset = 0x14},
     indexed = {type = 'dword', offset = 0x18}
 }
 
@@ -944,7 +923,7 @@ end
 local tagClass = {}
 
 function tagClass.new(address)
-    return createObject(address, tagStructure)
+    return createObject(address, tagHeaderStructure)
 end
 
 ---@class tagCollectionClass
@@ -1104,9 +1083,6 @@ updateTagDataHeaderGlobal()
 ------------------------------------------------------------------------------
 
 -- Add utilities to library
-luablam.getTagClass = getTagClass
-luablam.getTagId = getTagId
-luablam.getTagPath = getTagPath
 luablam.getObjects = getObjects
 luablam.consoleOutput = consoleOutput
 luablam.dumpObject = dumpObject
@@ -1132,24 +1108,70 @@ function luablam.getCameraType()
     return cameraType
 end
 
---- Create a ingame-object object from a given address
+--- Create a tag object from a given address. THIS OBJECT IS NOT DYNAMIC.
 ---@param address integer
----@return ObjectClass
-function luablam.object(address)
+---@return tagClass
+function luablam.tag(address)
     if (address and address ~= 0) then
-        -- Generate a new object from class
-        return objectClass.new(address)
+        -- Generate a new tag object from class
+        local tag = tagClass.new(address)
+
+        -- Get all the tag info
+        local tagInfo = dumpObject(tag)
+
+        -- Set up values
+        tagInfo.address = address
+        tagInfo.path = read_string(tagInfo.path)
+        tagInfo.class = tagClassFromInt(tagInfo.class)
+
+        return tagInfo
     end
     return nil
 end
 
---- Create a tag object from a given address
----@param address number
----@return tagClass
-function luablam.tag(address)
-    if (address and address ~= 0) then
-        -- Generate a new object from class
-        return tagClass.new(address)
+--- Return the address of a tag given tag path (or id) and tag type
+---@param tag string | number
+---@param class string
+---@return tagHeaderStructure
+function luablam.getTag(...)
+    local arg = {...}
+    
+    -- Arguments
+    local tagId = nil
+    local tagPath = nil
+    local tagClass = nil
+
+    if (#arg ~= 2) then
+        consoleOutput(debug.traceback("Wrong number of arguments on get tag function", 2), colorsRGB.error)
+    end
+
+    -- Get arguments from table
+    if (isNumber(arg[1])) then
+        tagId = arg[1]
+    elseif (isString(arg[1])) then
+        tagPath = arg[1]
+    end
+
+    tagClass = arg[2]
+
+    local tagAddress = nil
+    
+    -- Get tag address
+    if (tagId ~= nil) then
+        tagAddress = get_tag(tagId)
+    else
+        tagAddress = get_tag(tagClass, tagPath)
+    end
+
+    return luablam.tag(tagAddress)
+end
+
+--- Create a ingame-object object from a given address
+---@param address integer
+---@return ObjectClass
+function luablam.object(address)
+    if (isValid(address)) then
+        return objectClass.new(address)
     end
     return nil
 end
@@ -1158,8 +1180,7 @@ end
 ---@param address number
 ---@return bipedClass
 function luablam.biped(address)
-    if (address and address ~= 0) then
-        -- Generate a new object from class
+    if (isValid(address)) then
         return bipedClass.new(address)
     end
     return nil
@@ -1169,14 +1190,9 @@ end
 ---@param tag string | number
 ---@return unicodeStringListClass
 function luablam.unicodeStringList(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.unicodeStringList)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            
-            -- Generate a new object from class
-            return unicodeStringListClass.new(address)
-        end
+    if (isValid(tag)) then
+        local unicodeStringListTag = luablam.getTag(tag, tagClasses.unicodeStringList)
+        return unicodeStringListClass.new(unicodeStringListTag.data)
     end
     return nil
 end
@@ -1185,14 +1201,9 @@ end
 ---@param tag string | number
 ---@return uiWidgetDefinitionClass
 function luablam.uiWidgetDefinition(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.uiWidgetDefinition)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-
-            -- Generate a new object from class
-            return uiWidgetDefinitionClass.new(address)
-        end
+    if (isValid(tag)) then
+        local uiWidgetDefinitionTag = luablam.getTag(tag, tagClasses.uiWidgetDefinition)
+        return uiWidgetDefinitionClass.new(uiWidgetDefinitionTag.data)
     end
     return nil
 end
@@ -1201,14 +1212,9 @@ end
 ---@param tag string | number
 ---@return uiWidgetCollectionClass
 function luablam.uiWidgetCollection(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.uiWidgetCollection)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            
-            -- Generate a new object from class
-            return uiWidgetCollectionClass.new(address)
-        end
+    if (isValid(tag)) then
+        local uiWidgetCollectionTag = luablam.getTag(tag, tagClasses.uiWidgetCollection)
+        return uiWidgetCollectionClass.new(uiWidgetCollectionTag.data)
     end
     return nil
 end
@@ -1217,14 +1223,9 @@ end
 ---@param tag string | number
 ---@return tagCollectionClass
 function luablam.tagCollection(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.tagCollection)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            
-            -- Generate a new object from class
-            return tagCollectionClass.new(address)
-        end
+    if (isValid(tag)) then
+        local tagCollectionTag = luablam.getTag(tag, tagClasses.tagCollection)
+        return tagCollectionClass.new(tagCollectionTag.data)
     end
     return nil
 end
@@ -1233,14 +1234,9 @@ end
 ---@param tag string | number
 ---@return weaponHudInterfaceClass
 function luablam.weaponHudInterface(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.weaponHudInterface)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-
-            -- Generate a new object from class
-            return weaponHudInterfaceClass.new(address)
-        end
+    if (isValid(tag)) then
+        local weaponHudInterfaceTag = luablam.getTag(tag, tagClasses.weaponHudInterface)
+        return weaponHudInterfaceClass.new(weaponHudInterfaceTag.data)
     end
     return nil
 end
@@ -1248,24 +1244,17 @@ end
 --- Create a Scenario object from a tag path or id
 ---@return scenerioClass
 function luablam.scenario()
-    local address = read_dword(getTag(0, tagClasses.scenario) + 0x14)
-    
-    -- Generate a new object from class
-    return scenarioClass.new(address)
+    local scenarioTag = luablam.getTag(0, tagClasses.scenario)
+    return scenarioClass.new(scenarioTag.data)
 end
 
 --- Create a Scenery object from a tag path or id
 ---@param tag string | number
 ---@return sceneryClass
 function luablam.scenery(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.scenery)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-
-            -- Generate a new object from class
-            return sceneryClass.new(address)
-        end
+    if (isValid(tag)) then
+        local sceneryTag = luablam.getTag(tag, tagClasses.scenery)
+        return sceneryClass.new(sceneryTag.data)
     end
     return nil
 end
@@ -1274,14 +1263,9 @@ end
 ---@param tag string | number
 ---@return collisionGeometryClass
 function luablam.collisionGeometry(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.collisionGeometry)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-
-            -- Generate a new object from class
-            return collisionGeometryClass.new(address)
-        end
+    if (isValid(tag)) then
+        local collisionGeometryTag = luablam.getTag(tag, tagClasses.collisionGeometry)
+        return collisionGeometryClass.new(collisionGeometryTag.data)
     end
     return nil
 end
@@ -1290,14 +1274,9 @@ end
 ---@param tag string | number
 ---@return modelAnimationsClass
 function luablam.modelAnimations(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.modelAnimations)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            
-            -- Generate a new object from class
-            return modelAnimationsClass.new(address)
-        end
+    if (isValid()) then
+        local modelAnimationsTag = luablam.getTag(tag, tagClasses.modelAnimations)
+        return modelAnimationsClass.new(modelAnimationsTag.data)
     end
     return nil
 end
@@ -1306,14 +1285,9 @@ end
 ---@param tag string | number
 ---@return weaponClass
 function luablam.weapon(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.weapon)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            
-            -- Generate a new object from class
-            return weaponClass.new(address)
-        end
+    if (isValid(tag)) then
+        local weaponTag = luablam.getTag(tag, tagClasses.weapon)
+        return weaponClass.new(weaponTag)
     end
     return nil
 end
@@ -1322,14 +1296,9 @@ end
 ---@param tag string | number
 ---@return modelClass
 function luablam.model(tag)
-    if (tag and tag ~= '') then
-        local tagAddress = getTag(tag, tagClasses.model)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            
-            -- Generate a new object from class
-            return modelClass.new(address)
-        end
+    if (isValid(tag)) then
+        local modelTag = luablam.getTag(tag, tagClasses.model)
+        return modelClass.new(modelTag.data)
     end
     return nil
 end
@@ -1351,7 +1320,7 @@ luablam35.version = 3.5
 function proccessRequestedObject(class, param, properties)
     local object = luablam[class](param)
     if (properties == nil) then
-        return dumpObject(object)
+        return luablam.dumpObject(object)
     else
         for k,v in pairs(properties) do
             object[k] = v
@@ -1384,8 +1353,8 @@ end
 ---@return uiWidgetDefinitionClass
 function luablam35.uiWidgetDefinition(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('uiWidgetDefinition', tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject('uiWidgetDefinition', tag.path, properties)
     end
     return nil
 end
@@ -1395,8 +1364,8 @@ end
 ---@return weaponHudInterfaceClass
 function luablam35.weaponHudInterface(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('weaponHudInterface', tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject('weaponHudInterface', tag.path, properties)
     end
     return nil
 end
@@ -1406,8 +1375,8 @@ end
 ---@return unicodeStringListClass
 function luablam35.unicodeStringList(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('unicodeStringList', tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject('unicodeStringList', tag.path, properties)
     end
     return nil
 end
@@ -1417,8 +1386,8 @@ end
 ---@return scenerioClass
 function luablam35.scenario(address, properties)
     if (address and address ~= nil) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('scenario', tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject('scenario', tag.path, properties)
     end
 end
 
@@ -1427,8 +1396,8 @@ end
 ---@return sceneryClass
 function luablam35.scenery(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('scenery', tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject('scenery', tag.path, properties)
     end
     return nil
 end
@@ -1438,8 +1407,8 @@ end
 ---@return collisionGeometryClass
 function luablam35.collisionGeometry(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('collisionGeometry', tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject('collisionGeometry', tag.path, properties)
     end
 
     return nil
@@ -1450,8 +1419,8 @@ end
 ---@return modelAnimationsClass
 function luablam35.modelAnimations(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('modelAnimations', tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject('modelAnimations', tag.path, properties)
     end
     return nil
 end
@@ -1461,8 +1430,8 @@ end
 ---@return tagCollectionClass
 function luablam35.tagCollection(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject('tagCollection', tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject('tagCollection', tag.path, properties)
     end
     return nil
 end
@@ -1475,9 +1444,9 @@ function luablam.compat35()
     ---@param tagPath string
     ---@return number
     get_tag_id = function(tagClass, tagPath)
-        local tagAddress = get_tag(tagClass, tagPath)
-        if (tagAddress and tagAddress ~= 0) then
-            return luablam.getTagId(tagAddress)
+        local tag = luablam.getTag(tagClass, tagPath)
+        if (tag ~= nil) then
+            return tag.id
         end
         return nil
     end
@@ -1487,10 +1456,10 @@ function luablam.compat35()
     ---@param path string
     ---@return number
     get_simple_tag_id = function(type, path)
-        local global_tag_address = get_tag(type, path)
-        for tagId = 0, get_tags_count() - 1 do
-            if (get_tag_path(tagId) == path) then
-                return tagId
+        for index = 0, luablam.tagDataHeader.count - 1 do
+            local tag = luablam.tag(index)
+            if (tag.path == path) then
+                return index
             end
         end
         return nil
@@ -1500,9 +1469,9 @@ function luablam.compat35()
     ---@param tagId number
     ---@return string
     get_tag_path = function(tagId)
-        local tagAddress = get_tag(tagId)
-        if (tagAddress and tagAddress ~= 0) then
-            return luablam.getTagPath(tagAddress)
+        local tag = luablam.tag(tagId)
+        if (tag ~= nil) then
+            return tag.path
         end
         return nil
     end
@@ -1511,9 +1480,9 @@ function luablam.compat35()
     ---@param tagId number
     ---@return string
     get_tag_type = function(tagId)
-        local tagAddress = get_tag(tagId)
-        if (tagAddress and tagAddress ~= 0) then
-            return luablam.getTagClass(tagAddress)
+        local tag = luablam.tag(tagId)
+        if (tag ~= nil) then
+            return tag.class
         end
         return nil
     end
