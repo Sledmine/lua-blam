@@ -979,9 +979,6 @@ function unicodeStringListClass.new(address)
     unicodeStringList.address = address
     unicodeStringList.structure = unicodeStringListStructure
 
-    -- Mockup object properties for IDE
-    unicodeStringList.count = 0xFF
-    unicodeStringList.stringList = {}
     return unicodeStringList
 end
 
