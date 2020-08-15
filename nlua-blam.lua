@@ -405,7 +405,7 @@ local function consoleOutput(message, ...)
     end
 end
 
--- Convert bits into boolean values
+--- Convert bits into boolean values
 -- Writing true or false is equal to 1 or 0 but not when reading
 ---@param bit number
 ---@return boolean
@@ -541,7 +541,7 @@ local dataBindingMetaTable = {
 -- Object functions
 ------------------------------------------------------------------------------
 
--- Remove unused properties for game execution
+--- Remove unused properties for game execution
 -- NOTE: DO NOT REMOVE THIS, it will be usefull...
 ---@param object table
 local function cleanObject(object)
@@ -554,7 +554,7 @@ local function cleanObject(object)
     ]]
 end
 
--- Return a dump of a given LuaBlam object
+--- Return a dump of a given LuaBlam object
 ---@param object table
 ---@return table
 local function dumpObject(object)
@@ -570,7 +570,7 @@ end
 -- Object structures
 ------------------------------------------------------------------------------
 
--- Return a extended parent structure with another given structure
+--- Return a extended parent structure with another given structure
 ---@param parent table
 ---@param structure table
 ---@return table
@@ -1509,7 +1509,7 @@ local luablam35 = {}
 -- Set compatibility layer version
 luablam35.version = 3.5
 
--- LuaBlam old API binding
+--- LuaBlam old API binding
 ---@param class string
 ---@param param string | number
 ---@param properties table
@@ -1633,7 +1633,7 @@ function luablam35.tagCollection(address, properties)
     return nil
 end
 
--- Setups LuaBlam 3.5 API
+--- Setups LuaBlam 3.5 API
 ---@return table
 function luablam.compat35()
     --- Return the id of a tag given tag type and tag path
