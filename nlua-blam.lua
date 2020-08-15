@@ -1152,13 +1152,14 @@ end
 -- LuaBlam globals
 ------------------------------------------------------------------------------
 
--- Add data tables to library
+-- Add Blam! data tables to library
 luablam.addressList = addressList
 luablam.tagClasses = tagClasses
 luablam.objectClasses = objectClasses
 luablam.cameraTypes = cameraTypes
 luablam.colorsRGB = colorsRGB
 
+-- LuaBlam globals
 luablam.tagDataHeader = {}
 
 function updateTagDataHeaderGlobal() 
@@ -1169,10 +1170,13 @@ function updateTagDataHeaderGlobal()
 
     setmetatable(headerData, dataBindingMetaTable)
 
-    luablam.tagDataHeader = luablam.dumpObject(headerData)
+    luablam.tagDataHeader = dumpObject(headerData)
 end
 
 set_callback('map load', 'updateTagDataHeaderGlobal')
+
+-- Update everything on script load
+updateTagDataHeaderGlobal()
 
 
 ------------------------------------------------------------------------------
