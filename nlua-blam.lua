@@ -9,8 +9,6 @@ local luablam = {}
 -- LuaBlam version
 luablam.version = 4.1
 
-
-
 ------------------------------------------------------------------------------
 -- Useful functions for internal use
 ------------------------------------------------------------------------------
@@ -18,28 +16,28 @@ luablam.version = 4.1
 -- From legacy glue library!
 -- String or number to hex
 local function tohex(s, upper)
-	if type(s) == 'number' then
-		return (upper and '%08.8X' or '%08.8x'):format(s)
-	end
-	if upper then
-		return (s:gsub('.', function(c)
-		  return ('%02X'):format(c:byte())
-		end))
-	else
-		return (s:gsub('.', function(c)
-		  return ('%02x'):format(c:byte())
-		end))
-	end
+    if type(s) == "number" then
+        return (upper and "%08.8X" or "%08.8x"):format(s)
+    end
+    if upper then
+        return (s:sub(".", function(c)
+            return ("%02X"):format(c:byte())
+        end))
+    else
+        return (s:gsub(".", function(c)
+            return ("%02x"):format(c:byte())
+        end))
+    end
 end
 
 --- Hex to binary string
 local function fromhex(s)
-	if #s % 2 == 1 then
-		return fromhex('0'..s)
-	end
-	return (s:gsub('..', function(cc)
-	  return string.char(tonumber(cc, 16))
-	end))
+    if #s % 2 == 1 then
+        return fromhex("0" .. s)
+    end
+    return (s:gsub("..", function(cc)
+        return string.char(tonumber(cc, 16))
+    end))
 end
 
 ------------------------------------------------------------------------------
@@ -280,7 +278,6 @@ end
 local function tagClassFromInt(tagClassInt)
     if (tagClassInt) then
         local tagClassHex = tohex(tagClassInt)
-        print("TAG HEX:" .. tagClassHex)
         local tagClass = ""
         if (tagClassHex) then
             local byte = ""
@@ -560,7 +557,7 @@ local function createObject(address, struct)
 end
 
 --- Remove unused properties for game execution
--- NOTE: DO NOT REMOVE THIS, it will be usefull...
+--[[
 ---@param object table
 local function cleanObject(object)
     for k, v in pairs(object) do
@@ -569,6 +566,7 @@ local function cleanObject(object)
         end
     end
 end
+]]
 
 --- Return a dump of a given LuaBlam object
 ---@param object table
