@@ -12,7 +12,7 @@ LuaBlam aims to make easier and more understandable scripts providing simple syn
 - Simple to implement and simple to learn
 - Highly customizable
 - Cross-platform (Chimera, SAPP)
-- Auto completion for code editors (using EmmyLua)
+- Auto completion for code editors (using [EmmyLua](https://github.com/EmmyLua))
 
 ### Example with lua-blam:
 
