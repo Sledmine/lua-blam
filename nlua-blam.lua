@@ -1,13 +1,46 @@
 ------------------------------------------------------------------------------
--- Blam library for Chimera/SAPP Lua scripting.
--- Authors: Sledmine & JerryBrick
--- Version: 4.0
+-- Blam! library for Chimera/SAPP Lua scripting
+-- Sledmine & JerryBrick
+-- Version 4.1
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
 local luablam = {}
 
 -- LuaBlam version
 luablam.version = 4.1
+
+
+
+------------------------------------------------------------------------------
+-- Useful functions for internal use
+------------------------------------------------------------------------------
+---
+-- From legacy glue library!
+-- String or number to hex
+local function tohex(s, upper)
+	if type(s) == 'number' then
+		return (upper and '%08.8X' or '%08.8x'):format(s)
+	end
+	if upper then
+		return (s:gsub('.', function(c)
+		  return ('%02X'):format(c:byte())
+		end))
+	else
+		return (s:gsub('.', function(c)
+		  return ('%02x'):format(c:byte())
+		end))
+	end
+end
+
+--- Hex to binary string
+local function fromhex(s)
+	if #s % 2 == 1 then
+		return fromhex('0'..s)
+	end
+	return (s:gsub('..', function(cc)
+	  return string.char(tonumber(cc, 16))
+	end))
+end
 
 ------------------------------------------------------------------------------
 -- Blam! engine data
@@ -130,6 +163,14 @@ local cameraTypes = {
     deadCamera = 5, -- 23776
 }
 
+-- Console colors
+local colorsRGB = {
+    success = {r = 0.235, g = 0.82, b = 0},
+    warning = {r = 0.94, g = 0.75, b = 0.098},
+    error = {r = 1, g = 0.2, b = 0.2},
+    unknow = {r = 0.66, g = 0.66, b = 0.66},
+}
+
 ------------------------------------------------------------------------------
 -- SAPP API bindings
 ------------------------------------------------------------------------------
@@ -184,46 +225,76 @@ if (api_version) then
 end
 
 ------------------------------------------------------------------------------
+-- Generic functions
+------------------------------------------------------------------------------
+
+--- Verify if the given variable is a number
+---@param var any
+---@return boolean
+local function isNumber(var)
+    return (type(var) == "number")
+end
+
+--- Verify if the given variable is a string
+---@param var any
+---@return boolean
+local function isString(var)
+    return (type(var) == "string")
+end
+
+--- Verify if the given variable is a boolean
+---@param var any
+---@return boolean
+local function isBoolean(var)
+    return (type(var) == "boolean")
+end
+
+--- Verify if the given variable is a table
+---@param var any
+---@return boolean
+local function isTable(var)
+    return (type(var) == "table")
+end
+
+--- Remove spaces and tabs from the beginning and the end of a string
+---@param var string
+---@return string
+local function trim(string)
+    return string:match "^%s*(.*)":match "(.-)%s*$"
+end
+
+--- Verify if the value is valid
+---@param var any
+---@return boolean
+local function isValid(var)
+    return (var and var ~= "" and var ~= 0)
+end
+
+------------------------------------------------------------------------------
 -- Utilities
 ------------------------------------------------------------------------------
 
---- Return the type of a tag given tag address
----@param tagAddress number
+--- Convert tag class int to string
+---@param tagClassInt number
 ---@return string
-local function getTagClass(tagAddress)
-    if (tagAddress) then
+local function tagClassFromInt(tagClassInt)
+    if (tagClassInt) then
+        local tagClassHex = tohex(tagClassInt)
+        print("TAG HEX:" .. tagClassHex)
         local tagClass = ""
-        for i = 0, 3 do
-            local byte = read_char(tagAddress + i)
-            if (byte and byte > -1) then
-                tagClass = string.char(byte) .. tagClass
-            else
-                return nil
+        if (tagClassHex) then
+            local byte = ""
+            for char in string.gmatch(tagClassHex, ".") do
+                byte = byte .. char
+                if (#byte % 2 == 0) then
+                    tagClass = tagClass .. string.char(tonumber(byte, 16))
+                    byte = ""
+                end
             end
         end
         return tagClass
-    else
-        return nil
-    end
-end
-
---- Return the id of a tag given tag type and tag path
----@param tagAddress number
----@return number
-local function getTagId(tagAddress)
-    if (tagAddress and tagAddress ~= 0) then
-        local tagId = tagAddress + 0xC
-        return read_dword(tagId)
     end
     return nil
-end
-
---- Return the tag path given tag id
----@param tagAddress number
----@return string
-local function getTagPath(tagAddress)
-    local tagPathAddress = read_dword(tagAddress + 0x10)
-    return read_string(tagPathAddress)
 end
 
 --- Return the current existing objects in the current map, ONLY WORKS FOR CHIMERA!!!
@@ -268,26 +339,71 @@ local function writeUnicodeString(address, newString)
     end
 end
 
---- Return the address of a tag given tag path (or id) and tag type
----@param tag string | number
----@param class string
----@return number
-local function getTag(tag, class)
-    if (type(tag) == "number") then
-        local tagAddress = get_tag(tag)
-        if (tagAddress) then
-            local tagClass = luablam.getTagClass(tagAddress)
-            if (tagClass == class) then
-                return tagAddress
-            end
+-- Create a reference to the original console out function
+local console_out = console_out
+
+--- Print a console message. It also supports multi-line messages!
+---@param message string
+local function consoleOutput(message, ...)
+    -- Params
+    local singleLine = nil
+    local color = nil
+
+    -- Put the extra arguments into a table
+    ---@class consoleOputputArgs
+    ---@field singleLine boolean
+    ---@field color table
+    local args = {...}
+
+    if (message == nil or #args > 2) then
+        consoleOutput(debug.traceback("Wrong number of arguments on console out function", 2),
+                      colorsRGB.error)
+    end
+
+    -- Get the arguments from table
+    for i, v in ipairs(args) do
+        if (isBoolean(v)) then
+            singleLine = v
+        elseif (isTable(v)) then
+            color = v
         end
-        return nil
-    else
-        return get_tag(class, tag)
+    end
+
+    -- Set the default color
+    local r = 1
+    local g = 1
+    local b = 1
+
+    -- Lookup for a custom color
+    if (color ~= nil) then
+        r = color.r
+        g = color.g
+        b = color.b
+    end
+
+    local buffer = ""
+
+    -- Explode the string!!
+    for line in message:gmatch("([^\n]+)") do
+        -- Trim the line
+        local trimmedLine = trim(line)
+
+        if (singleLine) then
+            -- Store the line in the buffer
+            buffer = buffer .. trimmedLine .. " "
+        else
+            -- Print the line
+            console_out(trimmedLine, r, g, b)
+        end
+    end
+
+    -- Print the single-line message
+    if (singleLine) then
+        console_out(buffer, r, g, b)
     end
 end
 
--- Convert bits into boolean values
+--- Convert bits into boolean values
 -- Writing true or false is equal to 1 or 0 but not when reading
 ---@param bit number
 ---@return boolean
@@ -369,7 +485,8 @@ local dataBindingMetaTable = {
                 operation[2](object.address + propertyData.offset, value)
             end
         else
-            error("Cannot write into a invalid property '" .. property .. "'")
+            local errorMessage = "Unable to write an invalid property ('" .. property .. "')"
+            consoleOutput(debug.traceback(errorMessage, 2), colorsRGB.error)
         end
     end,
     __index = function(object, property)
@@ -414,7 +531,8 @@ local dataBindingMetaTable = {
                 return operation[1](object.address + propertyData.offset)
             end
         else
-            error("Cannot read from a invalid property '" .. property .. "'")
+            local errorMessage = "Unable to read an invalid property ('" .. property .. "')"
+            consoleOutput(debug.traceback(errorMessage, 2), colorsRGB.error)
         end
     end,
 }
@@ -423,20 +541,36 @@ local dataBindingMetaTable = {
 -- Object functions
 ------------------------------------------------------------------------------
 
--- Remove unused properties for game execution
+--- Create a LuaBlam object
+---@param address number
+---@param struct table
+---@return table
+local function createObject(address, struct)
+    -- Create object
+    local object = {}
+
+    -- Set up 'legacy' values
+    object.address = address
+    object.structure = struct
+
+    -- Set mechanisim to bind properties to memory
+    setmetatable(object, dataBindingMetaTable)
+
+    return object
+end
+
+--- Remove unused properties for game execution
 -- NOTE: DO NOT REMOVE THIS, it will be usefull...
 ---@param object table
 local function cleanObject(object)
-    --[[
     for k, v in pairs(object) do
-        if (k ~= 'address' and k ~= 'structure') then
+        if (k ~= "address" and k ~= "structure") then
             object[k] = nil
         end
     end
-    ]]
 end
 
--- Return a dump of a given LuaBlam object
+--- Return a dump of a given LuaBlam object
 ---@param object table
 ---@return table
 local function dumpObject(object)
@@ -451,7 +585,7 @@ end
 -- Object structures
 ------------------------------------------------------------------------------
 
--- Return a extended parent structure with another given structure
+--- Return a extended parent structure with another given structure
 ---@param parent table
 ---@param structure table
 ---@return table
@@ -684,11 +818,11 @@ local tagDataHeaderStructure = {
 }
 
 -- Tag structure
-local tagStructure = {
+local tagHeaderStructure = {
     class = {type = "dword", offset = 0x0},
     id = {type = "dword", offset = 0xC},
-    path = {type = "string", offset = 0x10},
-    _data = {type = "dword", offset = 0x14},
+    path = {type = "dword", offset = 0x10},
+    data = {type = "dword", offset = 0x14},
     indexed = {type = "dword", offset = 0x18},
 }
 
@@ -980,13 +1114,7 @@ local modelStructure = {
 local objectClass = {}
 
 function objectClass.new(address)
-    local object = {}
-
-    -- Legacy values
-    object.address = address
-    object.structure = objectStructure
-
-    return object
+    return createObject(address, objectStructure)
 end
 
 ---@class bipedClass : ObjectClass
@@ -1017,15 +1145,7 @@ end
 local bipedClass = {}
 
 function bipedClass.new(address)
-    -- Create object "instance"
-    ---@class bipedObject
-    local biped = {}
-
-    -- Legacy values
-    biped.address = address
-    biped.structure = bipedStructure
-
-    return biped
+    return createObject(address, bipedStructure)
 end
 
 ---@class tagClass
@@ -1036,14 +1156,7 @@ end
 local tagClass = {}
 
 function tagClass.new(address)
-    -- Create tag "instance"
-    local tag = {}
-
-    -- Legacy values
-    tag.address = address
-    tag.structure = tagStructure
-
-    return tag
+    return createObject(address, tagHeaderStructure)
 end
 
 ---@class tagCollectionClass
@@ -1052,14 +1165,7 @@ end
 local tagCollectionClass = {}
 
 function tagCollectionClass.new(address)
-    -- Create object "instance"
-    local tagCollection = {}
-
-    -- Legacy values
-    tagCollection.address = address
-    tagCollection.structure = tagCollectionStructure
-
-    return tagCollection
+    return createObject(address, tagCollectionStructure)
 end
 
 ---@class unicodeStringListClass
@@ -1068,17 +1174,7 @@ end
 local unicodeStringListClass = {}
 
 function unicodeStringListClass.new(address)
-    -- Create object "instance"
-    local unicodeStringList = {}
-
-    -- Legacy values
-    unicodeStringList.address = address
-    unicodeStringList.structure = unicodeStringListStructure
-
-    -- Mockup object properties for IDE
-    unicodeStringList.count = 0xFF
-    unicodeStringList.stringList = {}
-    return unicodeStringList
+    return createObject(address, unicodeStringListStructure)
 end
 
 ---@class uiWidgetDefinitionClass
@@ -1097,14 +1193,7 @@ end
 local uiWidgetDefinitionClass = {}
 
 function uiWidgetDefinitionClass.new(address)
-    -- Create object "instance"
-    local uiWidgetDefinition = {}
-
-    -- Legacy values
-    uiWidgetDefinition.address = address
-    uiWidgetDefinition.structure = uiWidgetDefinitionStructure
-
-    return uiWidgetDefinition
+    return createObject(address, uiWidgetDefinitionStructure)
 end
 
 ---@class uiWidgetCollectionClass
@@ -1113,14 +1202,7 @@ end
 local uiWidgetCollectionClass = {}
 
 function uiWidgetCollectionClass.new(address)
-    -- Create object "instance"
-    local uiWidgetCollection = {}
-
-    -- Legacy values
-    uiWidgetCollection.address = address
-    uiWidgetCollection.structure = uiWidgetCollectionStructure
-
-    return uiWidgetCollection
+    return createObject(address, uiWidgetCollectionStructure)
 end
 
 ---@class weaponHudInterfaceClass
@@ -1133,14 +1215,7 @@ end
 local weaponHudInterfaceClass = {}
 
 function weaponHudInterfaceClass.new(address)
-    -- Create object "instance"
-    local weaponHudInterface = {}
-
-    -- Legacy values
-    weaponHudInterface.address = address
-    weaponHudInterface.structure = weaponHudInterfaceStructure
-
-    return weaponHudInterface
+    return createObject(address, weaponHudInterfaceStructure)
 end
 
 ---@class scenerioClass
@@ -1153,14 +1228,7 @@ end
 local scenarioClass = {}
 
 function scenarioClass.new(address)
-    -- Create object "instance"
-    local scenario = {}
-
-    -- Legacy values
-    scenario.address = address
-    scenario.structure = scenarioStructure
-
-    return scenario
+    return createObject(address, scenarioStructure)
 end
 
 ---@class sceneryClass
@@ -1169,14 +1237,7 @@ end
 local sceneryClass = {}
 
 function sceneryClass.new(address)
-    -- Create object "instance"
-    local scenery = {}
-
-    -- Legacy values
-    scenery.address = address
-    scenery.structure = sceneryStructure
-
-    return scenery
+    return createObject(address, sceneryStructure)
 end
 
 ---@class collisionGeometryClass
@@ -1185,14 +1246,7 @@ end
 local collisionGeometryClass = {}
 
 function collisionGeometryClass.new(address)
-    -- Create object "instance"
-    local collisionGeometry = {}
-
-    -- Legacy values
-    collisionGeometry.address = address
-    collisionGeometry.structure = collisionGeometryStructure
-
-    return collisionGeometry
+    return createObject(address, collisionGeometryStructure)
 end
 
 ---@class modelAnimationsClass
@@ -1203,14 +1257,7 @@ end
 local modelAnimationsClass = {}
 
 function modelAnimationsClass.new(address)
-    -- Create object "instance"
-    local modelAnimations = {}
-
-    -- Legacy values
-    modelAnimations.address = address
-    modelAnimations.structure = modelAnimationsStructure
-
-    return modelAnimations
+    return createObject(address, modelAnimationsStructure)
 end
 
 ---@class weaponClass
@@ -1218,14 +1265,7 @@ end
 local weaponClass = {}
 
 function weaponClass.new(address)
-    -- Create object "instance"
-    local weapon = {}
-
-    -- Legacy values
-    weapon.address = address
-    weapon.structure = weaponStructure
-
-    return weapon
+    return createObject(address, weaponStructure)
 end
 
 ---@class modelClass
@@ -1236,41 +1276,40 @@ end
 local modelClass = {}
 
 function modelClass.new(address)
-    -- Create object "instance"
-    local model = {}
-
-    -- Legacy values
-    model.address = address
-    model.structure = modelStructure
-
-    return model
+    return createObject(address, modelStructure)
 end
 
 ------------------------------------------------------------------------------
 -- LuaBlam globals
 ------------------------------------------------------------------------------
 
--- Add data tables to library
+-- Add Blam! data tables to library
 luablam.addressList = addressList
 luablam.tagClasses = tagClasses
 luablam.objectClasses = objectClasses
 luablam.cameraTypes = cameraTypes
+luablam.colorsRGB = colorsRGB
 
+-- LuaBlam globals
 luablam.tagDataHeader = {}
 
-function updateTagDataHeaderGlobal()
-    local headerData = {}
-
-    headerData.address = addressList.tagDataHeader
-    headerData.structure = tagDataHeaderStructure
-
-    setmetatable(headerData, dataBindingMetaTable)
-
-    luablam.tagDataHeader = luablam.dumpObject(headerData)
-end
-
 if (server_type ~= "sapp") then
+
+    function updateTagDataHeaderGlobal()
+        local headerData = {}
+
+        headerData.address = addressList.tagDataHeader
+        headerData.structure = tagDataHeaderStructure
+
+        setmetatable(headerData, dataBindingMetaTable)
+
+        luablam.tagDataHeader = dumpObject(headerData)
+    end
     set_callback("map load", "updateTagDataHeaderGlobal")
+
+    -- Update everything on script load
+    updateTagDataHeaderGlobal()
+
 end
 
 ------------------------------------------------------------------------------
@@ -1278,10 +1317,8 @@ end
 ------------------------------------------------------------------------------
 
 -- Add utilities to library
-luablam.getTagClass = getTagClass
-luablam.getTagId = getTagId
-luablam.getTagPath = getTagPath
 luablam.getObjects = getObjects
+luablam.consoleOutput = consoleOutput
 luablam.dumpObject = dumpObject
 
 --- Returns the camera type
@@ -1305,38 +1342,71 @@ function luablam.getCameraType()
     return cameraType
 end
 
---- Create a ingame-object object from a given address
+--- Create a tag object from a given address. THIS OBJECT IS NOT DYNAMIC.
 ---@param address integer
----@return ObjectClass
-function luablam.object(address)
+---@return tagClass
+function luablam.tag(address)
     if (address and address ~= 0) then
-        -- Generate a new object from class
-        local newObject = objectClass.new(address)
+        -- Generate a new tag object from class
+        local tag = tagClass.new(address)
 
-        -- Set mechanisim to bind properties to memory
-        setmetatable(newObject, dataBindingMetaTable)
+        -- Get all the tag info
+        local tagInfo = dumpObject(tag)
 
-        cleanObject(newObject)
+        -- Set up values
+        tagInfo.address = address
+        tagInfo.path = read_string(tagInfo.path)
+        tagInfo.class = tagClassFromInt(tagInfo.class)
 
-        return newObject
+        return tagInfo
     end
     return nil
 end
 
---- Create a tag object from a given address
----@param address number
----@return tagClass
-function luablam.tag(address)
-    if (address and address ~= 0) then
-        -- Generate a new object from class
-        local newObject = tagClass.new(address)
+--- Return the address of a tag given tag path (or id) and tag type
+---@param tag string | number
+---@param class string
+---@return tagHeaderStructure
+function luablam.getTag(...)
+    local arg = {...}
 
-        -- Set mechanisim to bind properties to memory
-        setmetatable(newObject, dataBindingMetaTable)
+    -- Arguments
+    local tagId = nil
+    local tagPath = nil
+    local tagClass = nil
 
-        cleanObject(newObject)
+    if (#arg ~= 2) then
+        consoleOutput(debug.traceback("Wrong number of arguments on get tag function", 2),
+                      colorsRGB.error)
+    end
 
-        return newObject
+    -- Get arguments from table
+    if (isNumber(arg[1])) then
+        tagId = arg[1]
+    elseif (isString(arg[1])) then
+        tagPath = arg[1]
+    end
+
+    tagClass = arg[2]
+
+    local tagAddress = nil
+
+    -- Get tag address
+    if (tagId ~= nil) then
+        tagAddress = get_tag(tagId)
+    else
+        tagAddress = get_tag(tagClass, tagPath)
+    end
+
+    return luablam.tag(tagAddress)
+end
+
+--- Create a ingame-object object from a given address
+---@param address integer
+---@return ObjectClass
+function luablam.object(address)
+    if (isValid(address)) then
+        return objectClass.new(address)
     end
     return nil
 end
@@ -1345,16 +1415,8 @@ end
 ---@param address number
 ---@return bipedClass
 function luablam.biped(address)
-    if (address and address ~= 0) then
-        -- Generate a new object from class
-        local newBiped = bipedClass.new(address)
-
-        -- Set mechanisim to bind properties to memory
-        setmetatable(newBiped, dataBindingMetaTable)
-
-        cleanObject(newBiped)
-
-        return newBiped
+    if (isValid(address)) then
+        return bipedClass.new(address)
     end
     return nil
 end
@@ -1363,20 +1425,9 @@ end
 ---@param tag string | number
 ---@return unicodeStringListClass
 function luablam.unicodeStringList(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.unicodeStringList)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newUnicodeStringList = unicodeStringListClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newUnicodeStringList, dataBindingMetaTable)
-
-            cleanObject(newUnicodeStringList)
-
-            return newUnicodeStringList
-        end
+    if (isValid(tag)) then
+        local unicodeStringListTag = luablam.getTag(tag, tagClasses.unicodeStringList)
+        return unicodeStringListClass.new(unicodeStringListTag.data)
     end
     return nil
 end
@@ -1385,20 +1436,9 @@ end
 ---@param tag string | number
 ---@return uiWidgetDefinitionClass
 function luablam.uiWidgetDefinition(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.uiWidgetDefinition)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newUiWidgetDefinition = uiWidgetDefinitionClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newUiWidgetDefinition, dataBindingMetaTable)
-
-            cleanObject(newUiWidgetDefinition)
-
-            return newUiWidgetDefinition
-        end
+    if (isValid(tag)) then
+        local uiWidgetDefinitionTag = luablam.getTag(tag, tagClasses.uiWidgetDefinition)
+        return uiWidgetDefinitionClass.new(uiWidgetDefinitionTag.data)
     end
     return nil
 end
@@ -1407,20 +1447,9 @@ end
 ---@param tag string | number
 ---@return uiWidgetCollectionClass
 function luablam.uiWidgetCollection(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.uiWidgetCollection)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newUiWidgetCollection = uiWidgetCollectionClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newUiWidgetCollection, dataBindingMetaTable)
-
-            cleanObject(newUiWidgetCollection)
-
-            return newUiWidgetCollection
-        end
+    if (isValid(tag)) then
+        local uiWidgetCollectionTag = luablam.getTag(tag, tagClasses.uiWidgetCollection)
+        return uiWidgetCollectionClass.new(uiWidgetCollectionTag.data)
     end
     return nil
 end
@@ -1429,20 +1458,9 @@ end
 ---@param tag string | number
 ---@return tagCollectionClass
 function luablam.tagCollection(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.tagCollection)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newTagCollection = tagCollectionClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newTagCollection, dataBindingMetaTable)
-
-            cleanObject(newTagCollection)
-
-            return newTagCollection
-        end
+    if (isValid(tag)) then
+        local tagCollectionTag = luablam.getTag(tag, tagClasses.tagCollection)
+        return tagCollectionClass.new(tagCollectionTag.data)
     end
     return nil
 end
@@ -1451,20 +1469,9 @@ end
 ---@param tag string | number
 ---@return weaponHudInterfaceClass
 function luablam.weaponHudInterface(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.weaponHudInterface)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newWeaponHudInterface = weaponHudInterfaceClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newWeaponHudInterface, dataBindingMetaTable)
-
-            cleanObject(newWeaponHudInterface)
-
-            return newWeaponHudInterface
-        end
+    if (isValid(tag)) then
+        local weaponHudInterfaceTag = luablam.getTag(tag, tagClasses.weaponHudInterface)
+        return weaponHudInterfaceClass.new(weaponHudInterfaceTag.data)
     end
     return nil
 end
@@ -1472,36 +1479,17 @@ end
 --- Create a Scenario object from a tag path or id
 ---@return scenerioClass
 function luablam.scenario(tag)
-    local address = read_dword(getTag(tag or 0, tagClasses.scenario) + 0x14)
-    -- Generate a new object from class
-    local newScenario = scenarioClass.new(address)
-
-    -- Set mechanisim to bind properties to memory
-    setmetatable(newScenario, dataBindingMetaTable)
-
-    cleanObject(newScenario)
-
-    return newScenario
+    local scenarioTag = luablam.getTag(tag or 0, tagClasses.scenario)
+    return scenarioClass.new(scenarioTag.data)
 end
 
 --- Create a Scenery object from a tag path or id
 ---@param tag string | number
 ---@return sceneryClass
 function luablam.scenery(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.scenery)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newScenery = sceneryClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newScenery, dataBindingMetaTable)
-
-            cleanObject(newScenery)
-
-            return newScenery
-        end
+    if (isValid(tag)) then
+        local sceneryTag = luablam.getTag(tag, tagClasses.scenery)
+        return sceneryClass.new(sceneryTag.data)
     end
     return nil
 end
@@ -1510,20 +1498,9 @@ end
 ---@param tag string | number
 ---@return collisionGeometryClass
 function luablam.collisionGeometry(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.collisionGeometry)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newCollisionGeometry = collisionGeometryClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newCollisionGeometry, dataBindingMetaTable)
-
-            cleanObject(newCollisionGeometry)
-
-            return newCollisionGeometry
-        end
+    if (isValid(tag)) then
+        local collisionGeometryTag = luablam.getTag(tag, tagClasses.collisionGeometry)
+        return collisionGeometryClass.new(collisionGeometryTag.data)
     end
     return nil
 end
@@ -1532,20 +1509,9 @@ end
 ---@param tag string | number
 ---@return modelAnimationsClass
 function luablam.modelAnimations(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.modelAnimations)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newModelAnimations = modelAnimationsClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newModelAnimations, dataBindingMetaTable)
-
-            cleanObject(newModelAnimations)
-
-            return newModelAnimations
-        end
+    if (isValid()) then
+        local modelAnimationsTag = luablam.getTag(tag, tagClasses.modelAnimations)
+        return modelAnimationsClass.new(modelAnimationsTag.data)
     end
     return nil
 end
@@ -1554,20 +1520,9 @@ end
 ---@param tag string | number
 ---@return weaponClass
 function luablam.weapon(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.weapon)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newweapon = weaponClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newweapon, dataBindingMetaTable)
-
-            cleanObject(newweapon)
-
-            return newweapon
-        end
+    if (isValid(tag)) then
+        local weaponTag = luablam.getTag(tag, tagClasses.weapon)
+        return weaponClass.new(weaponTag)
     end
     return nil
 end
@@ -1576,20 +1531,9 @@ end
 ---@param tag string | number
 ---@return modelClass
 function luablam.model(tag)
-    if (tag and tag ~= "") then
-        local tagAddress = getTag(tag, tagClasses.model)
-        if (tagAddress and tagAddress ~= 0) then
-            local address = read_dword(tagAddress + 0x14)
-            -- Generate a new object from class
-            local newmodel = modelClass.new(address)
-
-            -- Set mechanisim to bind properties to memory
-            setmetatable(newModel, dataBindingMetaTable)
-
-            cleanObject(newModel)
-
-            return newModel
-        end
+    if (isValid(tag)) then
+        local modelTag = luablam.getTag(tag, tagClasses.model)
+        return modelClass.new(modelTag.data)
     end
     return nil
 end
@@ -1603,7 +1547,7 @@ local luablam35 = {}
 -- Set compatibility layer version
 luablam35.version = 3.5
 
--- LuaBlam old API binding
+--- LuaBlam old API binding
 ---@param class string
 ---@param param string | number
 ---@param properties table
@@ -1611,7 +1555,7 @@ luablam35.version = 3.5
 function proccessRequestedObject(class, param, properties)
     local object = luablam[class](param)
     if (properties == nil) then
-        return dumpObject(object)
+        return luablam.dumpObject(object)
     else
         for k, v in pairs(properties) do
             object[k] = v
@@ -1644,8 +1588,8 @@ end
 ---@return uiWidgetDefinitionClass
 function luablam35.uiWidgetDefinition(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject("uiWidgetDefinition", tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject("uiWidgetDefinition", tag.path, properties)
     end
     return nil
 end
@@ -1655,8 +1599,8 @@ end
 ---@return weaponHudInterfaceClass
 function luablam35.weaponHudInterface(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject("weaponHudInterface", tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject("weaponHudInterface", tag.path, properties)
     end
     return nil
 end
@@ -1666,8 +1610,8 @@ end
 ---@return unicodeStringListClass
 function luablam35.unicodeStringList(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject("unicodeStringList", tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject("unicodeStringList", tag.path, properties)
     end
     return nil
 end
@@ -1677,8 +1621,8 @@ end
 ---@return scenerioClass
 function luablam35.scenario(address, properties)
     if (address and address ~= nil) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject("scenario", tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject("scenario", tag.path, properties)
     end
 end
 
@@ -1687,8 +1631,8 @@ end
 ---@return sceneryClass
 function luablam35.scenery(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject("scenery", tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject("scenery", tag.path, properties)
     end
     return nil
 end
@@ -1698,8 +1642,8 @@ end
 ---@return collisionGeometryClass
 function luablam35.collisionGeometry(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject("collisionGeometry", tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject("collisionGeometry", tag.path, properties)
     end
 
     return nil
@@ -1710,8 +1654,8 @@ end
 ---@return modelAnimationsClass
 function luablam35.modelAnimations(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject("modelAnimations", tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject("modelAnimations", tag.path, properties)
     end
     return nil
 end
@@ -1721,13 +1665,13 @@ end
 ---@return tagCollectionClass
 function luablam35.tagCollection(address, properties)
     if (address and address ~= 0) then
-        local tagPath = luablam.getTagPath(address)
-        return proccessRequestedObject("tagCollection", tagPath, properties)
+        local tag = luablam.tag(address)
+        return proccessRequestedObject("tagCollection", tag.path, properties)
     end
     return nil
 end
 
--- Setups LuaBlam 3.5 API
+--- Setups LuaBlam 3.5 API
 ---@return table
 function luablam.compat35()
     --- Return the id of a tag given tag type and tag path
@@ -1735,9 +1679,9 @@ function luablam.compat35()
     ---@param tagPath string
     ---@return number
     get_tag_id = function(tagClass, tagPath)
-        local tagAddress = get_tag(tagClass, tagPath)
-        if (tagAddress and tagAddress ~= 0) then
-            return luablam.getTagId(tagAddress)
+        local tag = luablam.getTag(tagClass, tagPath)
+        if (tag ~= nil) then
+            return tag.id
         end
         return nil
     end
@@ -1747,10 +1691,10 @@ function luablam.compat35()
     ---@param path string
     ---@return number
     get_simple_tag_id = function(type, path)
-        local global_tag_address = get_tag(type, path)
-        for tagId = 0, get_tags_count() - 1 do
-            if (get_tag_path(tagId) == path) then
-                return tagId
+        for index = 0, luablam.tagDataHeader.count - 1 do
+            local tag = luablam.tag(index)
+            if (tag.path == path) then
+                return index
             end
         end
         return nil
@@ -1760,9 +1704,9 @@ function luablam.compat35()
     ---@param tagId number
     ---@return string
     get_tag_path = function(tagId)
-        local tagAddress = get_tag(tagId)
-        if (tagAddress and tagAddress ~= 0) then
-            return luablam.getTagPath(tagAddress)
+        local tag = luablam.tag(tagId)
+        if (tag ~= nil) then
+            return tag.path
         end
         return nil
     end
@@ -1771,9 +1715,9 @@ function luablam.compat35()
     ---@param tagId number
     ---@return string
     get_tag_type = function(tagId)
-        local tagAddress = get_tag(tagId)
-        if (tagAddress and tagAddress ~= 0) then
-            return luablam.getTagClass(tagAddress)
+        local tag = luablam.tag(tagId)
+        if (tag ~= nil) then
+            return tag.class
         end
         return nil
     end
