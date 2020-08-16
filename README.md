@@ -1,4 +1,4 @@
-# lua-blam 4.0 
+# lua-blam 4.1
 ### What is it?
 
 Is a Lua library for scripting that allows you to handle Halo Custom Edition memory as objects in your script, including features as API extension and unification between Chimera and SAPP.
