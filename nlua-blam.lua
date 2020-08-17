@@ -12,7 +12,7 @@ luablam.version = 4.1
 ------------------------------------------------------------------------------
 -- Useful functions for internal use
 ------------------------------------------------------------------------------
----
+
 -- From legacy glue library!
 -- String or number to hex
 local function tohex(s, upper)
@@ -255,10 +255,10 @@ local function isTable(var)
 end
 
 --- Remove spaces and tabs from the beginning and the end of a string
----@param var string
+---@param str string
 ---@return string
-local function trim(string)
-    return string:match "^%s*(.*)":match "(.-)%s*$"
+local function trim(str)
+    return str:match "^%s*(.*)":match "(.-)%s*$"
 end
 
 --- Verify if the value is valid
@@ -337,7 +337,7 @@ local function writeUnicodeString(address, newString)
 end
 
 -- Create a reference to the original console out function
-local console_out = console_out
+local original_console_out = console_out
 
 --- Print a console message. It also supports multi-line messages!
 ---@param message string
@@ -390,13 +390,13 @@ local function consoleOutput(message, ...)
             buffer = buffer .. trimmedLine .. " "
         else
             -- Print the line
-            console_out(trimmedLine, r, g, b)
+            original_console_out(trimmedLine, r, g, b)
         end
     end
 
     -- Print the single-line message
     if (singleLine) then
-        console_out(buffer, r, g, b)
+        original_console_out(buffer, r, g, b)
     end
 end
 
@@ -1362,35 +1362,31 @@ function luablam.tag(address)
 end
 
 --- Return the address of a tag given tag path (or id) and tag type
----@param tag string | number
+---@param tagIdOrPath string | number
 ---@param class string
----@return tagHeaderStructure
-function luablam.getTag(...)
-    local arg = {...}
-
+---@return tagClass
+function luablam.getTag(tagIdOrPath, class, ...)
     -- Arguments
-    local tagId = nil
-    local tagPath = nil
-    local tagClass = nil
+    local tagId
+    local tagPath
+    local tagClass = class
 
-    if (#arg ~= 2) then
+    -- Get arguments from table
+    if (isNumber(tagIdOrPath)) then
+        tagId = tagIdOrPath
+    elseif (isString(tagIdOrPath)) then
+        tagPath = tagIdOrPath
+    end
+
+    if (...) then
         consoleOutput(debug.traceback("Wrong number of arguments on get tag function", 2),
                       colorsRGB.error)
     end
 
-    -- Get arguments from table
-    if (isNumber(arg[1])) then
-        tagId = arg[1]
-    elseif (isString(arg[1])) then
-        tagPath = arg[1]
-    end
-
-    tagClass = arg[2]
-
-    local tagAddress = nil
+    local tagAddress
 
     -- Get tag address
-    if (tagId ~= nil) then
+    if (tagId) then
         tagAddress = get_tag(tagId)
     else
         tagAddress = get_tag(tagClass, tagPath)
