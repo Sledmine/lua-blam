@@ -14,7 +14,7 @@ luablam.version = 4.1
 ------------------------------------------------------------------------------
 
 -- From legacy glue library!
--- String or number to hex
+--- String or number to hex
 local function tohex(s, upper)
     if type(s) == "number" then
         return (upper and "%08.8X" or "%08.8x"):format(s)
@@ -213,7 +213,7 @@ if (api_version) then
         destroy_object(objectId)
     end
 
-    --- Prints text into console
+    --- Print text into console
     ---@param message string
     function console_out(message)
         cprint(message)
@@ -400,8 +400,8 @@ local function consoleOutput(message, ...)
     end
 end
 
---- Convert bits into boolean values
--- Writing true or false is equal to 1 or 0 but not when reading
+--- Convert bits into boolean values.
+--- Writing true or false is equal to 1 or 0 but not when reading
 ---@param bit number
 ---@return boolean
 local function b2b(bit)
@@ -556,8 +556,8 @@ local function createObject(address, struct)
     return object
 end
 
---- Remove unused properties for game execution
 --[[
+--- Remove unused properties for game execution
 ---@param object table
 local function cleanObject(object)
     for k, v in pairs(object) do
@@ -1319,7 +1319,7 @@ luablam.getObjects = getObjects
 luablam.consoleOutput = consoleOutput
 luablam.dumpObject = dumpObject
 
---- Returns the camera type
+--- Get the camera type
 ---@return number
 function luablam.getCameraType()
     local camera = read_word(addressList.cameraType)
@@ -1546,7 +1546,7 @@ luablam35.version = 3.5
 ---@param param string | number
 ---@param properties table
 ---@return table | nil
-function proccessRequestedObject(class, param, properties)
+local function proccessRequestedObject(class, param, properties)
     local object = luablam[class](param)
     if (properties == nil) then
         return luablam.dumpObject(object)
@@ -1665,7 +1665,7 @@ function luablam35.tagCollection(address, properties)
     return nil
 end
 
---- Setups LuaBlam 3.5 API
+--- Setup LuaBlam 3.5 API
 ---@return table
 function luablam.compat35()
     --- Return the id of a tag given tag type and tag path
