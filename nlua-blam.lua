@@ -1546,7 +1546,7 @@ luablam35.version = 3.5
 ---@param param string | number
 ---@param properties table
 ---@return table | nil
-function proccessRequestedObject(class, param, properties)
+local function proccessRequestedObject(class, param, properties)
     local object = luablam[class](param)
     if (properties == nil) then
         return luablam.dumpObject(object)
