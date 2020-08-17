@@ -106,7 +106,7 @@ function test_Objects:test_Tag_Collection()
 end
 
 function test_Objects:test_Tag_Collection_Compat35()
-    ---@type blam35S
+    ---@type blam35
     local blam35 = blam.compat35()
     local uiDefaultProfiles = blam35.tagCollection(
                                   get_tag(blam.tagClasses.tagCollection,
