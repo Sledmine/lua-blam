@@ -876,7 +876,7 @@ local uiWidgetDefinitionStructure = {
     },
 }
 
--- tagCollection structure
+-- uiWidgetCollection structure
 local uiWidgetCollectionStructure = {
     count = {type = "byte", offset = 0x0},
     tagList = {
@@ -1535,7 +1535,7 @@ end
 ------------------------------------------------------------------------------
 -- LuaBlam 3.5 compatibility layer
 ------------------------------------------------------------------------------
-
+---@class blam35
 local luablam35 = {}
 
 -- Set compatibility layer version
@@ -1673,8 +1673,8 @@ function luablam.compat35()
     ---@param tagPath string
     ---@return number
     get_tag_id = function(tagClass, tagPath)
-        local tag = luablam.getTag(tagClass, tagPath)
-        if (tag ~= nil) then
+        local tag = luablam.getTag(tagPath, tagClass)
+        if (tag) then
             return tag.id
         end
         return nil
@@ -1686,7 +1686,7 @@ function luablam.compat35()
     ---@return number
     get_simple_tag_id = function(type, path)
         for index = 0, luablam.tagDataHeader.count - 1 do
-            local tag = luablam.tag(index)
+            local tag = luablam.getTag(index)
             if (tag.path == path) then
                 return index
             end
@@ -1698,8 +1698,8 @@ function luablam.compat35()
     ---@param tagId number
     ---@return string
     get_tag_path = function(tagId)
-        local tag = luablam.tag(tagId)
-        if (tag ~= nil) then
+        local tag = luablam.getTag(tagId)
+        if (tag) then
             return tag.path
         end
         return nil
@@ -1709,8 +1709,8 @@ function luablam.compat35()
     ---@param tagId number
     ---@return string
     get_tag_type = function(tagId)
-        local tag = luablam.tag(tagId)
-        if (tag ~= nil) then
+        local tag = luablam.getTag(tagId)
+        if (tag) then
             return tag.class
         end
         return nil
@@ -1728,6 +1728,7 @@ function luablam.compat35()
         return luablam.getObjects()
     end
 
+    
     return luablam35
 end
 
