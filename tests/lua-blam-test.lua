@@ -121,7 +121,7 @@ end
 ------------------------------------------------------------------------------
 
 function test_Objects:test_Biped_Object()
-    ---@type bipedClass
+    ---@type biped
     local bipedObject = blam.biped(get_dynamic_player())
     lu.assertNotIsNil(bipedObject)
     lu.assertNotIsNil(bipedObject.structure)

@@ -347,9 +347,6 @@ local function consoleOutput(message, ...)
     local color = nil
 
     -- Put the extra arguments into a table
-    ---@class consoleOputputArgs
-    ---@field singleLine boolean
-    ---@field color table
     local args = {...}
 
     if (message == nil or #args > 2) then
@@ -525,6 +522,10 @@ local dataBindingMetaTable = {
 
                 return table
             else
+                if (not operation) then
+                    
+                    console_out(property)
+                end 
                 return operation[1](object.address + propertyData.offset)
             end
         else
@@ -663,16 +664,23 @@ local objectStructure = {
     xVel = {type = "float", offset = 0x68},
     yVel = {type = "float", offset = 0x6C},
     zVel = {type = "float", offset = 0x70},
-    pitch = {type = "float", offset = 0x74},
-    yaw = {type = "float", offset = 0x78},
-    roll = {type = "float", offset = 0x7C},
-    xScale = {type = "float", offset = 0x80},
-    yScale = {type = "float", offset = 0x84},
-    zScale = {type = "float", offset = 0x88},
-    pitchVel = {type = "float", offset = 0x8C},
-    yawVel = {type = "float", offset = 0x90},
+    vX = {type = "float", offset = 0x74},
+    vY = {type = "float", offset = 0x78},
+    vZ = {type = "float", offset = 0x7C},
+    v2X = {type = "float", offset = 0x80},
+    v2Y = {type = "float", offset = 0x84},
+    v2Z = {type = "float", offset = 0x88},
+    yawVel = {type = "float", offset = 0x8C},
+    pitchVel = {type = "float", offset = 0x90},
     rollVel = {type = "float", offset = 0x94},
+    locationId = {type = "dword", offset = 0x98},
+    boundingRadius = {type = "float", offset = 0xAC},
     type = {type = "word", offset = 0xB4},
+    team = {type = "word", offset = 0xB8},
+    playerId = {type = "dword", offset = 0xC0},
+    parentId = {type = "dword", offset = 0xC4},
+    -- Experimental name properties
+    isHealthEmpty = {type = "bit", offset = 0x106, bitLevel = 2},
     animationTagId = {
         type = "dword",
         offset = 0xCC,
@@ -682,8 +690,6 @@ local objectStructure = {
         type = "word",
         offset = 0xD2,
     },
-    weapon = {type = "dword", offset = 0x11E},
-    parent = {type = "dword", offset = 0x122},
     regionPermutation1 = {
         type = "byte",
         offset = 0x180,
@@ -1062,7 +1068,7 @@ local modelStructure = {
 -- Object classes
 ------------------------------------------------------------------------------
 
----@class ObjectClass
+---@class blamObject
 ---@field address number
 ---@field tagId number Object tag ID
 ---@field hasCollision boolean Check if object has or has not collision
@@ -1086,21 +1092,25 @@ local modelStructure = {
 ---@field xVel number Current velocity of the object on X axis
 ---@field yVel number Current velocity of the object on Y axis
 ---@field zVel number Current velocity of the object on Z axis
----@field pitch number Current rotation of the object on pitch
----@field yaw number Current rotation of the object on yaw
----@field roll number Current rotation of the object on roll
----@field xScale number PROVIDE DESCRIPTION
----@field yScale number PROVIDE DESCRIPTION
----@field zScale number PROVIDE DESCRIPTION
+---@field vX number Current x value in first rotation vector
+---@field vY number Current y value in first rotation vector
+---@field vZ number Current z value in first rotation vector
+---@field v2X number Current x value in second rotation vector
+---@field v2Y number Current y value in second rotation vector
+---@field v2Z number Current z value in second rotation vector
 ---@field yawVel number Current velocity of the object in yaw
 ---@field pitchVel number Current velocity of the object in pitch
 ---@field rollVel number Current velocity of the object in roll
+---@field locationId number Current id of the location in the map
+---@field boundingRadius number Radius amount of the object in radians
 ---@field type number Object type
+---@field team number Object multiplayer team
+---@field playerId number Current player id if the object
+---@field parentId number Current parent id of the object
+---@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
 ---@field animationTagId number Current animation tag ID
 ---@field animation number Current animation index
 ---@field animationFrame number Current animation frame
----@field weapon number Current weapon tag ID
----@field parent number Parent object id
 ---@field regionPermutation1 number
 ---@field regionPermutation2 number
 ---@field regionPermutation3 number
@@ -1109,17 +1119,17 @@ local modelStructure = {
 ---@field regionPermutation6 number
 ---@field regionPermutation7 number
 ---@field regionPermutation8 number
-local objectClass = {}
 
-function objectClass.new(address)
+---@return blamObject
+local function objectClassNew(address)
     return createObject(address, objectStructure)
 end
 
----@class bipedClass : ObjectClass
+---@class biped : blamObject
 ---@field invisible boolean Biped invisible state
 ---@field noDropItems boolean Biped ability to drop items at dead
----@field ignoreCollision boolean Does the biped ignore the collision?
----@field flashlight boolean Does the biped have the flashlight enabled?
+---@field ignoreCollision boolean Biped ignores collisiion
+---@field flashlight boolean Biped has flaslight enabled
 ---@field cameraX number Current position of the biped  X axis
 ---@field cameraY number Current position of the biped  Y axis
 ---@field cameraZ number Current position of the biped  Z axis
@@ -1140,42 +1150,42 @@ end
 ---@field invisibleScale number Opacity amount of biped invisiblity
 ---@field primaryNades number Primary grenades count
 ---@field secondaryNades number Secondary grenades count
-local bipedClass = {}
 
-function bipedClass.new(address)
+---@return biped
+local function bipedClassNew(address)
     return createObject(address, bipedStructure)
 end
 
----@class tagClass
+---@class tag
 ---@field class number Type of the tag
 ---@field id number Tag ID
 ---@field path string Path of the tag
 ---@field indexed boolean Is the tag indexed?
-local tagClass = {}
 
-function tagClass.new(address)
+---@return tag
+local function tagClassNew(address)
     return createObject(address, tagHeaderStructure)
 end
 
----@class tagCollectionClass
+---@class tagCollection
 ---@field count number Number of tags in the collection
 ---@field tagList table List of tags
-local tagCollectionClass = {}
 
-function tagCollectionClass.new(address)
+---@return tagCollection
+local function tagCollectionNew(address)
     return createObject(address, tagCollectionStructure)
 end
 
----@class unicodeStringListClass
+---@class unicodeStringList
 ---@field count number Number of unicode strings
 ---@field stringList table List of unicode strings
-local unicodeStringListClass = {}
 
-function unicodeStringListClass.new(address)
+---@return unicodeStringList
+local function unicodeStringListClassNew(address)
     return createObject(address, unicodeStringListStructure)
 end
 
----@class uiWidgetDefinitionClass
+---@class uiWidgetDefinition
 ---@field type number Type of widget
 ---@field controllerIndex number Index of the player controller
 ---@field name string Name of the widget
@@ -1188,92 +1198,91 @@ end
 ---@field tagReference number
 ---@field childWidgetsCount number Number of child widgets
 ---@field childWidgetsList table tag ID list of the child widgets
-local uiWidgetDefinitionClass = {}
 
-function uiWidgetDefinitionClass.new(address)
+---@return uiWidgetDefinition
+local function uiWidgetDefinitionClassNew(address)
     return createObject(address, uiWidgetDefinitionStructure)
 end
 
----@class uiWidgetCollectionClass
+---@class uiWidgetCollection
 ---@field count number Number of widgets in the collection
 ---@field tagList table Tag ID list of the widgets
-local uiWidgetCollectionClass = {}
 
-function uiWidgetCollectionClass.new(address)
+---@return uiWidgetCollection
+local function uiWidgetCollectionClassNew(address)
     return createObject(address, uiWidgetCollectionStructure)
 end
 
----@class weaponHudInterfaceClass
+---@class weaponHudInterface
 ---@field crosshairs number
 ---@field defaultBlue number
 ---@field defaultGreen number
 ---@field defaultRed number
 ---@field defaultAlpha number
 ---@field sequenceIndex number
-local weaponHudInterfaceClass = {}
 
-function weaponHudInterfaceClass.new(address)
+local function weaponHudInterfaceClassNew(address)
     return createObject(address, weaponHudInterfaceStructure)
 end
 
----@class scenerioClass
+---@class scenario
 ---@field sceneryPaletteCount number Number of sceneries in the scenery palette
 ---@field sceneryPaletteList table Tag ID list of scenerys in the scenery palette
 ---@field spawnLocationCount number Number of spawns in the scenario
 ---@field spawnLocationList table List of spawns in the scenario
 ---@field vehicleLocationCount number Number of vehicles locations in the scenario
 ---@field vehicleLocationList table List of vehicles locations in the scenario
-local scenarioClass = {}
 
-function scenarioClass.new(address)
+---@return scenario
+local function scenarioClassNew(address)
     return createObject(address, scenarioStructure)
 end
 
----@class sceneryClass
+---@class scenery
 ---@field model number
 ---@field modifierShader number
-local sceneryClass = {}
 
-function sceneryClass.new(address)
+---@return scenery
+local function sceneryClassNew(address)
     return createObject(address, sceneryStructure)
 end
 
----@class collisionGeometryClass
+---@class collisionGeometry
 ---@field vertexCount number Number of vertex in the collision geometry
 ---@field vertexList table List of vertex in the collision geometry
-local collisionGeometryClass = {}
 
-function collisionGeometryClass.new(address)
+---@return collisionGeometry
+local function collisionGeometryClassNew(address)
     return createObject(address, collisionGeometryStructure)
 end
 
----@class modelAnimationsClass
+---@class modelAnimations
 ---@field fpAnimationCount number Number of first-person animations
 ---@field fpAnimationList table List of first-person animations
 ---@field animationCount number Number of animations of the model
 ---@field animationList table List of animations of the model
-local modelAnimationsClass = {}
 
-function modelAnimationsClass.new(address)
+---@return modelAnimations
+local function modelAnimationsClassNew(address)
     return createObject(address, modelAnimationsStructure)
 end
 
----@class weaponClass
+---@class weapon
 ---@param model number Tag ID of the weapon model
-local weaponClass = {}
 
-function weaponClass.new(address)
+---@return weapon
+local function weaponClassNew(address)
     return createObject(address, weaponStructure)
 end
 
----@class modelClass
+---@class model
 ---@param nodeCount number Number of nodes
 ---@param nodeList table List of the model nodes
 ---@param regionCount number Number of regions
 ---@param regionList table List of regions
-local modelClass = {}
 
-function modelClass.new(address)
+---@return model
+local function modelClassNew(address)
     return createObject(address, modelStructure)
 end
 
@@ -1342,11 +1351,11 @@ end
 
 --- Create a tag object from a given address. THIS OBJECT IS NOT DYNAMIC.
 ---@param address integer
----@return tagClass
+---@return tag
 function luablam.tag(address)
     if (address and address ~= 0) then
         -- Generate a new tag object from class
-        local tag = tagClass.new(address)
+        local tag = tagClassNew(address)
 
         -- Get all the tag info
         local tagInfo = dumpObject(tag)
@@ -1364,7 +1373,7 @@ end
 --- Return the address of a tag given tag path (or id) and tag type
 ---@param tagIdOrPath string | number
 ---@param class string
----@return tagClass
+---@return tag
 function luablam.getTag(tagIdOrPath, class, ...)
     -- Arguments
     local tagId
@@ -1397,137 +1406,137 @@ end
 
 --- Create a ingame-object object from a given address
 ---@param address integer
----@return ObjectClass
+---@return blamObject
 function luablam.object(address)
     if (isValid(address)) then
-        return objectClass.new(address)
+        return objectClassNew(address)
     end
     return nil
 end
 
 --- Create a Biped object from a given address
 ---@param address number
----@return bipedClass
+---@return biped
 function luablam.biped(address)
     if (isValid(address)) then
-        return bipedClass.new(address)
+        return bipedClassNew(address)
     end
     return nil
 end
 
 --- Create a Unicode String List object from a tag path or id
 ---@param tag string | number
----@return unicodeStringListClass
+---@return unicodeStringList
 function luablam.unicodeStringList(tag)
     if (isValid(tag)) then
         local unicodeStringListTag = luablam.getTag(tag, tagClasses.unicodeStringList)
-        return unicodeStringListClass.new(unicodeStringListTag.data)
+        return unicodeStringListClassNew(unicodeStringListTag.data)
     end
     return nil
 end
 
 --- Create a UI Widget Definition object from a tag path or id
 ---@param tag string | number
----@return uiWidgetDefinitionClass
+---@return uiWidgetDefinition
 function luablam.uiWidgetDefinition(tag)
     if (isValid(tag)) then
         local uiWidgetDefinitionTag = luablam.getTag(tag, tagClasses.uiWidgetDefinition)
-        return uiWidgetDefinitionClass.new(uiWidgetDefinitionTag.data)
+        return uiWidgetDefinitionClassNew(uiWidgetDefinitionTag.data)
     end
     return nil
 end
 
 --- Create a UI Widget Collection object from a tag path or id
 ---@param tag string | number
----@return uiWidgetCollectionClass
+---@return uiWidgetCollection
 function luablam.uiWidgetCollection(tag)
     if (isValid(tag)) then
         local uiWidgetCollectionTag = luablam.getTag(tag, tagClasses.uiWidgetCollection)
-        return uiWidgetCollectionClass.new(uiWidgetCollectionTag.data)
+        return uiWidgetCollectionClassNew(uiWidgetCollectionTag.data)
     end
     return nil
 end
 
 --- Create a Tag Collection object from a tag path or id
 ---@param tag string | number
----@return tagCollectionClass
+---@return tagCollection
 function luablam.tagCollection(tag)
     if (isValid(tag)) then
         local tagCollectionTag = luablam.getTag(tag, tagClasses.tagCollection)
-        return tagCollectionClass.new(tagCollectionTag.data)
+        return tagCollectionNew(tagCollectionTag.data)
     end
     return nil
 end
 
 --- Create a Weapon HUD Interface object from a tag path or id
 ---@param tag string | number
----@return weaponHudInterfaceClass
+---@return weaponHudInterface
 function luablam.weaponHudInterface(tag)
     if (isValid(tag)) then
         local weaponHudInterfaceTag = luablam.getTag(tag, tagClasses.weaponHudInterface)
-        return weaponHudInterfaceClass.new(weaponHudInterfaceTag.data)
+        return weaponHudInterfaceClassNew(weaponHudInterfaceTag.data)
     end
     return nil
 end
 
 --- Create a Scenario object from a tag path or id
----@return scenerioClass
+---@return scenario
 function luablam.scenario(tag)
     local scenarioTag = luablam.getTag(tag or 0, tagClasses.scenario)
-    return scenarioClass.new(scenarioTag.data)
+    return scenarioClassNew(scenarioTag.data)
 end
 
 --- Create a Scenery object from a tag path or id
 ---@param tag string | number
----@return sceneryClass
+---@return scenery
 function luablam.scenery(tag)
     if (isValid(tag)) then
         local sceneryTag = luablam.getTag(tag, tagClasses.scenery)
-        return sceneryClass.new(sceneryTag.data)
+        return sceneryClassNew(sceneryTag.data)
     end
     return nil
 end
 
 --- Create a Collision Geometry object from a tag path or id
 ---@param tag string | number
----@return collisionGeometryClass
+---@return collisionGeometry
 function luablam.collisionGeometry(tag)
     if (isValid(tag)) then
         local collisionGeometryTag = luablam.getTag(tag, tagClasses.collisionGeometry)
-        return collisionGeometryClass.new(collisionGeometryTag.data)
+        return collisionGeometryClassNew(collisionGeometryTag.data)
     end
     return nil
 end
 
 --- Create a Model Animation object from a tag path or id
 ---@param tag string | number
----@return modelAnimationsClass
+---@return modelAnimations
 function luablam.modelAnimations(tag)
     if (isValid()) then
         local modelAnimationsTag = luablam.getTag(tag, tagClasses.modelAnimations)
-        return modelAnimationsClass.new(modelAnimationsTag.data)
+        return modelAnimationsClassNew(modelAnimationsTag.data)
     end
     return nil
 end
 
 --- Create a Model Animation object from a tag path or id
 ---@param tag string | number
----@return weaponClass
+---@return weapon
 function luablam.weapon(tag)
     if (isValid(tag)) then
         local weaponTag = luablam.getTag(tag, tagClasses.weapon)
-        return weaponClass.new(weaponTag)
+        return weaponClassNew(weaponTag)
     end
     return nil
 end
 
 --- Create a Model Animation object from a tag path or id
 ---@param tag string | number
----@return modelClass
+---@return model
 function luablam.model(tag)
     if (isValid(tag)) then
         local modelTag = luablam.getTag(tag, tagClasses.model)
-        return modelClass.new(modelTag.data)
+        return modelClassNew(modelTag.data)
     end
     return nil
 end
@@ -1559,7 +1568,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return ObjectClass
+---@return blamObject
 function luablam35.object(address, properties)
     if (address and address ~= 0) then
         return proccessRequestedObject("object", address, properties)
@@ -1569,7 +1578,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return bipedClass
+---@return biped
 function luablam35.biped(address, properties)
     if (address and address ~= 0) then
         return proccessRequestedObject("biped", address, properties)
@@ -1579,7 +1588,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return uiWidgetDefinitionClass
+---@return uiWidgetDefinition
 function luablam35.uiWidgetDefinition(address, properties)
     if (address and address ~= 0) then
         local tag = luablam.tag(address)
@@ -1590,7 +1599,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return weaponHudInterfaceClass
+---@return weaponHudInterface
 function luablam35.weaponHudInterface(address, properties)
     if (address and address ~= 0) then
         local tag = luablam.tag(address)
@@ -1601,7 +1610,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return unicodeStringListClass
+---@return unicodeStringList
 function luablam35.unicodeStringList(address, properties)
     if (address and address ~= 0) then
         local tag = luablam.tag(address)
@@ -1612,7 +1621,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return scenerioClass
+---@return scenario
 function luablam35.scenario(address, properties)
     if (address and address ~= nil) then
         local tag = luablam.tag(address)
@@ -1622,7 +1631,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return sceneryClass
+---@return scenery
 function luablam35.scenery(address, properties)
     if (address and address ~= 0) then
         local tag = luablam.tag(address)
@@ -1633,7 +1642,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return collisionGeometryClass
+---@return collisionGeometry
 function luablam35.collisionGeometry(address, properties)
     if (address and address ~= 0) then
         local tag = luablam.tag(address)
@@ -1645,7 +1654,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return modelAnimationsClass
+---@return modelAnimations
 function luablam35.modelAnimations(address, properties)
     if (address and address ~= 0) then
         local tag = luablam.tag(address)
@@ -1656,7 +1665,7 @@ end
 
 ---@param address number
 ---@param properties nil | table
----@return tagCollectionClass
+---@return tagCollection
 function luablam35.tagCollection(address, properties)
     if (address and address ~= 0) then
         local tag = luablam.tag(address)
