@@ -1,13 +1,10 @@
 ------------------------------------------------------------------------------
 -- Blam! library for Chimera/SAPP Lua scripting
--- Sledmine & JerryBrick
--- Version 4.1
+-- Sledmine, JerryBrick
+-- Version 4.2
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local luablam = {}
-
--- LuaBlam version
-luablam.version = 4.1
+local luablam = {version = 4.1}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal use
@@ -523,9 +520,9 @@ local dataBindingMetaTable = {
                 return table
             else
                 if (not operation) then
-                    
+
                     console_out(property)
-                end 
+                end
                 return operation[1](object.address + propertyData.offset)
             end
         else
@@ -599,7 +596,59 @@ local function extendStructure(parent, structure)
     return extendedStructure
 end
 
--- ObjectClass structure
+---@class blamObject
+---@field address number
+---@field tagId number Object tag ID
+---@field hasCollision boolean Check if object has or has not collision
+---@field isOnGround boolean Is the object touching ground
+---@field ignoreGravity boolean Make object to ignore gravity
+---@field isInWater boolean Is the object touching on water
+---@field dynamicShading boolean Enable disable dynamic shading for lightmaps
+---@field isNotCastingShadow boolean Enable/disable object shadow casting
+---@field frozen boolean Freeze/unfreeze object existence
+---@field isOutSideMap boolean Is object outside/inside bsp
+---@field isCollideable boolean Enable/disable object shadow casting
+---@field model number Gbxmodel tag ID
+---@field health number Current health of the object
+---@field shield number Current shield of the object
+---@field redA number Red color channel for A modifier
+---@field greenA number Green color channel for A modifier
+---@field blueA number Blue color channel for A modifier
+---@field x number Current position of the object on X axis
+---@field y number Current position of the object on Y axis
+---@field z number Current position of the object on Z axis
+---@field xVel number Current velocity of the object on X axis
+---@field yVel number Current velocity of the object on Y axis
+---@field zVel number Current velocity of the object on Z axis
+---@field vX number Current x value in first rotation vector
+---@field vY number Current y value in first rotation vector
+---@field vZ number Current z value in first rotation vector
+---@field v2X number Current x value in second rotation vector
+---@field v2Y number Current y value in second rotation vector
+---@field v2Z number Current z value in second rotation vector
+---@field yawVel number Current velocity of the object in yaw
+---@field pitchVel number Current velocity of the object in pitch
+---@field rollVel number Current velocity of the object in roll
+---@field locationId number Current id of the location in the map
+---@field boundingRadius number Radius amount of the object in radians
+---@field type number Object type
+---@field team number Object multiplayer team
+---@field playerId number Current player id if the object
+---@field parentId number Current parent id of the object
+---@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
+---@field animationTagId number Current animation tag ID
+---@field animation number Current animation index
+---@field animationFrame number Current animation frame
+---@field regionPermutation1 number
+---@field regionPermutation2 number
+---@field regionPermutation3 number
+---@field regionPermutation4 number
+---@field regionPermutation5 number
+---@field regionPermutation6 number
+---@field regionPermutation7 number
+---@field regionPermutation8 number
+
+-- blamObject structure
 local objectStructure = {
     tagId = {type = "dword", offset = 0x0},
     hasCollision = {
@@ -674,13 +723,20 @@ local objectStructure = {
     pitchVel = {type = "float", offset = 0x90},
     rollVel = {type = "float", offset = 0x94},
     locationId = {type = "dword", offset = 0x98},
-    boundingRadius = {type = "float", offset = 0xAC},
+    boundingRadius = {
+        type = "float",
+        offset = 0xAC,
+    },
     type = {type = "word", offset = 0xB4},
     team = {type = "word", offset = 0xB8},
     playerId = {type = "dword", offset = 0xC0},
     parentId = {type = "dword", offset = 0xC4},
     -- Experimental name properties
-    isHealthEmpty = {type = "bit", offset = 0x106, bitLevel = 2},
+    isHealthEmpty = {
+        type = "bit",
+        offset = 0x106,
+        bitLevel = 2,
+    },
     animationTagId = {
         type = "dword",
         offset = 0xCC,
@@ -1068,57 +1124,6 @@ local modelStructure = {
 -- Object classes
 ------------------------------------------------------------------------------
 
----@class blamObject
----@field address number
----@field tagId number Object tag ID
----@field hasCollision boolean Check if object has or has not collision
----@field isOnGround boolean Is the object touching ground
----@field ignoreGravity boolean Make object to ignore gravity
----@field isInWater boolean Is the object touching on water
----@field dynamicShading boolean Enable disable dynamic shading for lightmaps
----@field isNotCastingShadow boolean Enable/disable object shadow casting
----@field frozen boolean Freeze/unfreeze object existence
----@field isOutSideMap boolean Is object outside/inside bsp
----@field isCollideable boolean Enable/disable object shadow casting
----@field model number Gbxmodel tag ID
----@field health number Current health of the object
----@field shield number Current shield of the object
----@field redA number Red color channel for A modifier
----@field greenA number Green color channel for A modifier
----@field blueA number Blue color channel for A modifier
----@field x number Current position of the object on X axis
----@field y number Current position of the object on Y axis
----@field z number Current position of the object on Z axis
----@field xVel number Current velocity of the object on X axis
----@field yVel number Current velocity of the object on Y axis
----@field zVel number Current velocity of the object on Z axis
----@field vX number Current x value in first rotation vector
----@field vY number Current y value in first rotation vector
----@field vZ number Current z value in first rotation vector
----@field v2X number Current x value in second rotation vector
----@field v2Y number Current y value in second rotation vector
----@field v2Z number Current z value in second rotation vector
----@field yawVel number Current velocity of the object in yaw
----@field pitchVel number Current velocity of the object in pitch
----@field rollVel number Current velocity of the object in roll
----@field locationId number Current id of the location in the map
----@field boundingRadius number Radius amount of the object in radians
----@field type number Object type
----@field team number Object multiplayer team
----@field playerId number Current player id if the object
----@field parentId number Current parent id of the object
----@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
----@field animationTagId number Current animation tag ID
----@field animation number Current animation index
----@field animationFrame number Current animation frame
----@field regionPermutation1 number
----@field regionPermutation2 number
----@field regionPermutation3 number
----@field regionPermutation4 number
----@field regionPermutation5 number
----@field regionPermutation6 number
----@field regionPermutation7 number
----@field regionPermutation8 number
 
 ---@return blamObject
 local function objectClassNew(address)
@@ -1150,6 +1155,7 @@ end
 ---@field invisibleScale number Opacity amount of biped invisiblity
 ---@field primaryNades number Primary grenades count
 ---@field secondaryNades number Secondary grenades count
+---@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard
 
 ---@return biped
 local function bipedClassNew(address)
@@ -1290,7 +1296,7 @@ end
 -- LuaBlam globals
 ------------------------------------------------------------------------------
 
--- Add Blam! data tables to library
+-- Add blam! data tables to library
 luablam.addressList = addressList
 luablam.tagClasses = tagClasses
 luablam.objectClasses = objectClasses
@@ -1737,7 +1743,6 @@ function luablam.compat35()
         return luablam.getObjects()
     end
 
-    
     return luablam35
 end
 
