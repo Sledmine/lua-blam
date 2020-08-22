@@ -1274,7 +1274,7 @@ local function modelAnimationsClassNew(address)
 end
 
 ---@class weapon
----@param model number Tag ID of the weapon model
+---@field model number Tag ID of the weapon model
 
 ---@return weapon
 local function weaponClassNew(address)
@@ -1282,11 +1282,11 @@ local function weaponClassNew(address)
 end
 
 ---@class model
----@param nodeCount number Number of nodes
----@param nodeList table List of the model nodes
----@param regionCount number Number of regions
----@param regionList table List of regions
-
+---@field nodeCount number Number of nodes
+---@field nodeList table List of the model nodes
+---@field regionCount number Number of regions
+---@field regionList table List of regions
+---
 ---@return model
 local function modelClassNew(address)
     return createObject(address, modelStructure)
