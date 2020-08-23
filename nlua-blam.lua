@@ -333,64 +333,56 @@ local function writeUnicodeString(address, newString)
     end
 end
 
--- Create a reference to the original console out function
+-- Local reference to the original console_out function
 local original_console_out = console_out
 
 --- Print a console message. It also supports multi-line messages!
 ---@param message string
 local function consoleOutput(message, ...)
-    -- Params
-    local singleLine = nil
-    local color = nil
-
     -- Put the extra arguments into a table
     local args = {...}
 
-    if (message == nil or #args > 2) then
-        consoleOutput(debug.traceback("Wrong number of arguments on console out function", 2),
+    if (message == nil or #args > 5) then
+        consoleOutput(debug.traceback("Wrong number of arguments on console output function", 2),
                       colorsRGB.error)
     end
 
+    -- Output color
+    local color = {
+        a = 1,
+        r = 1,
+        g = 1,
+        b = 1
+    }
+
     -- Get the arguments from table
-    for i, v in ipairs(args) do
-        if (isBoolean(v)) then
-            singleLine = v
-        elseif (isTable(v)) then
-            color = v
+    if (isTable(args[1])) then
+        color = args[1]
+        if (not color.a) then
+            color.a = 1
         end
+    elseif (#args == 3 or #args == 4) then
+        local rgbPosition = 1
+        if (#args == 4) then
+            color.a = args[1]
+            rgbPosition = 2
+        end
+        color.r = args[rgbPosition]
+        color.g = args[rgbPosition + 1]
+        color.b = args[rgbPosition + 2]
     end
+    
+    if (isString(message)) then
+        -- Explode the string!!
+        for line in message:gmatch("([^\n]+)") do
+            -- Trim the line
+            local trimmedLine = trim(line)
 
-    -- Set the default color
-    local r = 1
-    local g = 1
-    local b = 1
-
-    -- Lookup for a custom color
-    if (color ~= nil) then
-        r = color.r
-        g = color.g
-        b = color.b
-    end
-
-    local buffer = ""
-
-    -- Explode the string!!
-    for line in message:gmatch("([^\n]+)") do
-        -- Trim the line
-        local trimmedLine = trim(line)
-
-        if (singleLine) then
-            -- Store the line in the buffer
-            buffer = buffer .. trimmedLine .. " "
-        else
             -- Print the line
-            original_console_out(trimmedLine, r, g, b)
+            original_console_out(trimmedLine, table.unpack(color))
         end
-    end
-
-    -- Print the single-line message
-    if (singleLine) then
-        original_console_out(buffer, r, g, b)
+    else
+        original_console_out(message, table.unpack(color))
     end
 end
 
@@ -1331,8 +1323,10 @@ end
 
 -- Add utilities to library
 luablam.getObjects = getObjects
-luablam.consoleOutput = consoleOutput
 luablam.dumpObject = dumpObject
+
+-- Use LuaBlam console out function
+console_out = consoleOutput
 
 --- Get the camera type
 ---@return number
