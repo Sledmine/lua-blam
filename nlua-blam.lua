@@ -1362,6 +1362,8 @@ luablam.addressList = addressList
 luablam.tagClasses = tagClasses
 luablam.objectClasses = objectClasses
 luablam.cameraTypes = cameraTypes
+luablam.netgameFlagTypes = netgameFlagTypes
+luablam.netgameEquipmentTypes = netgameEquipmentTypes
 luablam.colorsRGB = colorsRGB
 
 -- LuaBlam globals
