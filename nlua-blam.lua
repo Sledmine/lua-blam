@@ -158,6 +158,36 @@ local cameraTypes = {
     deadCamera = 5, -- 23776
 }
 
+local netgameFlagTypes = {
+    ctfFlag = 0,
+    ctfVehicle = 1,
+    ballSpawn = 2,
+    raceTrack = 3,
+    raceVehicle = 4,
+    vegasBank = 5,
+    teleportFrom = 6,
+    teleportTo = 7,
+    hillFlag = 8,
+}
+
+local netgameEquipmentTypes = {
+    none = 0,
+    ctf = 1,
+    slayer = 2,
+    oddball = 3,
+    koth = 4,
+    race = 5,
+    terminator = 6,
+    stub = 7,
+    ignored1 = 8,
+    ignored2 = 9,
+    ignored3 = 10,
+    ignored4 = 11,
+    allGames = 12,
+    allExceptCtf = 13,
+    allExceptRaceCtf = 14,
+}
+
 -- Console colors
 local colorsRGB = {
     success = {r = 0.235, g = 0.82, b = 0},
