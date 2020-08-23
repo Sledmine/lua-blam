@@ -429,8 +429,8 @@ local dataBindingMetaTable = {
                 operation[2](object.address + propertyData.offset, bitLevel, value)
             elseif (dataType == "list") then
                 operation = dataOperations[propertyData.elementsType]
-                local listCount = read_byte(object.address + propertyData.offset - 0x4)
-                local listAddress = read_dword(object.address + propertyData.offset)
+                local listCount = read_byte(object.address + propertyData.offset)
+                local listAddress = read_dword(object.address + propertyData.offset + 0x4)
                 for i = 1, listCount do
                     if (value[i] ~= nil) then
                         operation[2](listAddress + 0xC + propertyData.jump * (i - 1), value[i])
@@ -441,8 +441,8 @@ local dataBindingMetaTable = {
                     end
                 end
             elseif (dataType == "table") then
-                local elementsCount = read_byte(object.address + propertyData.offset - 0x4)
-                local firstElement = read_dword(object.address + propertyData.offset)
+                local elementsCount = read_byte(object.address + propertyData.offset)
+                local firstElement = read_dword(object.address + propertyData.offset + 0x4)
                 for i = 1, elementsCount do
                     local elementAddress = firstElement + (i - 1) * propertyData.jump
                     if (value[i] ~= nil) then
@@ -485,8 +485,8 @@ local dataBindingMetaTable = {
                 return b2b(operation[1](object.address + propertyData.offset, bitLevel))
             elseif (dataType == "list") then
                 operation = dataOperations[propertyData.elementsType]
-                local listCount = read_byte(object.address + propertyData.offset - 0x4)
-                local listAddress = read_dword(object.address + propertyData.offset)
+                local listCount = read_byte(object.address + propertyData.offset)
+                local listAddress = read_dword(object.address + propertyData.offset + 0x4)
                 local list = {}
                 for i = 1, listCount do
                     list[i] = operation[1](listAddress + 0xC + propertyData.jump * (i - 1))
@@ -494,8 +494,8 @@ local dataBindingMetaTable = {
                 return list
             elseif (dataType == "table") then
                 local table = {}
-                local elementsCount = read_byte(object.address + propertyData.offset - 0x4)
-                local firstElement = read_dword(object.address + propertyData.offset)
+                local elementsCount = read_byte(object.address + propertyData.offset)
+                local firstElement = read_dword(object.address + propertyData.offset + 0x4)
                 for i = 1, elementsCount do
                     local elementAddress = firstElement + (i - 1) * propertyData.jump
                     table[i] = {}
@@ -883,7 +883,7 @@ local tagCollectionStructure = {
     count = {type = "byte", offset = 0x0},
     tagList = {
         type = "list",
-        offset = 0x4,
+        offset = 0x0,
         elementsType = "dword",
         jump = 0x10,
     },
@@ -894,7 +894,7 @@ local unicodeStringListStructure = {
     count = {type = "byte", offset = 0x0},
     stringList = {
         type = "list",
-        offset = 0x4,
+        offset = 0x0,
         elementsType = "ustring",
         jump = 0x14,
     },
@@ -924,7 +924,7 @@ local uiWidgetDefinitionStructure = {
     },
     childWidgetsList = {
         type = "list",
-        offset = 0x03E4,
+        offset = 0x03E0,
         elementsType = "dword",
         jump = 0x50,
     },
@@ -935,7 +935,7 @@ local uiWidgetCollectionStructure = {
     count = {type = "byte", offset = 0x0},
     tagList = {
         type = "list",
-        offset = 0x4,
+        offset = 0x0,
         elementsType = "dword",
         jump = 0x10,
     },
@@ -962,7 +962,7 @@ local scenarioStructure = {
     },
     sceneryPaletteList = {
         type = "list",
-        offset = 0x0220,
+        offset = 0x021C,
         elementsType = "dword",
         jump = 0x30,
     },
@@ -972,7 +972,7 @@ local scenarioStructure = {
     },
     spawnLocationList = {
         type = "table",
-        offset = 0x358,
+        offset = 0x354,
         jump = 0x34,
         rows = {
             x = {type = "float", offset = 0x0},
@@ -999,7 +999,7 @@ local scenarioStructure = {
     },
     vehicleLocationList = {
         type = "table",
-        offset = 0x244,
+        offset = 0x240,
         jump = 0x78,
         rows = {
             type = {type = "word", offset = 0x0},
@@ -1034,7 +1034,7 @@ local collisionGeometryStructure = {
     vertexCount = {type = "byte", offset = 0x408},
     vertexList = {
         type = "table",
-        offset = 0x40C,
+        offset = 0x408,
         jump = 0x10,
         rows = {
             x = {type = "float", offset = 0x0},
@@ -1052,7 +1052,7 @@ local modelAnimationsStructure = {
     },
     fpAnimationList = {
         type = "list",
-        offset = 0x94,
+        offset = 0x90,
         elementsType = "byte",
         jump = 0x2,
     },
@@ -1062,7 +1062,7 @@ local modelAnimationsStructure = {
     },
     animationList = {
         type = "table",
-        offset = 0x78,
+        offset = 0x74,
         jump = 0xB4,
         rows = {
             name = {type = "string", offset = 0x0},
@@ -1090,7 +1090,7 @@ local modelStructure = {
     nodeCount = {type = "dword", offset = 0xB8},
     nodeList = {
         type = "table",
-        offset = 0xBC,
+        offset = 0xB8,
         jump = 0x9C,
         rows = {
             x = {type = "float", offset = 0x28},
@@ -1101,7 +1101,7 @@ local modelStructure = {
     regionCount = {type = "dword", offset = 0xC4},
     regionList = {
         type = "table",
-        offset = 0xC8,
+        offset = 0xC4,
         jump = 76,
         rows = {
             permutationCount = {
