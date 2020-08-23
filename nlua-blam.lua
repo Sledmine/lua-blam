@@ -1018,6 +1018,41 @@ local scenarioStructure = {
             roll = {type = "float", offset = 0x1C},
         },
     },
+    netgameFlagsCount = {
+        type = "byte",
+        offset = 0x378,
+    },
+    netgameFlagsList = {
+        type = "table",
+        offset = 0x378,
+        jump = 0x94,
+        rows = {
+            x = {type = "float", offset = 0x0},
+            y = {type = "float", offset = 0x4},
+            z = {type = "float", offset = 0x8},
+            angle = {type = "float", offset = 0xC},
+            type = {type = "byte", offset = 0x10},
+            teamIndex = {type = "word", offset = 0x12},
+        },
+    },
+    netgameEquipmentCount = {
+        type = "byte",
+        offset = 0x384,
+    },
+    netgameEquipmentList = {
+        type = "table",
+        offset = 0x384,
+        jump = 0x90,
+        rows = {
+            levitate = {type = "byte", offset = 0x00},
+            type = {type = "byte", offset = 0x4},
+            teamIndex = {type = "byte", offset = 0xC},
+            spawnTime = {type = "word", offset = 0xE},
+            x = {type = "float", offset = 0x40},
+            y = {type = "float", offset = 0x44},
+            z = {type = "float", offset = 0x48},
+        },
+    },
 }
 
 -- Scenery structure
@@ -1230,6 +1265,10 @@ end
 ---@field spawnLocationList table List of spawns in the scenario
 ---@field vehicleLocationCount number Number of vehicles locations in the scenario
 ---@field vehicleLocationList table List of vehicles locations in the scenario
+---@field netgameEquipmentCount number Number of netgame equipments
+---@field netgameEquipmentList table List of netgame equipments
+---@field netgameFlagsCount number Number of netgame equipments
+---@field netgameFlagsList table List of netgame equipments
 
 ---@return scenario
 local function scenarioClassNew(address)
