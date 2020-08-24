@@ -389,7 +389,7 @@ local function consoleOutput(message, ...)
 
     -- Set alpha channel if not set
     if (#colorARGB == 3) then
-        colorARGB:insert(1, 1)
+        table.insert(colorARGB, 1, 1)
     end
     
     if (isString(message)) then
@@ -1385,9 +1385,6 @@ end
 -- Add utilities to library
 luablam.getObjects = getObjects
 luablam.dumpObject = dumpObject
-
--- Use LuaBlam console out function
-console_out = consoleOutput
 
 --- Get the camera type
 ---@return number
