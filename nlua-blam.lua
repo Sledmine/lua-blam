@@ -1060,7 +1060,7 @@ local scenarioStructure = {
             x = {type = "float", offset = 0x0},
             y = {type = "float", offset = 0x4},
             z = {type = "float", offset = 0x8},
-            angle = {type = "float", offset = 0xC},
+            rotation = {type = "float", offset = 0xC},
             type = {type = "byte", offset = 0x10},
             teamIndex = {type = "word", offset = 0x12},
         },
