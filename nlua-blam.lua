@@ -189,11 +189,11 @@ local netgameEquipmentTypes = {
 }
 
 -- Console colors
-local colorsRGB = {
-    success = {r = 0.235, g = 0.82, b = 0},
-    warning = {r = 0.94, g = 0.75, b = 0.098},
-    error = {r = 1, g = 0.2, b = 0.2},
-    unknow = {r = 0.66, g = 0.66, b = 0.66},
+local consoleColors = {
+    success = {0.235, 0.82, 0},
+    warning = {0.94, 0.75, 0.098},
+    error = {1, 0.2, 0.2},
+    unknow = {0.66, 0.66, 0.66},
 }
 
 ------------------------------------------------------------------------------
@@ -374,32 +374,22 @@ local function consoleOutput(message, ...)
 
     if (message == nil or #args > 5) then
         consoleOutput(debug.traceback("Wrong number of arguments on console output function", 2),
-                      colorsRGB.error)
+                      consoleColors.error)
     end
 
     -- Output color
-    local color = {
-        a = 1,
-        r = 1,
-        g = 1,
-        b = 1
-    }
+    local colorARGB = {1, 1, 1, 1}
 
-    -- Get the arguments from table
+    -- Get the output color from arguments table
     if (isTable(args[1])) then
-        color = args[1]
-        if (not color.a) then
-            color.a = 1
-        end
+        colorARGB = args[1]
     elseif (#args == 3 or #args == 4) then
-        local rgbPosition = 1
-        if (#args == 4) then
-            color.a = args[1]
-            rgbPosition = 2
-        end
-        color.r = args[rgbPosition]
-        color.g = args[rgbPosition + 1]
-        color.b = args[rgbPosition + 2]
+        colorARGB = args
+    end
+
+    -- Set alpha channel if not set
+    if (#colorARGB == 3) then
+        colorARGB:insert(1, 1)
     end
     
     if (isString(message)) then
@@ -409,10 +399,10 @@ local function consoleOutput(message, ...)
             local trimmedLine = trim(line)
 
             -- Print the line
-            original_console_out(trimmedLine, table.unpack(color))
+            original_console_out(trimmedLine, table.unpack(colorARGB))
         end
     else
-        original_console_out(message, table.unpack(color))
+        original_console_out(message, table.unpack(colorARGB))
     end
 end
 
@@ -499,7 +489,7 @@ local dataBindingMetaTable = {
             end
         else
             local errorMessage = "Unable to write an invalid property ('" .. property .. "')"
-            consoleOutput(debug.traceback(errorMessage, 2), colorsRGB.error)
+            consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
         end
     end,
     __index = function(object, property)
@@ -549,7 +539,7 @@ local dataBindingMetaTable = {
             end
         else
             local errorMessage = "Unable to read an invalid property ('" .. property .. "')"
-            consoleOutput(debug.traceback(errorMessage, 2), colorsRGB.error)
+            consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
         end
     end,
 }
@@ -1364,7 +1354,7 @@ luablam.objectClasses = objectClasses
 luablam.cameraTypes = cameraTypes
 luablam.netgameFlagTypes = netgameFlagTypes
 luablam.netgameEquipmentTypes = netgameEquipmentTypes
-luablam.colorsRGB = colorsRGB
+luablam.consoleColors = consoleColors
 
 -- LuaBlam globals
 luablam.tagDataHeader = {}
@@ -1461,7 +1451,7 @@ function luablam.getTag(tagIdOrPath, class, ...)
 
     if (...) then
         consoleOutput(debug.traceback("Wrong number of arguments on get tag function", 2),
-                      colorsRGB.error)
+                      consoleColors.error)
     end
 
     local tagAddress
