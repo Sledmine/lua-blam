@@ -1385,6 +1385,7 @@ end
 -- Add utilities to library
 luablam.getObjects = getObjects
 luablam.dumpObject = dumpObject
+luablam.consoleOutput = consoleOutput
 
 --- Get the camera type
 ---@return number
