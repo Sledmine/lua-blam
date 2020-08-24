@@ -1397,7 +1397,8 @@ luablam.getObjects = getObjects
 luablam.dumpObject = dumpObject
 
 -- Use LuaBlam console out function
-console_out = consoleOutput
+-- ARE U SURE ABOUT THAT?
+-- console_out = consoleOutput
 
 --- Get the camera type
 ---@return number
