@@ -1774,7 +1774,7 @@ function luablam.compat35()
     get_tag_id = function(tagClass, tagPath)
         local tag = luablam.getTag(tagPath, tagClass)
         if (tag) then
-            return tag.id
+            return tag.fullId
         end
         return nil
     end
