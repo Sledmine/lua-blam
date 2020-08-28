@@ -1069,7 +1069,7 @@ local scenarioStructure = {
         offset = 0x388,
         jump = 0x90,
         rows = {
-            levitate = {type = "byte", offset = 0x00},
+            levitate = {type = "bit", offset = 0x0, bitLevel = 0},
             type1 = {type = "word", offset = 0x4},
             type2 = {type = "word", offset = 0x6},
             type3 = {type = "word", offset = 0x8},
