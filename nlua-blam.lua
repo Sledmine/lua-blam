@@ -1367,27 +1367,7 @@ luablam.netgameEquipmentTypes = netgameEquipmentTypes
 luablam.consoleColors = consoleColors
 
 -- LuaBlam globals
-luablam.tagDataHeader = {}
-
-if (server_type ~= "sapp") then
-
-    function updateTagDataHeaderGlobal()
-        local headerData = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
-        luablam.tagDataHeader = dumpObject(headerData)
-    end
-
-    -- Update everything
-    function updateGlobals()
-        updateTagDataHeaderGlobal()
-    end
-
-    -- Update globals at map load
-    set_callback("map load", "updateGlobals")
-
-    -- Update globals at script load
-    updateGlobals()
-
-end
+luablam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
 
 ------------------------------------------------------------------------------
 -- LuaBlam API
