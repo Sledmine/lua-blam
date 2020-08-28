@@ -897,7 +897,9 @@ local tagDataHeaderStructure = {
 -- Tag structure
 local tagHeaderStructure = {
     class = {type = "dword", offset = 0x0},
-    id = {type = "dword", offset = 0xC},
+    index = {type = "word", offset = 0xC},
+    id = {type = "word", offset = 0xE},
+    fullId = {type = "dword", offset = 0xC},
     path = {type = "dword", offset = 0x10},
     data = {type = "dword", offset = 0x14},
     indexed = {type = "dword", offset = 0x18},
@@ -1368,6 +1370,7 @@ luablam.consoleColors = consoleColors
 
 -- LuaBlam globals
 luablam.tagDataHeader = {}
+luablam.tagArray = {}
 
 if (server_type ~= "sapp") then
 
@@ -1376,9 +1379,26 @@ if (server_type ~= "sapp") then
         luablam.tagDataHeader = dumpObject(headerData)
     end
 
+    function updateTagDataGlobal()
+        local tagArray = {}
+        for i = 0, luablam.tagDataHeader.count - 1 do
+            local tagAddress = luablam.tagDataHeader.array + (i * 0x20)
+            local tag = dumpObject(createObject(tagAddress, tagHeaderStructure))
+            
+            -- Set up values
+            tag.address = tagAddress
+            tag.path = read_string(tag.path)
+            tag.class = tagClassFromInt(tag.class)
+
+            tagArray[i] = tag
+        end
+        luablam.tagArray = tagArray
+    end
+
     -- Update everything
     function updateGlobals()
         updateTagDataHeaderGlobal()
+        updateTagDataGlobal()
     end
 
     -- Update globals at map load
