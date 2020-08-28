@@ -1372,19 +1372,20 @@ luablam.tagDataHeader = {}
 if (server_type ~= "sapp") then
 
     function updateTagDataHeaderGlobal()
-        local headerData = {}
-
-        headerData.address = addressList.tagDataHeader
-        headerData.structure = tagDataHeaderStructure
-
-        setmetatable(headerData, dataBindingMetaTable)
-
+        local headerData = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
         luablam.tagDataHeader = dumpObject(headerData)
     end
-    set_callback("map load", "updateTagDataHeaderGlobal")
 
-    -- Update everything on script load
-    updateTagDataHeaderGlobal()
+    -- Update everything
+    function updateGlobals()
+        updateTagDataHeaderGlobal()
+    end
+
+    -- Update globals at map load
+    set_callback("map load", "updateGlobals")
+
+    -- Update globals at script load
+    updateGlobals()
 
 end
 
