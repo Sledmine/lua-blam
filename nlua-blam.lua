@@ -1448,7 +1448,7 @@ function luablam.getTag(tagIdOrPath, class, ...)
 
     -- Get tag address
     if (tagId) then
-        if (tagId < 0xFF) then
+        if (tagId < 0xFFFF) then
             tagId = read_dword(luablam.tagDataHeader.array + (tagId * 0x20 + 0xC))
         end
         tagAddress = get_tag(tagId)
