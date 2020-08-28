@@ -406,15 +406,20 @@ local function consoleOutput(message, ...)
     end
 end
 
---- Convert bits into boolean values.
---- Writing true or false is equal to 1 or 0 but not when reading
+--- Convert booleans to bits and bits to booleans
 ---@param bit number
 ---@return boolean
 local function b2b(bit)
     if (bit == 1) then
         return true
+    elseif (bit == 0) then
+        return false
+    elseif (bit == true) then
+        return 1
+    elseif (bit == false) then
+        return 0
     end
-    return false
+    error()
 end
 
 ------------------------------------------------------------------------------
@@ -446,7 +451,7 @@ local dataBindingMetaTable = {
             local operation = dataOperations[dataType]
             if (dataType == "bit") then
                 local bitLevel = propertyData.bitLevel
-                operation[2](object.address + propertyData.offset, bitLevel, value)
+                operation[2](object.address + propertyData.offset, bitLevel, b2b(value))
             elseif (dataType == "list") then
                 operation = dataOperations[propertyData.elementsType]
                 local listCount = read_byte(object.address + propertyData.offset)
