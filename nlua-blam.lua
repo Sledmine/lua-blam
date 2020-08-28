@@ -891,7 +891,7 @@ local bipedStructure = extendStructure(objectStructure, {
 local tagDataHeaderStructure = {
     array = {type = "dword", offset = 0x0},
     scenario = {type = "dword", offset = 0x4},
-    count = {type = "dword", offset = 0xC},
+    count = {type = "word", offset = 0xC},
 }
 
 -- Tag structure
@@ -1448,6 +1448,9 @@ function luablam.getTag(tagIdOrPath, class, ...)
 
     -- Get tag address
     if (tagId) then
+        if (tagId < 0xFF) then
+            tagId = read_dword(luablam.tagDataHeader.array + (tagId * 0x20 + 0xC))
+        end
         tagAddress = get_tag(tagId)
     else
         tagAddress = get_tag(tagClass, tagPath)
