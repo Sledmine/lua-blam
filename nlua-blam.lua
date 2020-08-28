@@ -1049,7 +1049,7 @@ local scenarioStructure = {
     },
     netgameFlagsList = {
         type = "table",
-        offset = 0x378,
+        offset = 0x37C,
         jump = 0x94,
         rows = {
             x = {type = "float", offset = 0x0},
@@ -1066,7 +1066,7 @@ local scenarioStructure = {
     },
     netgameEquipmentList = {
         type = "table",
-        offset = 0x384,
+        offset = 0x388,
         jump = 0x90,
         rows = {
             levitate = {type = "byte", offset = 0x00},
