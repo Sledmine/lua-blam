@@ -1065,12 +1065,17 @@ local scenarioStructure = {
         jump = 0x90,
         rows = {
             levitate = {type = "byte", offset = 0x00},
-            type = {type = "byte", offset = 0x4},
+            type1 = {type = "word", offset = 0x4},
+            type2 = {type = "word", offset = 0x6},
+            type3 = {type = "word", offset = 0x8},
+            type4 = {type = "word", offset = 0xA},
             teamIndex = {type = "byte", offset = 0xC},
             spawnTime = {type = "word", offset = 0xE},
             x = {type = "float", offset = 0x40},
             y = {type = "float", offset = 0x44},
             z = {type = "float", offset = 0x48},
+            facing = {type = "float", offset = 0x4C},
+            itemCollection = {type = "dword", offset = 0x6C},
         },
     },
 }
