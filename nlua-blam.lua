@@ -897,7 +897,9 @@ local tagDataHeaderStructure = {
 -- Tag structure
 local tagHeaderStructure = {
     class = {type = "dword", offset = 0x0},
-    id = {type = "dword", offset = 0xC},
+    index = {type = "word", offset = 0xC},
+    id = {type = "word", offset = 0xE},
+    fullId = {type = "dword", offset = 0xC},
     path = {type = "dword", offset = 0x10},
     data = {type = "dword", offset = 0x14},
     indexed = {type = "dword", offset = 0x18},
@@ -1734,7 +1736,7 @@ function luablam.compat35()
     get_tag_id = function(tagClass, tagPath)
         local tag = luablam.getTag(tagPath, tagClass)
         if (tag) then
-            return tag.id
+            return tag.fullId
         end
         return nil
     end
