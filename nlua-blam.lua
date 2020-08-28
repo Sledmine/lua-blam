@@ -1080,7 +1080,7 @@ local scenarioStructure = {
             y = {type = "float", offset = 0x44},
             z = {type = "float", offset = 0x48},
             facing = {type = "float", offset = 0x4C},
-            itemCollection = {type = "dword", offset = 0x6C},
+            itemCollection = {type = "dword", offset = 0x5C},
         },
     },
 }
