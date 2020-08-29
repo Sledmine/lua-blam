@@ -44,7 +44,7 @@ end
 -- Address list
 local addressList = {
     tagDataHeader = 0x40440000,
-    cameraType = 0x00647498, -- from Giraffe
+    cameraType = 0x00647498 -- from Giraffe
 }
 
 -- Provide global tag classes by default
@@ -130,7 +130,7 @@ local tagClasses = {
     weaponHudInterface = "wphi",
     weapon = "weap",
     weatherParticleSystem = "rain",
-    wind = "wind",
+    wind = "wind"
 }
 
 -- Provide global object classes by default
@@ -146,7 +146,7 @@ local objectClasses = {
     control = 8,
     lightFixture = 9,
     placeHolder = 10,
-    soundScenery = 11,
+    soundScenery = 11
 }
 
 -- Camera types
@@ -155,7 +155,7 @@ local cameraTypes = {
     firstPerson = 2, -- 30400
     devcam = 3, -- 30704
     thirdPerson = 4, -- 31952
-    deadCamera = 5, -- 23776
+    deadCamera = 5 -- 23776
 }
 
 local netgameFlagTypes = {
@@ -167,7 +167,7 @@ local netgameFlagTypes = {
     vegasBank = 5,
     teleportFrom = 6,
     teleportTo = 7,
-    hillFlag = 8,
+    hillFlag = 8
 }
 
 local netgameEquipmentTypes = {
@@ -185,7 +185,7 @@ local netgameEquipmentTypes = {
     ignored4 = 11,
     allGames = 12,
     allExceptCtf = 13,
-    allExceptRaceCtf = 14,
+    allExceptRaceCtf = 14
 }
 
 -- Console colors
@@ -193,7 +193,7 @@ local consoleColors = {
     success = {1, 0.235, 0.82, 0},
     warning = {1, 0.94, 0.75, 0.098},
     error = {1, 1, 0.2, 0.2},
-    unknow = {1, 0.66, 0.66, 0.66},
+    unknow = {1, 0.66, 0.66, 0.66}
 }
 
 ------------------------------------------------------------------------------
@@ -391,7 +391,7 @@ local function consoleOutput(message, ...)
     if (#colorARGB == 3) then
         table.insert(colorARGB, 1, 1)
     end
-    
+
     if (isString(message)) then
         -- Explode the string!!
         for line in message:gmatch("([^\n]+)") do
@@ -407,19 +407,20 @@ local function consoleOutput(message, ...)
 end
 
 --- Convert booleans to bits and bits to booleans
----@param bit number
----@return boolean
-local function b2b(bit)
-    if (bit == 1) then
+---@param bitOrBool number
+---@return boolean | number
+local function b2b(bitOrBool)
+    if (bitOrBool == 1) then
         return true
-    elseif (bit == 0) then
+    elseif (bitOrBool == 0) then
         return false
-    elseif (bit == true) then
+    elseif (bitOrBool == true) then
         return 1
-    elseif (bit == false) then
+    elseif (bitOrBool == false) then
         return 0
     end
-    error()
+    error("B2B error, expected boolean or bit value, got " .. tostring(bitOrBool) .. " " ..
+                  type(bitOrBool))
 end
 
 ------------------------------------------------------------------------------
@@ -438,29 +439,31 @@ local dataOperations = {
     string = {read_string, write_string},
     ustring = {
         readUnicodeString,
-        writeUnicodeString,
-    },
+        writeUnicodeString
+    }
 }
 
 -- Magic luablam metatable
 local dataBindingMetaTable = {
-    __newindex = function(object, property, value)
+    __newindex = function(object, property, propertyValue)
         local propertyData = object.structure[property]
         if (propertyData) then
             local dataType = propertyData.type
             local operation = dataOperations[dataType]
             if (dataType == "bit") then
                 local bitLevel = propertyData.bitLevel
-                operation[2](object.address + propertyData.offset, bitLevel, b2b(value))
+                operation[2](object.address + propertyData.offset, bitLevel, b2b(propertyValue))
             elseif (dataType == "list") then
                 operation = dataOperations[propertyData.elementsType]
                 local listCount = read_byte(object.address + propertyData.offset - 0x4)
                 local listAddress = read_dword(object.address + propertyData.offset)
+                -- // FIXME: What tha heck i means here Jerry???
                 for i = 1, listCount do
-                    if (value[i] ~= nil) then
-                        operation[2](listAddress + 0xC + propertyData.jump * (i - 1), value[i])
+                    if (propertyValue[i] ~= nil) then
+                        operation[2](listAddress + 0xC + propertyData.jump * (i - 1),
+                                     propertyValue[i])
                     else
-                        if (i > #value) then
+                        if (i > #propertyValue) then
                             break
                         end
                     end
@@ -468,29 +471,30 @@ local dataBindingMetaTable = {
             elseif (dataType == "table") then
                 local elementsCount = read_byte(object.address + propertyData.offset - 0x4)
                 local firstElement = read_dword(object.address + propertyData.offset)
+                -- // TODO: Some values here were renamed, check if they are accurate
                 for i = 1, elementsCount do
                     local elementAddress = firstElement + (i - 1) * propertyData.jump
-                    if (value[i] ~= nil) then
-                        for k, v in pairs(value[i]) do
-                            local fieldData = propertyData.rows[k]
-                            if (fieldData ~= nil) then
+                    if (propertyValue[i]) then
+                        for subProperty, subPropertyValue in pairs(propertyValue[i]) do
+                            local fieldData = propertyData.rows[subProperty]
+                            if (fieldData) then
                                 operation = dataOperations[fieldData.type]
                                 if (fieldData.type == "bit") then
                                     operation[2](elementAddress + fieldData.offset,
-                                                 fieldData.bitLevel, v)
+                                                 fieldData.bitLevel, b2b(subPropertyValue))
                                 else
-                                    operation[2](elementAddress + fieldData.offset, v)
+                                    operation[2](elementAddress + fieldData.offset, subPropertyValue)
                                 end
                             end
                         end
                     else
-                        if (i > #value) then
+                        if (i > #propertyValue) then
                             break
                         end
                     end
                 end
             else
-                operation[2](object.address + propertyData.offset, value)
+                operation[2](object.address + propertyData.offset, propertyValue)
             end
         else
             local errorMessage = "Unable to write an invalid property ('" .. property .. "')"
@@ -499,9 +503,7 @@ local dataBindingMetaTable = {
     end,
     __index = function(object, property)
         local objectStructure = object.structure
-
         local propertyData = objectStructure[property]
-
         if (propertyData) then
             local dataType = propertyData.type
             local operation = dataOperations[dataType]
@@ -521,23 +523,23 @@ local dataBindingMetaTable = {
                 local table = {}
                 local elementsCount = read_byte(object.address + propertyData.offset - 0x4)
                 local firstElement = read_dword(object.address + propertyData.offset)
-                for i = 1, elementsCount do
-                    local elementAddress = firstElement + (i - 1) * propertyData.jump
-                    table[i] = {}
+                for elementPosition = 1, elementsCount do
+                    local elementAddress = firstElement + (elementPosition - 1) * propertyData.jump
+                    table[elementPosition] = {}
+                    -- // FIXME: What tha heck Jerry means here with k,v ???!!!
                     for k, v in pairs(propertyData.rows) do
                         operation = dataOperations[v.type]
                         if (v.type == "bit") then
-                            table[i][k] = b2b(operation[1](elementAddress + v.offset, v.bitLevel))
+                            table[elementPosition][k] =
+                                b2b(operation[1](elementAddress + v.offset, v.bitLevel))
                         else
-                            table[i][k] = operation[1](elementAddress + v.offset)
+                            table[elementPosition][k] = operation[1](elementAddress + v.offset)
                         end
                     end
                 end
-
                 return table
             else
                 if (not operation) then
-
                     console_out(property)
                 end
                 return operation[1](object.address + propertyData.offset)
@@ -546,7 +548,7 @@ local dataBindingMetaTable = {
             local errorMessage = "Unable to read an invalid property ('" .. property .. "')"
             consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
         end
-    end,
+    end
 }
 
 ------------------------------------------------------------------------------
@@ -561,7 +563,7 @@ local function createObject(address, struct)
     -- Create object
     local object = {}
 
-    -- Set up 'legacy' values
+    -- Set up legacy values
     object.address = address
     object.structure = struct
 
@@ -570,18 +572,6 @@ local function createObject(address, struct)
 
     return object
 end
-
---[[
---- Remove unused properties for game execution
----@param object table
-local function cleanObject(object)
-    for k, v in pairs(object) do
-        if (k ~= "address" and k ~= "structure") then
-            object[k] = nil
-        end
-    end
-end
-]]
 
 --- Return a dump of a given LuaBlam object
 ---@param object table
@@ -671,52 +661,52 @@ local objectStructure = {
     hasCollision = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 0,
+        bitLevel = 0
     },
     isOnGround = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 1,
+        bitLevel = 1
     },
     ignoreGravity = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 2,
+        bitLevel = 2
     },
     isInWater = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 3,
+        bitLevel = 3
     },
     isStationary = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 5,
+        bitLevel = 5
     },
     dynamicShading = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 14,
+        bitLevel = 14
     },
     isNotCastingShadow = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 18,
+        bitLevel = 18
     },
     frozen = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 20,
+        bitLevel = 20
     },
     isOutSideMap = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 21,
+        bitLevel = 21
     },
     isCollideable = {
         type = "bit",
         offset = 0x10,
-        bitLevel = 24,
+        bitLevel = 24
     },
     model = {type = "dword", offset = 0x34},
     health = {type = "float", offset = 0xE0},
@@ -742,7 +732,7 @@ local objectStructure = {
     locationId = {type = "dword", offset = 0x98},
     boundingRadius = {
         type = "float",
-        offset = 0xAC,
+        offset = 0xAC
     },
     type = {type = "word", offset = 0xB4},
     team = {type = "word", offset = 0xB8},
@@ -752,49 +742,49 @@ local objectStructure = {
     isHealthEmpty = {
         type = "bit",
         offset = 0x106,
-        bitLevel = 2,
+        bitLevel = 2
     },
     animationTagId = {
         type = "dword",
-        offset = 0xCC,
+        offset = 0xCC
     },
     animation = {type = "word", offset = 0xD0},
     animationFrame = {
         type = "word",
-        offset = 0xD2,
+        offset = 0xD2
     },
     regionPermutation1 = {
         type = "byte",
-        offset = 0x180,
+        offset = 0x180
     },
     regionPermutation2 = {
         type = "byte",
-        offset = 0x181,
+        offset = 0x181
     },
     regionPermutation3 = {
         type = "byte",
-        offset = 0x182,
+        offset = 0x182
     },
     regionPermutation4 = {
         type = "byte",
-        offset = 0x183,
+        offset = 0x183
     },
     regionPermutation5 = {
         type = "byte",
-        offset = 0x184,
+        offset = 0x184
     },
     regionPermutation6 = {
         type = "byte",
-        offset = 0x185,
+        offset = 0x185
     },
     regionPermutation7 = {
         type = "byte",
-        offset = 0x186,
+        offset = 0x186
     },
     regionPermutation8 = {
         type = "byte",
-        offset = 0x187,
-    },
+        offset = 0x187
+    }
 }
 
 -- Biped structure (extends object structure)
@@ -802,22 +792,22 @@ local bipedStructure = extendStructure(objectStructure, {
     invisible = {
         type = "bit",
         offset = 0x204,
-        bitLevel = 4,
+        bitLevel = 4
     },
     noDropItems = {
         type = "bit",
         offset = 0x204,
-        bitLevel = 20,
+        bitLevel = 20
     },
     ignoreCollision = {
         type = "bit",
         offset = 0x4CC,
-        bitLevel = 3,
+        bitLevel = 3
     },
     flashlight = {
         type = "bit",
         offset = 0x204,
-        bitLevel = 19,
+        bitLevel = 19
     },
     cameraX = {type = "float", offset = 0x230},
     cameraY = {type = "float", offset = 0x234},
@@ -825,52 +815,52 @@ local bipedStructure = extendStructure(objectStructure, {
     crouchHold = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 0,
+        bitLevel = 0
     },
     jumpHold = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 1,
+        bitLevel = 1
     },
     actionKeyHold = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 14,
+        bitLevel = 14
     },
     actionKey = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 6,
+        bitLevel = 6
     },
     meleeKey = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 7,
+        bitLevel = 7
     },
     reloadKey = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 10,
+        bitLevel = 10
     },
     weaponPTH = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 11,
+        bitLevel = 11
     },
     weaponSTH = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 12,
+        bitLevel = 12
     },
     flashlightKey = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 4,
+        bitLevel = 4
     },
     grenadeHold = {
         type = "bit",
         offset = 0x208,
-        bitLevel = 13,
+        bitLevel = 13
     },
     crouch = {type = "byte", offset = 0x2A0},
     shooting = {type = "float", offset = 0x284},
@@ -878,20 +868,20 @@ local bipedStructure = extendStructure(objectStructure, {
     zoomLevel = {type = "byte", offset = 0x320},
     invisibleScale = {
         type = "byte",
-        offset = 0x37C,
+        offset = 0x37C
     },
     primaryNades = {type = "byte", offset = 0x31E},
     secondaryNades = {
         type = "byte",
-        offset = 0x31F,
-    },
+        offset = 0x31F
+    }
 })
 
 -- Tag data header structure
 local tagDataHeaderStructure = {
     array = {type = "dword", offset = 0x0},
     scenario = {type = "dword", offset = 0x4},
-    count = {type = "dword", offset = 0xC},
+    count = {type = "word", offset = 0xC}
 }
 
 -- Tag structure
@@ -902,7 +892,7 @@ local tagHeaderStructure = {
     fullId = {type = "dword", offset = 0xC},
     path = {type = "dword", offset = 0x10},
     data = {type = "dword", offset = 0x14},
-    indexed = {type = "dword", offset = 0x18},
+    indexed = {type = "dword", offset = 0x18}
 }
 
 -- tagCollection structure
@@ -912,8 +902,8 @@ local tagCollectionStructure = {
         type = "list",
         offset = 0x4,
         elementsType = "dword",
-        jump = 0x10,
-    },
+        jump = 0x10
+    }
 }
 
 -- UnicodeStringList structure
@@ -923,8 +913,8 @@ local unicodeStringListStructure = {
         type = "list",
         offset = 0x4,
         elementsType = "ustring",
-        jump = 0x14,
-    },
+        jump = 0x14
+    }
 }
 
 -- UI Widget Definition structure
@@ -932,7 +922,7 @@ local uiWidgetDefinitionStructure = {
     type = {type = "word", offset = 0x0},
     controllerIndex = {
         type = "word",
-        offset = 0x2,
+        offset = 0x2
     },
     name = {type = "string", offset = 0x4},
     boundsY = {type = "short", offset = 0x24},
@@ -941,20 +931,20 @@ local uiWidgetDefinitionStructure = {
     width = {type = "short", offset = 0x2A},
     backgroundBitmap = {
         type = "word",
-        offset = 0x44,
+        offset = 0x44
     },
     eventType = {type = "byte", offset = 0x03F0},
     tagReference = {type = "word", offset = 0x400},
     childWidgetsCount = {
         type = "dword",
-        offset = 0x03E0,
+        offset = 0x03E0
     },
     childWidgetsList = {
         type = "list",
         offset = 0x03E4,
         elementsType = "dword",
-        jump = 0x50,
-    },
+        jump = 0x50
+    }
 }
 
 -- uiWidgetCollection structure
@@ -964,8 +954,8 @@ local uiWidgetCollectionStructure = {
         type = "list",
         offset = 0x4,
         elementsType = "dword",
-        jump = 0x10,
-    },
+        jump = 0x10
+    }
 }
 
 -- Weapon HUD Interface structure
@@ -977,25 +967,25 @@ local weaponHudInterfaceStructure = {
     defaultAlpha = {type = "byte", offset = 0x20B},
     sequenceIndex = {
         type = "short",
-        offset = 0x22A,
-    },
+        offset = 0x22A
+    }
 }
 
 -- Scenario structure
 local scenarioStructure = {
     sceneryPaletteCount = {
         type = "byte",
-        offset = 0x021C,
+        offset = 0x021C
     },
     sceneryPaletteList = {
         type = "list",
         offset = 0x0220,
         elementsType = "dword",
-        jump = 0x30,
+        jump = 0x30
     },
     spawnLocationCount = {
         type = "byte",
-        offset = 0x354,
+        offset = 0x354
     },
     spawnLocationList = {
         type = "table",
@@ -1007,22 +997,22 @@ local scenarioStructure = {
             z = {type = "float", offset = 0x8},
             rotation = {
                 type = "float",
-                offset = 0xC,
+                offset = 0xC
             },
             teamIndex = {
                 type = "byte",
-                offset = 0x10,
+                offset = 0x10
             },
             bspIndex = {
                 type = "short",
-                offset = 0x12,
+                offset = 0x12
             },
-            type = {type = "byte", offset = 0x14},
-        },
+            type = {type = "byte", offset = 0x14}
+        }
     },
     vehicleLocationCount = {
         type = "byte",
-        offset = 0x240,
+        offset = 0x240
     },
     vehicleLocationList = {
         type = "table",
@@ -1032,7 +1022,7 @@ local scenarioStructure = {
             type = {type = "word", offset = 0x0},
             nameIndex = {
                 type = "word",
-                offset = 0x2,
+                offset = 0x2
             },
             x = {type = "float", offset = 0x8},
             y = {type = "float", offset = 0xC},
@@ -1040,14 +1030,14 @@ local scenarioStructure = {
             yaw = {type = "float", offset = 0x14},
             pitch = {
                 type = "float",
-                offset = 0x18,
+                offset = 0x18
             },
-            roll = {type = "float", offset = 0x1C},
-        },
+            roll = {type = "float", offset = 0x1C}
+        }
     },
     netgameFlagsCount = {
         type = "byte",
-        offset = 0x378,
+        offset = 0x378
     },
     netgameFlagsList = {
         type = "table",
@@ -1057,34 +1047,56 @@ local scenarioStructure = {
             x = {type = "float", offset = 0x0},
             y = {type = "float", offset = 0x4},
             z = {type = "float", offset = 0x8},
-            rotation = {type = "float", offset = 0xC},
+            rotation = {
+                type = "float",
+                offset = 0xC
+            },
             type = {type = "byte", offset = 0x10},
-            teamIndex = {type = "word", offset = 0x12},
-        },
+            teamIndex = {
+                type = "word",
+                offset = 0x12
+            }
+        }
     },
     netgameEquipmentCount = {
         type = "byte",
-        offset = 0x384,
+        offset = 0x384
     },
     netgameEquipmentList = {
         type = "table",
         offset = 0x388,
         jump = 0x90,
         rows = {
-            levitate = {type = "bit", offset = 0x0, bitLevel = 0},
+            levitate = {
+                type = "bit",
+                offset = 0x0,
+                bitLevel = 0
+            },
             type1 = {type = "word", offset = 0x4},
             type2 = {type = "word", offset = 0x6},
             type3 = {type = "word", offset = 0x8},
             type4 = {type = "word", offset = 0xA},
-            teamIndex = {type = "byte", offset = 0xC},
-            spawnTime = {type = "word", offset = 0xE},
+            teamIndex = {
+                type = "byte",
+                offset = 0xC
+            },
+            spawnTime = {
+                type = "word",
+                offset = 0xE
+            },
             x = {type = "float", offset = 0x40},
             y = {type = "float", offset = 0x44},
             z = {type = "float", offset = 0x48},
-            facing = {type = "float", offset = 0x4C},
-            itemCollection = {type = "dword", offset = 0x5C},
-        },
-    },
+            facing = {
+                type = "float",
+                offset = 0x4C
+            },
+            itemCollection = {
+                type = "dword",
+                offset = 0x5C
+            }
+        }
+    }
 }
 
 -- Scenery structure
@@ -1092,8 +1104,8 @@ local sceneryStructure = {
     model = {type = "word", offset = 0x28 + 0xC},
     modifierShader = {
         type = "word",
-        offset = 0x90 + 0xC,
-    },
+        offset = 0x90 + 0xC
+    }
 }
 
 -- Collision Model structure
@@ -1106,26 +1118,26 @@ local collisionGeometryStructure = {
         rows = {
             x = {type = "float", offset = 0x0},
             y = {type = "float", offset = 0x4},
-            z = {type = "float", offset = 0x8},
-        },
-    },
+            z = {type = "float", offset = 0x8}
+        }
+    }
 }
 
 -- Model Animation structure
 local modelAnimationsStructure = {
     fpAnimationCount = {
         type = "byte",
-        offset = 0x90,
+        offset = 0x90
     },
     fpAnimationList = {
         type = "list",
         offset = 0x94,
         elementsType = "byte",
-        jump = 0x2,
+        jump = 0x2
     },
     animationCount = {
         type = "byte",
-        offset = 0x74,
+        offset = 0x74
     },
     animationList = {
         type = "table",
@@ -1136,20 +1148,20 @@ local modelAnimationsStructure = {
             type = {type = "word", offset = 0x20},
             frameCount = {
                 type = "byte",
-                offset = 0x22,
+                offset = 0x22
             },
             nextAnimation = {
                 type = "byte",
-                offset = 0x38,
+                offset = 0x38
             },
-            sound = {type = "byte", offset = 0x3C},
-        },
-    },
+            sound = {type = "byte", offset = 0x3C}
+        }
+    }
 }
 
 -- Weapon structure
 local weaponStructure = {
-    model = {type = "dword", offset = 0x34},
+    model = {type = "dword", offset = 0x34}
 }
 
 -- Model structure
@@ -1162,8 +1174,8 @@ local modelStructure = {
         rows = {
             x = {type = "float", offset = 0x28},
             y = {type = "float", offset = 0x2C},
-            z = {type = "float", offset = 0x30},
-        },
+            z = {type = "float", offset = 0x30}
+        }
     },
     regionCount = {type = "dword", offset = 0xC4},
     regionList = {
@@ -1173,16 +1185,15 @@ local modelStructure = {
         rows = {
             permutationCount = {
                 type = "dword",
-                offset = 0x40,
-            },
-        },
-    },
+                offset = 0x40
+            }
+        }
+    }
 }
 
 ------------------------------------------------------------------------------
 -- Object classes
 ------------------------------------------------------------------------------
-
 
 ---@return blamObject
 local function objectClassNew(address)
@@ -1369,45 +1380,7 @@ luablam.netgameEquipmentTypes = netgameEquipmentTypes
 luablam.consoleColors = consoleColors
 
 -- LuaBlam globals
-luablam.tagDataHeader = {}
-luablam.tagArray = {}
-
-if (server_type ~= "sapp") then
-
-    function updateTagDataHeaderGlobal()
-        local headerData = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
-        luablam.tagDataHeader = dumpObject(headerData)
-    end
-
-    function updateTagDataGlobal()
-        local tagArray = {}
-        for i = 0, luablam.tagDataHeader.count - 1 do
-            local tagAddress = luablam.tagDataHeader.array + (i * 0x20)
-            local tag = dumpObject(createObject(tagAddress, tagHeaderStructure))
-            
-            -- Set up values
-            tag.address = tagAddress
-            tag.path = read_string(tag.path)
-            tag.class = tagClassFromInt(tag.class)
-
-            tagArray[i] = tag
-        end
-        luablam.tagArray = tagArray
-    end
-
-    -- Update everything
-    function updateGlobals()
-        updateTagDataHeaderGlobal()
-        updateTagDataGlobal()
-    end
-
-    -- Update globals at map load
-    set_callback("map load", "updateGlobals")
-
-    -- Update globals at script load
-    updateGlobals()
-
-end
+luablam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
 
 ------------------------------------------------------------------------------
 -- LuaBlam API
@@ -1486,6 +1459,10 @@ function luablam.getTag(tagIdOrPath, class, ...)
 
     -- Get tag address
     if (tagId) then
+        if (tagId < 0xFFFF) then
+            -- Calculate tag index
+            tagId = read_dword(luablam.tagDataHeader.array + (tagId * 0x20 + 0xC))
+        end
         tagAddress = get_tag(tagId)
     else
         tagAddress = get_tag(tagClass, tagPath)
