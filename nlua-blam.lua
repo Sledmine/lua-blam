@@ -691,59 +691,6 @@ local function extendStructure(parent, structure)
     return extendedStructure
 end
 
----@class blamObject
----@field address number
----@field tagId number Object tag ID
----@field hasCollision boolean Check if object has or has not collision
----@field isOnGround boolean Is the object touching ground
----@field ignoreGravity boolean Make object to ignore gravity
----@field isInWater boolean Is the object touching on water
----@field dynamicShading boolean Enable disable dynamic shading for lightmaps
----@field isNotCastingShadow boolean Enable/disable object shadow casting
----@field frozen boolean Freeze/unfreeze object existence
----@field isOutSideMap boolean Is object outside/inside bsp
----@field isCollideable boolean Enable/disable object shadow casting
----@field model number Gbxmodel tag ID
----@field health number Current health of the object
----@field shield number Current shield of the object
----@field redA number Red color channel for A modifier
----@field greenA number Green color channel for A modifier
----@field blueA number Blue color channel for A modifier
----@field x number Current position of the object on X axis
----@field y number Current position of the object on Y axis
----@field z number Current position of the object on Z axis
----@field xVel number Current velocity of the object on X axis
----@field yVel number Current velocity of the object on Y axis
----@field zVel number Current velocity of the object on Z axis
----@field vX number Current x value in first rotation vector
----@field vY number Current y value in first rotation vector
----@field vZ number Current z value in first rotation vector
----@field v2X number Current x value in second rotation vector
----@field v2Y number Current y value in second rotation vector
----@field v2Z number Current z value in second rotation vector
----@field yawVel number Current velocity of the object in yaw
----@field pitchVel number Current velocity of the object in pitch
----@field rollVel number Current velocity of the object in roll
----@field locationId number Current id of the location in the map
----@field boundingRadius number Radius amount of the object in radians
----@field type number Object type
----@field team number Object multiplayer team
----@field playerId number Current player id if the object
----@field parentId number Current parent id of the object
----@field attachedToObjectId number Current id
----@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
----@field animationTagId number Current animation tag ID
----@field animation number Current animation index
----@field animationFrame number Current animation frame
----@field regionPermutation1 number
----@field regionPermutation2 number
----@field regionPermutation3 number
----@field regionPermutation4 number
----@field regionPermutation5 number
----@field regionPermutation6 number
----@field regionPermutation7 number
----@field regionPermutation8 number
-
 -- blamObject structure
 local objectStructure = {
     tagId = {type = "dword", offset = 0x0},
@@ -1398,6 +1345,59 @@ local modelStructure = {
 ------------------------------------------------------------------------------
 -- Object classes
 ------------------------------------------------------------------------------
+
+---@class blamObject
+---@field address number
+---@field tagId number Object tag ID
+---@field hasCollision boolean Check if object has or has not collision
+---@field isOnGround boolean Is the object touching ground
+---@field ignoreGravity boolean Make object to ignore gravity
+---@field isInWater boolean Is the object touching on water
+---@field dynamicShading boolean Enable disable dynamic shading for lightmaps
+---@field isNotCastingShadow boolean Enable/disable object shadow casting
+---@field frozen boolean Freeze/unfreeze object existence
+---@field isOutSideMap boolean Is object outside/inside bsp
+---@field isCollideable boolean Enable/disable object shadow casting
+---@field model number Gbxmodel tag ID
+---@field health number Current health of the object
+---@field shield number Current shield of the object
+---@field redA number Red color channel for A modifier
+---@field greenA number Green color channel for A modifier
+---@field blueA number Blue color channel for A modifier
+---@field x number Current position of the object on X axis
+---@field y number Current position of the object on Y axis
+---@field z number Current position of the object on Z axis
+---@field xVel number Current velocity of the object on X axis
+---@field yVel number Current velocity of the object on Y axis
+---@field zVel number Current velocity of the object on Z axis
+---@field vX number Current x value in first rotation vector
+---@field vY number Current y value in first rotation vector
+---@field vZ number Current z value in first rotation vector
+---@field v2X number Current x value in second rotation vector
+---@field v2Y number Current y value in second rotation vector
+---@field v2Z number Current z value in second rotation vector
+---@field yawVel number Current velocity of the object in yaw
+---@field pitchVel number Current velocity of the object in pitch
+---@field rollVel number Current velocity of the object in roll
+---@field locationId number Current id of the location in the map
+---@field boundingRadius number Radius amount of the object in radians
+---@field type number Object type
+---@field team number Object multiplayer team
+---@field playerId number Current player id if the object
+---@field parentId number Current parent id of the object
+---@field attachedToObjectId number Current id
+---@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
+---@field animationTagId number Current animation tag ID
+---@field animation number Current animation index
+---@field animationFrame number Current animation frame
+---@field regionPermutation1 number
+---@field regionPermutation2 number
+---@field regionPermutation3 number
+---@field regionPermutation4 number
+---@field regionPermutation5 number
+---@field regionPermutation6 number
+---@field regionPermutation7 number
+---@field regionPermutation8 number
 
 ---@return blamObject
 local function objectClassNew(address)
