@@ -44,7 +44,9 @@ end
 -- Address list
 local addressList = {
     tagDataHeader = 0x40440000,
-    cameraType = 0x00647498 -- from Giraffe
+    cameraType = 0x00647498, -- from Giraffe
+    gamePaused = 0x004ACA79,
+    gameOnMenus = 0x00622058
 }
 
 -- Provide global tag classes by default
