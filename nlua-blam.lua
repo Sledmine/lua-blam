@@ -642,6 +642,7 @@ end
 ---@field team number Object multiplayer team
 ---@field playerId number Current player id if the object
 ---@field parentId number Current parent id of the object
+---@field attachedToObjectId number Current id
 ---@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
 ---@field animationTagId number Current animation tag ID
 ---@field animation number Current animation index
@@ -738,6 +739,7 @@ local objectStructure = {
     team = {type = "word", offset = 0xB8},
     playerId = {type = "dword", offset = 0xC0},
     parentId = {type = "dword", offset = 0xC4},
+    attachedToObjectId = {type = "dword", offset = 0x11C},
     -- Experimental name properties
     isHealthEmpty = {
         type = "bit",
@@ -1390,6 +1392,13 @@ luablam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStr
 luablam.getObjects = getObjects
 luablam.dumpObject = dumpObject
 luablam.consoleOutput = consoleOutput
+
+function luablam.isNull(value)
+    if (value == 0xFF or value == 0xFFFF or value == 0xFFFFFFFF) then
+        return true
+    end
+    return false
+end
 
 --- Get the camera type
 ---@return number
