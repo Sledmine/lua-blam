@@ -921,6 +921,83 @@ local unicodeStringListStructure = {
     }
 }
 
+-- Bitmap structure
+local bitmapStructure = {
+    type = {type = "word", offset = 0x0},
+    format = {type = "word", offset = 0x2},
+    usage = {type = "word", offset = 0x4},
+    usageFlags = {type = "word", offset = 0x6},
+    detailFadeFactor = {type = "dword", offset = 0x8},
+    sharpenAmount = {type = "dword", offset = 0xC},
+    bumpHeight = {type = "dword", offset = 0x10},
+    spriteBudgetSize = {type = "word", offset = 0x14},
+    spriteBudgetCount = {type = "word", offset = 0x16},
+    colorPlateWidth = {type = "word", offset = 0x18},
+    colorPlateHeight = {type = "word", offset = 0x1A},
+    --compressedColorPlate = {offset = 0x1C},
+    --processedPixelData = {offset = 0x30},
+    blurFilterSize = {type = "float", offset = 0x44},
+    alphaBias = {type = "float", offset = 0x48},
+    mipmapCount = {type = "word", offset = 0x4C},
+    spriteUsage = {type = "word", offset = 0x4E},
+    spriteSpacing = {type = "word", offset = 0x50},
+    --padding1 = {size = 0x2, offset = 0x52},
+    sequencesCount = {type = "byte", offset = 0x54},
+    sequences = {
+        type = "table",
+        offset = 0x58,
+        jump = 0,
+        rows = {
+            name = {type = "string", offset = 0x0},
+            firstBitmapIndex = {type = "word", offset = 0x20},
+            bitmapCount = {type = "word", offset = 0x22},
+            --padding = {size = 0x10, offset = 0x24},
+            --[[
+            sprites = {
+                type = "table",
+                offset = 0x34,
+                jump = 0x20,
+                rows = {
+                    bitmapIndex = {type = "word", offset = 0x0},
+                    --padding1 = {size = 0x2, offset = 0x2},
+                    --padding2 = {size = 0x4, offset = 0x4},
+                    left = {type = "float", offset = 0x8},
+                    right = {type = "float", offset = 0xC},
+                    top = {type = "float", offset = 0x10},
+                    bottom = {type = "float", offset = 0x14},
+                    registrationX = {type = "float", offset = 0x18},
+                    registrationY = {type = "float", offset = 0x1C}
+                }
+            }
+            ]]
+        }
+    },
+    bitmapsCount = {type = "byte", offset = 0x60},
+    bitmaps = {
+        type = "table",
+        offset = 0x64,
+        jump = 0x30,
+        rows = {
+            class = {type = "dword", offset = 0x0},
+            width = {type = "word", offset = 0x4},
+            height = {type = "word", offset = 0x6},
+            depth = {type = "word", offset = 0x8},
+            type = {type = "word", offset = 0xA},
+            format = {type = "word", offset = 0xC},
+            flags = {type = "word", offset = 0xE},
+            x = {type = "word", offset = 0x10},
+            y = {type = "word", offset = 0x12},
+            mipmapCount = {type = "word", offset = 0x14},
+            --padding1 = {size = 0x2, offset = 0x16},
+            pixelOffset = {type = "dword", offset = 0x18},
+            --padding2 = {size = 0x4, offset = 0x1C},
+            --padding3 = {size = 0x4, offset = 0x20},
+            --padding4 = {size = 0x4, offset= 0x24},
+            --padding5 = {size = 0x8, offset= 0x28}
+        }
+    }
+}
+
 -- UI Widget Definition structure
 local uiWidgetDefinitionStructure = {
     type = {type = "word", offset = 0x0},
@@ -1265,6 +1342,35 @@ local function unicodeStringListClassNew(address)
     return createObject(address, unicodeStringListStructure)
 end
 
+---@class bitmap
+---@field type number
+---@field format number
+---@field usage number
+---@field usageFlags number
+---@field detailFadeFactor number
+---@field sharpenAmount number
+---@field bumpHeight number
+---@field spriteBudgetSize number
+---@field spriteBudgetCount number
+---@field colorPlateWidth number
+---@field colorPlateHeight number 
+--@field compressedColorPlate data
+--@field processedPixelData data
+---@field blurFilterSize number
+---@field alphaBias number
+---@field mipmapCount number
+---@field spriteUsage number
+---@field spriteSpacing number
+---@field sequencesCount number
+---@field sequences table
+---@field bitmapsCount number
+---@field bitmaps table
+
+---@return bitmap
+local function bitmapClassNew(address)
+    return createObject(address, bitmapStructure)
+end
+
 ---@class uiWidgetDefinition
 ---@field type number Type of widget
 ---@field controllerIndex number Index of the player controller
@@ -1511,6 +1617,16 @@ function luablam.unicodeStringList(tag)
         return unicodeStringListClassNew(unicodeStringListTag.data)
     end
     return nil
+end
+
+--- Create a bitmap object from a tag path or id
+---@param tag string | number
+---@return bitmap
+function luablam.bitmap(tag)
+    if(isValid(tag)) then
+        local bitmapTag = luablam.getTag(tag, tagClasses.bitmap)
+        return bitmapClassNew(bitmapTag.data)
+    end
 end
 
 --- Create a UI Widget Definition object from a tag path or id
