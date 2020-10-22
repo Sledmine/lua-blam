@@ -1,4 +1,5 @@
-# lua-blam 4.1
+# lua-blam 4.2
+
 ### What is it?
 
 Is a Lua library for scripting that allows you to handle Halo Custom Edition memory as objects in your script, including features as API extension and unification between Chimera and SAPP.
@@ -42,9 +43,9 @@ if (playerAddress) then
 end
 ```
 
-### Visual Studio Code Integration using [vscode-lua](https://github.com/sumneko/vscode-lua):
-![lua-blamvscode](https://i.imgur.com/eQea4mU.gif)
+### Visual Studio Code Integration using [VSCode-EmmyLua](https://github.com/EmmyLua/VSCode-EmmyLua):
 
+![lua-blamvscode](https://i.imgur.com/eQea4mU.gif)
 
 ### Documentation
 

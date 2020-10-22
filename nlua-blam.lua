@@ -4,7 +4,7 @@
 -- Version 4.2
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local luablam = {version = 4.1}
+local luablam = {version = 4.2}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal use
@@ -337,9 +337,15 @@ end
 
 --- Return the string of a unicode string given address
 ---@param address number
+---@param forced boolean
 ---@return string
-local function readUnicodeString(address)
-    local stringAddress = read_dword(address)
+function luablam.readUnicodeString(address, forced)
+    local stringAddress
+    if (forced) then
+        stringAddress = address
+    else
+        stringAddress = read_dword(address)
+    end
     local length = stringAddress / 2
     local output = ""
     for i = 1, length do
@@ -355,8 +361,14 @@ end
 --- Writes a unicode string in a given address
 ---@param address number
 ---@param newString string
-local function writeUnicodeString(address, newString)
-    local stringAddress = read_dword(address)
+---@param forced boolean
+function luablam.writeUnicodeString(address, newString, forced)
+    local stringAddress
+    if (forced) then
+        stringAddress = address
+    else
+        stringAddress = read_dword(address)
+    end
     for i = 1, #newString do
         write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
         if (i == #newString) then
@@ -440,8 +452,8 @@ local dataOperations = {
     float = {read_float, write_float},
     string = {read_string, write_string},
     ustring = {
-        readUnicodeString,
-        writeUnicodeString
+        luablam.readUnicodeString,
+        luablam.writeUnicodeString
     }
 }
 
@@ -459,7 +471,7 @@ local dataBindingMetaTable = {
                 operation = dataOperations[propertyData.elementsType]
                 local listCount = read_byte(object.address + propertyData.offset - 0x4)
                 local listAddress = read_dword(object.address + propertyData.offset)
-                -- // FIXME: What tha heck i means here Jerry???
+                -- // FIXME: What da heck i means here Jerry???
                 for i = 1, listCount do
                     if (propertyValue[i] ~= nil) then
                         operation[2](listAddress + 0xC + propertyData.jump * (i - 1),
@@ -1490,6 +1502,13 @@ luablam.netgameEquipmentTypes = netgameEquipmentTypes
 luablam.consoleColors = consoleColors
 
 -- LuaBlam globals
+
+---@class tagDataHeader
+---@field array any
+---@field scenario string
+---@field count number
+
+---@type tagDataHeader
 luablam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
 
 ------------------------------------------------------------------------------

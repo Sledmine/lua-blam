@@ -1,8 +1,6 @@
 ------------------------------------------------------------------------------
 -- Chimera Test
--- Test cases for Chimera API
--- Author: Sledmine, JerryBrick
--- Version: 1.0
+-- Sledmine, JerryBrick
 -- This script must run perfectly in stock Bloodgulch!!
 ------------------------------------------------------------------------------
 clua_version = 2.042
@@ -43,50 +41,58 @@ end
 
 set_callback("command", "OnCommand")
 
------------------ On Command Tests -----------------------
+----------------- Functions Tests -----------------------
 
-test_auxiliarFunctions = {}
+testFunctions = {}
 
-function test_auxiliarFunctions:test_getDynamicPlayer()
-    glue.writefile("chimera_tests.txt", "test_getDynamicPlayer", "t")
+function testFunctions:testGetDynamicPlayer()
     local memoryResult = get_dynamic_player()
     lu.assertNotIsNil(memoryResult)
 end
 
-function test_auxiliarFunctions:test_getDynamicPlayer_BlamValue()
-    glue.writefile("chimera_tests.txt", "test_getDynamicPlayer_BlamValue", "t")
+function testFunctions:testGetDynamicPlayerBlamValue()
     local memoryResult = get_dynamic_player()
     local player = blam.biped(memoryResult)
     lu.assertEquals(player.zoomLevel, 255)
 end
 
+function testFunctions:testReadFile()
+    local testFile = read_file("test.txt")
+    local testJson = read_file("test.json")
+    lu.assertEquals(testFile, "This is a test text")
+    lu.assertEquals(testJson, "{\"test\":\"This is a text property\"}")
+end
+
+function testFunctions:testWriteFile()
+    local writeText = "This is another test text"
+    write_file("write.txt", writeText)
+    local writeResult = read_file("write.txt")
+    lu.assertEquals(writeText, writeResult)
+end
+
 ----------------- Objects Tests -----------------------
 
-test_Objects = {}
+testObjects = {}
 
-function test_Objects:test_Objects_Spawn_And_Delete()
+function testObjects:testObjectsSpawnAndDelete()
     glue.writefile("chimera_tests.txt", "test_Objects_Spawn_And_Delete", "t")
     local objectResult = false
     local objectId = spawn_object("biped", "characters\\cyborg_mp\\cyborg_mp", 31, -82, 0.061)
     lu.assertNotIsNil(objectId)
     delete_object(objectId)
-    --objectAddress = get_object(objectId)
-    --local cyborgBiped = blam.biped(objectAddress)
-    --lu.assertEquals(cyborgBiped.health, 0)
+    -- objectAddress = get_object(objectId)
+    -- local cyborgBiped = blam.biped(objectAddress)
+    -- lu.assertEquals(cyborgBiped.health, 0)
 end
 
-
-function test_Objects:test_Get_Object_With_Whole_Id()
+function testObjects:testGetObjectWithWhole_Id()
     glue.writefile("chimera_tests.txt", "test_Get_Object_With_Whole_Id", "t")
     local gameObjects = blam.getObjects()
     lu.assertNotIsNil(gameObjects)
     lu.assertEquals(#gameObjects > 0, true)
 end
 
-function test_Objects:test_Get_Object_With_Index()
-    
-end
-
+--function testObjects:test_Get_Object_With_Index() end
 
 -- Mocked arguments and executions for standalone execution and in game execution
 if (not arg) then
