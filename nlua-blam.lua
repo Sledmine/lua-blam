@@ -1148,7 +1148,7 @@ local weaponHudInterfaceStructure = {
     --padding4 = {size = 0x20, offset = 0x40},
     crosshairs = {
         type = "table",
-        offset = 0x8A,
+        offset = 0x88,
         jump = 0x68,
         rows = {
             type = {type = "word", offset = 0x0},
@@ -1158,7 +1158,7 @@ local weaponHudInterfaceStructure = {
             bitmap = {type = "dword", offset = 0x30},
             overlays = {
                 type = "table",
-                offset = 0x34,
+                offset = 0x38,
                 jump = 0x6C,
                 rows = {
                     anchorOffset = {
