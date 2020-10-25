@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
--- Testing for the lua-blam library
+-- Testing for the lua blam library
 -- Sledmine, JerryBrick
 -- This script must run perfectly in stock Bloodgulch!!
 ------------------------------------------------------------------------------
@@ -18,14 +18,15 @@ local function tprint(message, ...)
             console_out(message) -- CHANGE THIS TO CONSOLE OUT WITH COLORS!
             return
         end
-        console_out(message)
+        console_out(message) -- CHANGE THIS TO CONSOLE OUT WITH COLORS!
+        (message)
     end
 end
 
 function OnCommand(command)
     if (command == "ltest") then
         local runner = lu.LuaUnit.new()
-        runner:setOutputType("junit", "luablam_tests_results")
+        runner:setOutputType("junit", "luablamtestsresults")
         runner:runSuite()
         return false
     end
@@ -37,20 +38,20 @@ set_callback("command", "OnCommand")
 -- Functions
 ------------------------------------------------------------------------------
 
-test_Functions = {}
+testFunctions = {}
 
-function test_Functions:setUp()
+function testFunctions:setUp()
     self.bipedTagPath = "characters\\cyborg_mp\\cyborg_mp"
 end
 
-function test_Functions:test_Get_Tag_Id_Compat35()
+function testFunctions:testget_tagIdCompat35()
     ---@type blam35
     local blam35 = blam.compat35()
     local tagId = get_tag_id(blam.tagClasses.biped, self.bipedTagPath)
     lu.assertNotIsNil(tagId, "Tag ID must not be nil")
 end
 
-function test_Functions:test_Get_Tag_Path_Compat35()
+function testFunctions:testget_tagPathCompat35()
     ---@type blam35
     local blam35 = blam.compat35()
     local tagId = get_tag_id(blam.tagClasses.biped, self.bipedTagPath)
@@ -58,7 +59,7 @@ function test_Functions:test_Get_Tag_Path_Compat35()
     lu.assertEquals(tagPath, self.bipedTagPath, "Tag path must be " .. self.bipedTagPath)
 end
 
-function test_Functions:test_Get_Tag_Type_Compat35()
+function testFunctions:testget_tagTypeCompat35()
     ---@type blam35
     local blam35 = blam.compat35()
     local tagId = get_tag_id(blam.tagClasses.biped, self.bipedTagPath)
@@ -70,16 +71,16 @@ end
 -- Blam Objects Test Setup
 ------------------------------------------------------------------------------
 
-test_Objects = {}
+testObjects = {}
 
-function test_Objects:setUp()
+function testObjects:setUp()
     self.bipedTagPath = "characters\\cyborg_mp\\cyborg_mp"
     self.uiDefaultProfilesTagPath = "ui\\ui_default_profiles"
     self.defaultProfilesTagList = {
-        3955427919,
-        3955493456,
-        3955558993,
-        3955624530,
+        3909224332,
+        3909289869,
+        3909355406,
+        3909420943,
     }
 end
 
@@ -87,7 +88,7 @@ end
 -- Tag Objects
 ------------------------------------------------------------------------------
 
-function test_Objects:test_Tag()
+function testObjects:testTag()
     local cyborgMpTag = blam.getTag(self.bipedTagPath, blam.tagClasses.biped)
     lu.assertNotIsNil(cyborgMpTag, "Cyborg tag must not be nil")
     local bipedTagAddress = get_tag(blam.tagClasses.biped, self.bipedTagPath)
@@ -97,7 +98,7 @@ function test_Objects:test_Tag()
     lu.assertEquals(cyborgMpTag.class, "bipd", "Cyborg tag class type must be bipd")
 end
 
-function test_Objects:test_Tag_Collection()
+function testObjects:testTagCollection()
     local uiDefaultProfiles = blam.tagCollection(self.uiDefaultProfilesTagPath)
     lu.assertNotIsNil(uiDefaultProfiles, "Tag collection must not be nil")
     lu.assertEquals(uiDefaultProfiles.count, 4, "Tag collection count must be 4")
@@ -105,7 +106,7 @@ function test_Objects:test_Tag_Collection()
                     "Tag collection list must match")
 end
 
-function test_Objects:test_Tag_Collection_Compat35()
+function testObjects:testTagCollectionCompat35()
     ---@type blam35
     local blam35 = blam.compat35()
     local uiDefaultProfiles = blam35.tagCollection(
@@ -120,7 +121,7 @@ end
 -- Game Objects
 ------------------------------------------------------------------------------
 
-function test_Objects:test_Biped_Object()
+function testObjects:testBipedObject()
     ---@type biped
     local bipedObject = blam.biped(get_dynamic_player())
     lu.assertNotIsNil(bipedObject)

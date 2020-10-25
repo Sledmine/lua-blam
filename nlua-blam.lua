@@ -287,7 +287,7 @@ end
 ---@param str string
 ---@return string
 local function trim(str)
-    return str:match "^%s*(.*)":match "(.-)%s*$"
+    return str:match("^%s*(.*)"):match("(.-)%s*$")
 end
 
 --- Verify if the value is valid
@@ -333,48 +333,6 @@ local function getObjects()
         end
     end
     return currentObjectsList
-end
-
---- Return the string of a unicode string given address
----@param address number
----@param forced boolean
----@return string
-function luablam.readUnicodeString(address, forced)
-    local stringAddress
-    if (forced) then
-        stringAddress = address
-    else
-        stringAddress = read_dword(address)
-    end
-    local length = stringAddress / 2
-    local output = ""
-    for i = 1, length do
-        local char = read_string(stringAddress + (i - 1) * 0x2)
-        if (char == "") then
-            break
-        end
-        output = output .. char
-    end
-    return output
-end
-
---- Writes a unicode string in a given address
----@param address number
----@param newString string
----@param forced boolean
-function luablam.writeUnicodeString(address, newString, forced)
-    local stringAddress
-    if (forced) then
-        stringAddress = address
-    else
-        stringAddress = read_dword(address)
-    end
-    for i = 1, #newString do
-        write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
-        if (i == #newString) then
-            write_byte(stringAddress + #newString * 0x2, 0x0)
-        end
-    end
 end
 
 -- Local reference to the original console_out function
@@ -434,82 +392,234 @@ local function b2b(bitOrBool)
         return 0
     end
     error("B2B error, expected boolean or bit value, got " .. tostring(bitOrBool) .. " " ..
-                  type(bitOrBool))
+              type(bitOrBool))
 end
 
 ------------------------------------------------------------------------------
 -- Objects data binding
 ------------------------------------------------------------------------------
 
--- Data types operations
-local dataOperations = {
-    bit = {read_bit, write_bit},
-    byte = {read_byte, write_byte},
-    short = {read_short, write_short},
-    word = {read_word, write_word},
-    int = {read_int, write_int},
-    dword = {read_dword, write_dword},
-    float = {read_float, write_float},
-    string = {read_string, write_string},
+local typesOperations
+
+local function readBit(address, propertyData)
+    return b2b(read_bit(address, propertyData.bitLevel))
+end
+
+local function writeBit(address, propertyData, propertyValue)
+    return write_bit(address, propertyData.bitLevel, b2b(propertyValue))
+end
+
+local function readByte(address)
+    return read_byte(address)
+end
+
+local function writeByte(address, propertyData, propertyValue)
+    return write_byte(address, propertyValue)
+end
+
+local function readShort(address)
+    return read_short(address)
+end
+
+local function writeShort(address, propertyData, propertyValue)
+    return write_short(address, propertyValue)
+end
+
+local function readWord(address)
+    return read_word(address)
+end
+
+local function writeWord(address, propertyData, propertyValue)
+    return write_word(address, propertyValue)
+end
+
+local function readInt(address)
+    return read_int(address)
+end
+
+local function writeInt(address, propertyData, propertyValue)
+    return write_int(address, propertyValue)
+end
+
+local function readDword(address)
+    return read_dword(address)
+end
+
+local function writeDword(address, propertyData, propertyValue)
+    return write_dword(address, propertyValue)
+end
+
+local function readFloat(address)
+    return read_float(address)
+end
+
+local function writeFloat(address, propertyData, propertyValue)
+    return write_float(address, propertyValue)
+end
+
+local function readString(address)
+    return read_string(address)
+end
+
+local function writeString(address, propertyData, propertyValue)
+    return write_string(address, propertyValue)
+end
+
+-- //TODO Refactor this tu support full unicode char size
+--- Return the string of a unicode string given address
+---@param address number
+---@param forced boolean
+---@return string
+function luablam.readUnicodeString(address, forced)
+    local stringAddress
+    if (forced) then
+        stringAddress = address
+    else
+        stringAddress = read_dword(address)
+    end
+    local length = stringAddress / 2
+    local output = ""
+    for i = 1, length do
+        local char = read_string(stringAddress + (i - 1) * 0x2)
+        if (char == "") then
+            break
+        end
+        output = output .. char
+    end
+    return output
+end
+
+-- //TODO Refactor this to support writing ASCII and Unicode strings
+--- Writes a unicode string in a given address
+---@param address number
+---@param newString string
+---@param forced boolean
+function luablam.writeUnicodeString(address, newString, forced)
+    local stringAddress
+    if (forced) then
+        stringAddress = address
+    else
+        stringAddress = read_dword(address)
+    end
+    for i = 1, #newString do
+        write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
+        if (i == #newString) then
+            write_byte(stringAddress + #newString * 0x2, 0x0)
+        end
+    end
+end
+
+local function readUnicodeString(address, propertyData)
+    return luablam.readUnicodeString(address)
+end
+
+local function writeUnicodeString(address, propertyData, propertyValue)
+    return luablam.writeUnicodeString(address, propertyValue)
+end
+
+local function readList(address, propertyData)
+    local operation = typesOperations[propertyData.elementsType]
+    local elementCount = read_byte(address - 0x4)
+    local addressList = read_dword(address) + 0xC
+    local list = {}
+    for currentElement = 1, elementCount do
+        list[currentElement] = operation.read(addressList +
+                                                  (propertyData.jump * (currentElement - 1)))
+    end
+    return list
+end
+
+local function writeList(address, propertyData, propertyValue)
+    local operation = typesOperations[propertyData.elementsType]
+    local elementCount = read_byte(address - 0x4)
+    local addressList = read_dword(address) + 0xC
+    for currentElement = 1, elementCount do
+        local elementValue = propertyValue[currentElement]
+        if (elementValue) then
+            -- Check if there are problems at sending property data here due to missing property data
+            operation.write(addressList + (propertyData.jump * (currentElement - 1)), propertyData,
+                            elementValue)
+        else
+            if (currentElement > #propertyValue) then
+                break
+            end
+        end
+    end
+end
+
+local function readTable(address, propertyData)
+    local table = {}
+    local elementsCount = read_byte(address - 0x4)
+    local firstElement = read_dword(address)
+    for elementPosition = 1, elementsCount do
+        local elementAddress = firstElement + ((elementPosition - 1) * propertyData.jump)
+        table[elementPosition] = {}
+        for subProperty, subPropertyData in pairs(propertyData.rows) do
+            operation = typesOperations[subPropertyData.type]
+            table[elementPosition][subProperty] = operation.read(
+                                                      elementAddress + subPropertyData.offset,
+                                                      {
+                    bitLevel = subPropertyData.bitLevel
+                })
+        end
+    end
+    return table
+end
+
+local function writeTable(address, propertyData, propertyValue)
+    local elementCount = read_byte(address - 0x4)
+    local firstElement = read_dword(address)
+    for currentElement = 1, elementCount do
+        local elementAddress = firstElement + (currentElement - 1) * propertyData.jump
+        if (propertyValue[currentElement]) then
+            for subProperty, subPropertyValue in pairs(propertyValue[currentElement]) do
+                local subPropertyData = propertyData.rows[subProperty]
+                if (subPropertyData) then
+                    operation = typesOperations[subPropertyData.type]
+                    operation.write(elementAddress + subPropertyData.offset,
+                                    {
+                        bitLevel = subPropertyData.bitLevel
+                    }, subPropertyValue)
+                end
+            end
+        else
+            if (currentElement > #propertyValue) then
+                break
+            end
+        end
+    end
+end
+
+-- Data types operations references
+typesOperations = {
+    bit = {read = readBit, write = writeBit},
+    byte = {read = readByte, write = writeByte},
+    short = {read = readShort, write = writeShort},
+    word = {read = readWord, write = writeWord},
+    int = {read = readInt, write = writeInt},
+    dword = {read = readDword, write = writeDword},
+    float = {read = readFloat, write = writeFloat},
+    string = {
+        read = readString,
+        write = writeString
+    },
     ustring = {
-        luablam.readUnicodeString,
-        luablam.writeUnicodeString
-    }
+        read = readUnicodeString,
+        write = writeUnicodeString
+    },
+    list = {read = readList, write = writeList},
+    table = {read = readTable, write = writeTable}
 }
 
 -- Magic luablam metatable
 local dataBindingMetaTable = {
     __newindex = function(object, property, propertyValue)
+        -- Get all the data related to property field
         local propertyData = object.structure[property]
         if (propertyData) then
-            local dataType = propertyData.type
-            local operation = dataOperations[dataType]
-            if (dataType == "bit") then
-                local bitLevel = propertyData.bitLevel
-                operation[2](object.address + propertyData.offset, bitLevel, b2b(propertyValue))
-            elseif (dataType == "list") then
-                operation = dataOperations[propertyData.elementsType]
-                local listCount = read_byte(object.address + propertyData.offset - 0x4)
-                local listAddress = read_dword(object.address + propertyData.offset)
-                -- // FIXME: What da heck i means here Jerry???
-                for i = 1, listCount do
-                    if (propertyValue[i] ~= nil) then
-                        operation[2](listAddress + 0xC + propertyData.jump * (i - 1),
-                                     propertyValue[i])
-                    else
-                        if (i > #propertyValue) then
-                            break
-                        end
-                    end
-                end
-            elseif (dataType == "table") then
-                local elementsCount = read_byte(object.address + propertyData.offset - 0x4)
-                local firstElement = read_dword(object.address + propertyData.offset)
-                -- // TODO: Some values here were renamed, check if they are accurate
-                for i = 1, elementsCount do
-                    local elementAddress = firstElement + (i - 1) * propertyData.jump
-                    if (propertyValue[i]) then
-                        for subProperty, subPropertyValue in pairs(propertyValue[i]) do
-                            local fieldData = propertyData.rows[subProperty]
-                            if (fieldData) then
-                                operation = dataOperations[fieldData.type]
-                                if (fieldData.type == "bit") then
-                                    operation[2](elementAddress + fieldData.offset,
-                                                 fieldData.bitLevel, b2b(subPropertyValue))
-                                else
-                                    operation[2](elementAddress + fieldData.offset, subPropertyValue)
-                                end
-                            end
-                        end
-                    else
-                        if (i > #propertyValue) then
-                            break
-                        end
-                    end
-                end
-            else
-                operation[2](object.address + propertyData.offset, propertyValue)
-            end
+            local operation = typesOperations[propertyData.type]
+            local propertyAddress = object.address + propertyData.offset
+            operation.write(propertyAddress, propertyData, propertyValue)
         else
             local errorMessage = "Unable to write an invalid property ('" .. property .. "')"
             consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
@@ -519,45 +629,9 @@ local dataBindingMetaTable = {
         local objectStructure = object.structure
         local propertyData = objectStructure[property]
         if (propertyData) then
-            local dataType = propertyData.type
-            local operation = dataOperations[dataType]
-            if (dataType == "bit") then
-                local bitLevel = propertyData.bitLevel
-                return b2b(operation[1](object.address + propertyData.offset, bitLevel))
-            elseif (dataType == "list") then
-                operation = dataOperations[propertyData.elementsType]
-                local listCount = read_byte(object.address + propertyData.offset - 0x4)
-                local listAddress = read_dword(object.address + propertyData.offset)
-                local list = {}
-                for i = 1, listCount do
-                    list[i] = operation[1](listAddress + 0xC + propertyData.jump * (i - 1))
-                end
-                return list
-            elseif (dataType == "table") then
-                local table = {}
-                local elementsCount = read_byte(object.address + propertyData.offset - 0x4)
-                local firstElement = read_dword(object.address + propertyData.offset)
-                for elementPosition = 1, elementsCount do
-                    local elementAddress = firstElement + (elementPosition - 1) * propertyData.jump
-                    table[elementPosition] = {}
-                    -- // FIXME: What tha heck Jerry means here with k,v ???!!!
-                    for k, v in pairs(propertyData.rows) do
-                        operation = dataOperations[v.type]
-                        if (v.type == "bit") then
-                            table[elementPosition][k] =
-                                b2b(operation[1](elementAddress + v.offset, v.bitLevel))
-                        else
-                            table[elementPosition][k] = operation[1](elementAddress + v.offset)
-                        end
-                    end
-                end
-                return table
-            else
-                if (not operation) then
-                    console_out(property)
-                end
-                return operation[1](object.address + propertyData.offset)
-            end
+            local operation = typesOperations[propertyData.type]
+            local propertyAddress = object.address + propertyData.offset
+            return operation.read(propertyAddress, propertyData)
         else
             local errorMessage = "Unable to read an invalid property ('" .. property .. "')"
             consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
@@ -753,7 +827,10 @@ local objectStructure = {
     team = {type = "word", offset = 0xB8},
     playerId = {type = "dword", offset = 0xC0},
     parentId = {type = "dword", offset = 0xC4},
-    attachedToObjectId = {type = "dword", offset = 0x11C},
+    attachedToObjectId = {
+        type = "dword",
+        offset = 0x11C
+    },
     -- Experimental name properties
     isHealthEmpty = {
         type = "bit",
@@ -939,31 +1016,59 @@ local bitmapStructure = {
     format = {type = "word", offset = 0x2},
     usage = {type = "word", offset = 0x4},
     usageFlags = {type = "word", offset = 0x6},
-    detailFadeFactor = {type = "dword", offset = 0x8},
+    detailFadeFactor = {
+        type = "dword",
+        offset = 0x8
+    },
     sharpenAmount = {type = "dword", offset = 0xC},
     bumpHeight = {type = "dword", offset = 0x10},
-    spriteBudgetSize = {type = "word", offset = 0x14},
-    spriteBudgetCount = {type = "word", offset = 0x16},
-    colorPlateWidth = {type = "word", offset = 0x18},
-    colorPlateHeight = {type = "word", offset = 0x1A},
-    --compressedColorPlate = {offset = 0x1C},
-    --processedPixelData = {offset = 0x30},
-    blurFilterSize = {type = "float", offset = 0x44},
+    spriteBudgetSize = {
+        type = "word",
+        offset = 0x14
+    },
+    spriteBudgetCount = {
+        type = "word",
+        offset = 0x16
+    },
+    colorPlateWidth = {
+        type = "word",
+        offset = 0x18
+    },
+    colorPlateHeight = {
+        type = "word",
+        offset = 0x1A
+    },
+    -- compressedColorPlate = {offset = 0x1C},
+    -- processedPixelData = {offset = 0x30},
+    blurFilterSize = {
+        type = "float",
+        offset = 0x44
+    },
     alphaBias = {type = "float", offset = 0x48},
     mipmapCount = {type = "word", offset = 0x4C},
     spriteUsage = {type = "word", offset = 0x4E},
     spriteSpacing = {type = "word", offset = 0x50},
-    --padding1 = {size = 0x2, offset = 0x52},
-    sequencesCount = {type = "byte", offset = 0x54},
+    -- padding1 = {size = 0x2, offset = 0x52},
+    sequencesCount = {
+        type = "byte",
+        offset = 0x54
+    },
     sequences = {
         type = "table",
         offset = 0x58,
+        -- //FIXME Check if the jump field is correctly being used
         jump = 0,
         rows = {
             name = {type = "string", offset = 0x0},
-            firstBitmapIndex = {type = "word", offset = 0x20},
-            bitmapCount = {type = "word", offset = 0x22},
-            --padding = {size = 0x10, offset = 0x24},
+            firstBitmapIndex = {
+                type = "word",
+                offset = 0x20
+            },
+            bitmapCount = {
+                type = "word",
+                offset = 0x22
+            }
+            -- padding = {size = 0x10, offset = 0x24},
             --[[
             sprites = {
                 type = "table",
@@ -999,13 +1104,19 @@ local bitmapStructure = {
             flags = {type = "word", offset = 0xE},
             x = {type = "word", offset = 0x10},
             y = {type = "word", offset = 0x12},
-            mipmapCount = {type = "word", offset = 0x14},
-            --padding1 = {size = 0x2, offset = 0x16},
-            pixelOffset = {type = "dword", offset = 0x18},
-            --padding2 = {size = 0x4, offset = 0x1C},
-            --padding3 = {size = 0x4, offset = 0x20},
-            --padding4 = {size = 0x4, offset= 0x24},
-            --padding5 = {size = 0x8, offset= 0x28}
+            mipmapCount = {
+                type = "word",
+                offset = 0x14
+            },
+            -- padding1 = {size = 0x2, offset = 0x16},
+            pixelOffset = {
+                type = "dword",
+                offset = 0x18
+            }
+            -- padding2 = {size = 0x4, offset = 0x1C},
+            -- padding3 = {size = 0x4, offset = 0x20},
+            -- padding4 = {size = 0x4, offset= 0x24},
+            -- padding5 = {size = 0x8, offset= 0x28}
         }
     }
 }
@@ -1366,8 +1477,8 @@ end
 ---@field spriteBudgetCount number
 ---@field colorPlateWidth number
 ---@field colorPlateHeight number 
---@field compressedColorPlate data
---@field processedPixelData data
+-- @field compressedColorPlate data
+-- @field processedPixelData data
 ---@field blurFilterSize number
 ---@field alphaBias number
 ---@field mipmapCount number
@@ -1642,7 +1753,7 @@ end
 ---@param tag string | number
 ---@return bitmap
 function luablam.bitmap(tag)
-    if(isValid(tag)) then
+    if (isValid(tag)) then
         local bitmapTag = luablam.getTag(tag, tagClasses.bitmap)
         return bitmapClassNew(bitmapTag.data)
     end
