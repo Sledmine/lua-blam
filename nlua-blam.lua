@@ -1109,9 +1109,33 @@ local uiWidgetCollectionStructure = {
     }
 }
 
+---@class anchorOffset
+---@field x number
+---@field y number
+---@field width number
+---@field height number
+
+---@class crosshairOverlay
+---@field anchorOffset anchorOffset
+
+---@class crosshair
+---@field type number
+---@field mapType number
+---@field bitmap number
+---@field overlays table
+
+---@class weaponHudInterface
+---@field childHud number
+---@field totalAmmoCutOff number
+---@field loadedAmmoCutOff number
+---@field heatCutOff number
+---@field ageCutOff number
+---@field crosshairs crosshair
+
 -- Weapon HUD Interface structure
 local weaponHudInterfaceStructure = {
     childHud = {type = "dword", offset = 0xC},
+    -- //TODO Check if this property should be moved to a nested property type
     usingParentHudFlashingParameters = {type = "bit", offset = "word", bitLevel = 1},
     --padding1 = {type = "word", offset = 0x12},
     totalAmmoCutOff = {type = "word", offset = 0x14},
@@ -1119,14 +1143,12 @@ local weaponHudInterfaceStructure = {
     heatCutOff = {type = "word", offset = 0x18},
     ageCutOff = {type = "word", offset = 0x1A},
     --padding2 = {size = 0x20, offset = 0x1C},
-    screenAlignment = {type = "word", },
+    --screenAlignment = {type = "word", },
     --padding3 = {size = 0x2, offset = 0x3E},
     --padding4 = {size = 0x20, offset = 0x40},
-
-
     crosshairs = {
         type = "table",
-        offset = 0x84,
+        offset = 0x8A,
         jump = 0x68,
         rows = {
             type = {type = "word", offset = 0x0},
@@ -1652,14 +1674,6 @@ end
 local function uiWidgetCollectionClassNew(address)
     return createObject(address, uiWidgetCollectionStructure)
 end
-
----@class weaponHudInterface
----@field crosshairs number
----@field defaultBlue number
----@field defaultGreen number
----@field defaultRed number
----@field defaultAlpha number
----@field sequenceIndex number
 
 local function weaponHudInterfaceClassNew(address)
     return createObject(address, weaponHudInterfaceStructure)

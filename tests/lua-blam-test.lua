@@ -15,10 +15,10 @@ local function tprint(message, ...)
     if (message) then
         message = tostring(message)
         if (message:find("Starting")) then
-            console_out(message) -- CHANGE THIS TO CONSOLE OUT WITH COLORS!
+            console_out(message)
             return
         end
-        console_out(message) -- CHANGE THIS TO CONSOLE OUT WITH COLORS!
+        console_out(message)
         (message)
     end
 end
@@ -76,6 +76,7 @@ testObjects = {}
 function testObjects:setUp()
     self.bipedTagPath = "characters\\cyborg_mp\\cyborg_mp"
     self.uiDefaultProfilesTagPath = "ui\\ui_default_profiles"
+    self.assaultRifleWphiTagPath = "weapons\\assault rifle\\assault rifle"
     self.defaultProfilesTagList = {
         3909224332,
         3909289869,
@@ -104,6 +105,19 @@ function testObjects:testTagCollection()
     lu.assertEquals(uiDefaultProfiles.count, 4, "Tag collection count must be 4")
     lu.assertEquals(uiDefaultProfiles.tagList, self.defaultProfilesTagList,
                     "Tag collection list must match")
+end
+
+function testObjects:testWeaponHudInterface()
+    local wphi = blam.weaponHudInterface(self.assaultRifleWphiTagPath)
+    lu.assertEquals(wphi.childHud, 3800891673)
+    lu.assertEquals(wphi.totalAmmoCutOff, 61)
+    lu.assertEquals(wphi.loadedAmmoCutOff, 10)
+    lu.assertEquals(wphi.heatCutOff, 0)
+    lu.assertEquals(wphi.ageCutOff, 0)
+    lu.assertNotIsNil(wphi.crosshairs)
+    lu.assertEquals(wphi.crosshairs.type, 0)
+    lu.assertEquals(wphi.crosshairs.mapType, 0)
+    lu.assertEquals(wphi.crosshairs.bitmap, 3801350432)
 end
 
 function testObjects:testTagCollectionCompat35()
