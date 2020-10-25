@@ -1163,6 +1163,7 @@ local weaponHudInterfaceStructure = {
                     },
                     --padding1 = {size = 0x2, offset = 0xE},
                     --padding2 = {size = 0x14, offset = 0x10},
+                    --[[
                     defaultColor = {
                         type = "pointer",
                         pointerType = "table",
@@ -1187,6 +1188,7 @@ local weaponHudInterfaceStructure = {
                             b = {type = "float", offset = 0xC}
                         }
                     },
+                    ]]
                     flashPeriod = {type = "float", offset = 0x2C},
                     flashDelay = {type = "float", offset = 0x30},
                     numberOfFlashes = {type = "word", offset = 0x34},
@@ -1199,6 +1201,7 @@ local weaponHudInterfaceStructure = {
                         }
                     },
                     flashLength = {type = "float", offset = 0x38},
+                    --[[
                     disabledColor = {
                         type = "pointer",
                         pointerType = "table",
@@ -1211,6 +1214,7 @@ local weaponHudInterfaceStructure = {
                             b = {type = "float", offset = 0xC}
                         }
                     },
+                    ]]
                     --padding3 = {size = 0x4, offset = 0x40},
                     frameRate = {type = "word", offset = 0x44},
                     sequenceIndex = {type = "word", offset = 0x48},
