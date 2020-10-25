@@ -555,12 +555,10 @@ local function readTable(address, propertyData)
         local elementAddress = firstElement + ((elementPosition - 1) * propertyData.jump)
         table[elementPosition] = {}
         for subProperty, subPropertyData in pairs(propertyData.rows) do
-            operation = typesOperations[subPropertyData.type]
+            local operation = typesOperations[subPropertyData.type]
             table[elementPosition][subProperty] = operation.read(
                                                       elementAddress + subPropertyData.offset,
-                                                      {
-                    bitLevel = subPropertyData.bitLevel
-                })
+                                                      subPropertyData)
         end
     end
     return table
@@ -575,11 +573,9 @@ local function writeTable(address, propertyData, propertyValue)
             for subProperty, subPropertyValue in pairs(propertyValue[currentElement]) do
                 local subPropertyData = propertyData.rows[subProperty]
                 if (subPropertyData) then
-                    operation = typesOperations[subPropertyData.type]
-                    operation.write(elementAddress + subPropertyData.offset,
-                                    {
-                        bitLevel = subPropertyData.bitLevel
-                    }, subPropertyValue)
+                    local operation = typesOperations[subPropertyData.type]
+                    operation.write(elementAddress + subPropertyData.offset, subPropertyData,
+                                    subPropertyValue)
                 end
             end
         else
@@ -1112,11 +1108,11 @@ local uiWidgetCollectionStructure = {
 ---@class anchorOffset
 ---@field x number
 ---@field y number
----@field width number
----@field height number
 
 ---@class crosshairOverlay
 ---@field anchorOffset anchorOffset
+---@field widthScale number
+---@field heightScale number
 
 ---@class crosshair
 ---@field type number
@@ -1136,42 +1132,71 @@ local uiWidgetCollectionStructure = {
 local weaponHudInterfaceStructure = {
     childHud = {type = "dword", offset = 0xC},
     -- //TODO Check if this property should be moved to a nested property type
-    usingParentHudFlashingParameters = {type = "bit", offset = "word", bitLevel = 1},
-    --padding1 = {type = "word", offset = 0x12},
-    totalAmmoCutOff = {type = "word", offset = 0x14},
-    loadedAmmoCutOff  = {type = "word", offset = 0x16},
+    usingParentHudFlashingParameters = {
+        type = "bit",
+        offset = "word",
+        bitLevel = 1
+    },
+    -- padding1 = {type = "word", offset = 0x12},
+    totalAmmoCutOff = {
+        type = "word",
+        offset = 0x14
+    },
+    loadedAmmoCutOff = {
+        type = "word",
+        offset = 0x16
+    },
     heatCutOff = {type = "word", offset = 0x18},
     ageCutOff = {type = "word", offset = 0x1A},
-    --padding2 = {size = 0x20, offset = 0x1C},
-    --screenAlignment = {type = "word", },
-    --padding3 = {size = 0x2, offset = 0x3E},
-    --padding4 = {size = 0x20, offset = 0x40},
+    -- padding2 = {size = 0x20, offset = 0x1C},
+    -- screenAlignment = {type = "word", },
+    -- padding3 = {size = 0x2, offset = 0x3E},
+    -- padding4 = {size = 0x20, offset = 0x40},
     crosshairs = {
         type = "table",
         offset = 0x88,
         jump = 0x68,
         rows = {
             type = {type = "word", offset = 0x0},
-            mapType = {type = "word", offset = 0x2},
-            --padding1 = {size = 0x2, offset = 0x4},
-            --padding2 = {size = 0x1C, offset = 0x6},
-            bitmap = {type = "dword", offset = 0x30},
+            mapType = {
+                type = "word",
+                offset = 0x2
+            },
+            -- padding1 = {size = 0x2, offset = 0x4},
+            -- padding2 = {size = 0x1C, offset = 0x6},
+            bitmap = {
+                type = "dword",
+                offset = 0x30
+            },
             overlays = {
                 type = "table",
                 offset = 0x38,
                 jump = 0x6C,
                 rows = {
-                    anchorOffset = {
-                        type = "table",
-                        offset = 0x0,
-                        jump = 0,
-                        rows = {
-                            x = {type = "word", offset = 0x0},
-                            y = {type = "word", offset = 0x2}
-                        }
+                    widthScale = {
+                        type = "float",
+                        offset = 0x4
                     },
-                    widthScale = {type = "float", offset = 0x4},
-                    heightScale = {type = "float", offset = 0x8},
+                    heightScale = {
+                        type = "float",
+                        offset = 0x8
+                    }
+                    --[[
+                        anchorOffset = {
+                            type = "table",
+                            offset = 0x0,
+                            jump = 0,
+                            rows = {
+                                x = {
+                                    type = "word",
+                                    offset = 0x0
+                                },
+                                y = {
+                                    type = "word",
+                                    offset = 0x2
+                                }
+                            }
+                        }
                     scalingFlags = {
                         type = "table",
                         offset = 0xC,
@@ -1210,7 +1235,7 @@ local weaponHudInterfaceStructure = {
                             b = {type = "float", offset = 0xC}
                         }
                     },
-                    ]]
+                    
                     flashPeriod = {type = "float", offset = 0x2C},
                     flashDelay = {type = "float", offset = 0x30},
                     numberOfFlashes = {type = "word", offset = 0x34},
@@ -1236,7 +1261,7 @@ local weaponHudInterfaceStructure = {
                             b = {type = "float", offset = 0xC}
                         }
                     },
-                    ]]
+                    
                     --padding3 = {size = 0x4, offset = 0x40},
                     frameRate = {type = "word", offset = 0x44},
                     sequenceIndex = {type = "word", offset = 0x48},
@@ -1254,13 +1279,12 @@ local weaponHudInterfaceStructure = {
                             dontShowWhenZoomed = {type = "bit", offset = 0x0, bitLevel = 6}
                         }
                     },
-                    --padding4 = {size = 0x20, offset = 0x4C}
+                    --padding4 = {size = 0x20, offset = 0x4C}]]
                 }
-            },
-            --padding3 = {size = 0x28, offset = 0x40}
+            }
+            -- padding3 = {size = 0x28, offset = 0x40}
         }
     }
-    
 
     --[[
     crosshairs = {type = "word", offset = 0x84},

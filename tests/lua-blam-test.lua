@@ -19,7 +19,6 @@ local function tprint(message, ...)
             return
         end
         console_out(message)
-        (message)
     end
 end
 
@@ -115,9 +114,12 @@ function testObjects:testWeaponHudInterface()
     lu.assertEquals(wphi.heatCutOff, 0)
     lu.assertEquals(wphi.ageCutOff, 0)
     lu.assertNotIsNil(wphi.crosshairs)
-    lu.assertEquals(wphi.crosshairs.type, 0)
-    lu.assertEquals(wphi.crosshairs.mapType, 0)
-    lu.assertEquals(wphi.crosshairs.bitmap, 3801350432)
+    lu.assertEquals(wphi.crosshairs[1].type, 0)
+    lu.assertEquals(wphi.crosshairs[1].mapType, 0)
+    lu.assertEquals(wphi.crosshairs[1].bitmap, 3801350432)
+    lu.assertNotIsNil(wphi.crosshairs[1].overlays)
+    lu.assertEquals(wphi.crosshairs[1].overlays[1].widthScale, 1)
+    lu.assertEquals(wphi.crosshairs[1].overlays[1].heightScale, 1)
 end
 
 function testObjects:testTagCollectionCompat35()
