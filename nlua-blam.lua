@@ -770,7 +770,7 @@ local objectStructure = {
     team = {type = "word", offset = 0xB8},
     playerId = {type = "dword", offset = 0xC0},
     parentId = {type = "dword", offset = 0xC4},
-    attachedToObjectId = {
+    attachedObjectId = {
         type = "dword",
         offset = 0x11C
     },
