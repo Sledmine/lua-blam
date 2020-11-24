@@ -6,7 +6,7 @@
 clua_version = 2.042
 
 local lu = require "luaunit"
-local blam = require "nlua-blam"
+local blam = require "blam"
 local glue = require "glue"
 local inspect = require "inspect"
 
@@ -25,7 +25,7 @@ end
 function OnCommand(command)
     if (command == "ltest") then
         local runner = lu.LuaUnit.new()
-        runner:setOutputType("junit", "luablamtestsresults")
+        runner:setOutputType("junit", "luablam_tests_results")
         runner:runSuite()
         return false
     end
@@ -39,33 +39,6 @@ set_callback("command", "OnCommand")
 
 testFunctions = {}
 
-function testFunctions:setUp()
-    self.bipedTagPath = "characters\\cyborg_mp\\cyborg_mp"
-end
-
-function testFunctions:testget_tagIdCompat35()
-    ---@type blam35
-    local blam35 = blam.compat35()
-    local tagId = get_tag_id(blam.tagClasses.biped, self.bipedTagPath)
-    lu.assertNotIsNil(tagId, "Tag ID must not be nil")
-end
-
-function testFunctions:testget_tagPathCompat35()
-    ---@type blam35
-    local blam35 = blam.compat35()
-    local tagId = get_tag_id(blam.tagClasses.biped, self.bipedTagPath)
-    local tagPath = get_tag_path(tagId)
-    lu.assertEquals(tagPath, self.bipedTagPath, "Tag path must be " .. self.bipedTagPath)
-end
-
-function testFunctions:testget_tagTypeCompat35()
-    ---@type blam35
-    local blam35 = blam.compat35()
-    local tagId = get_tag_id(blam.tagClasses.biped, self.bipedTagPath)
-    local tagType = get_tag_type(tagId)
-    lu.assertEquals(tagType, "bipd", "Tag type must be bipd")
-end
-
 ------------------------------------------------------------------------------
 -- Blam Objects Test Setup
 ------------------------------------------------------------------------------
@@ -76,6 +49,8 @@ function testObjects:setUp()
     self.bipedTagPath = "characters\\cyborg_mp\\cyborg_mp"
     self.uiDefaultProfilesTagPath = "ui\\ui_default_profiles"
     self.assaultRifleWphiTagPath = "weapons\\assault rifle\\assault rifle"
+    self.assaultRifleFpAnimsTagPath = "weapons\\assault rifle\\fp\\fp"
+    self.assaultRifleFpAnimsValues = {1, 6, 255, 4, 5, 2, 2, 9, 9, 255, 8, 7, 255, 3, 255, 255, 12}
     self.defaultProfilesTagList = {
         3909224332,
         3909289869,
@@ -106,8 +81,16 @@ function testObjects:testTagCollection()
                     "Tag collection list must match")
 end
 
+function testObjects:testModelAnimations()
+    local assaultRifleAnimations = blam.modelAnimations(self.assaultRifleFpAnimsTagPath)
+    lu.assertEquals(assaultRifleAnimations.fpAnimationList, self.assaultRifleFpAnimsValues)
+end
+
 function testObjects:testWeaponHudInterface()
     local wphi = blam.weaponHudInterface(self.assaultRifleWphiTagPath)
+    --[[local newCrosshairs = wphi.crosshairs
+    newCrosshairs[1].overlays[1].sequenceIndex = 2
+    wphi.crosshairs = newCrosshairs]]
     lu.assertEquals(wphi.childHud, 3800891673)
     lu.assertEquals(wphi.totalAmmoCutOff, 61)
     lu.assertEquals(wphi.loadedAmmoCutOff, 10)
@@ -120,6 +103,9 @@ function testObjects:testWeaponHudInterface()
     lu.assertNotIsNil(wphi.crosshairs[1].overlays)
     lu.assertEquals(wphi.crosshairs[1].overlays[1].widthScale, 1)
     lu.assertEquals(wphi.crosshairs[1].overlays[1].heightScale, 1)
+    lu.assertEquals(wphi.crosshairs[1].overlays[1].sequenceIndex, 0)
+    --lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColor.a, 1)
+    --lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColor.b, 1)
 end
 
 function testObjects:testTagCollectionCompat35()

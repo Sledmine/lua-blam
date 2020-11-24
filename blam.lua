@@ -4,7 +4,7 @@
 -- Version 4.2
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local luablam = {version = 4.2}
+local blam = {version = 4.2}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal use
@@ -325,7 +325,7 @@ end
 
 --- Return the current existing objects in the current map, ONLY WORKS FOR CHIMERA!!!
 ---@return table
-local function getObjects()
+function blam.getObjects()
     local currentObjectsList = {}
     for i = 0, 2047 do
         if (get_object(i)) then
@@ -470,7 +470,7 @@ end
 ---@param address number
 ---@param forced boolean
 ---@return string
-function luablam.readUnicodeString(address, forced)
+function blam.readUnicodeString(address, forced)
     local stringAddress
     if (forced) then
         stringAddress = address
@@ -494,7 +494,7 @@ end
 ---@param address number
 ---@param newString string
 ---@param forced boolean
-function luablam.writeUnicodeString(address, newString, forced)
+function blam.writeUnicodeString(address, newString, forced)
     local stringAddress
     if (forced) then
         stringAddress = address
@@ -510,17 +510,20 @@ function luablam.writeUnicodeString(address, newString, forced)
 end
 
 local function readUnicodeString(address, propertyData)
-    return luablam.readUnicodeString(address)
+    return blam.readUnicodeString(address)
 end
 
 local function writeUnicodeString(address, propertyData, propertyValue)
-    return luablam.writeUnicodeString(address, propertyValue)
+    return blam.writeUnicodeString(address, propertyValue)
 end
 
 local function readList(address, propertyData)
     local operation = typesOperations[propertyData.elementsType]
     local elementCount = read_byte(address - 0x4)
     local addressList = read_dword(address) + 0xC
+    if (propertyData.noOffset) then
+        addressList = read_dword(address)
+    end
     local list = {}
     for currentElement = 1, elementCount do
         list[currentElement] = operation.read(addressList +
@@ -532,7 +535,12 @@ end
 local function writeList(address, propertyData, propertyValue)
     local operation = typesOperations[propertyData.elementsType]
     local elementCount = read_byte(address - 0x4)
-    local addressList = read_dword(address) + 0xC
+    local addressList
+    if (propertyData.noOffset) then
+        addressList = read_dword(address)
+    else
+        addressList = read_dword(address) + 0xC
+    end
     for currentElement = 1, elementCount do
         local elementValue = propertyValue[currentElement]
         if (elementValue) then
@@ -770,10 +778,6 @@ local objectStructure = {
     team = {type = "word", offset = 0xB8},
     playerId = {type = "dword", offset = 0xC0},
     parentId = {type = "dword", offset = 0xC4},
-    attachedObjectId = {
-        type = "dword",
-        offset = 0x11C
-    },
     -- Experimental name properties
     isHealthEmpty = {
         type = "bit",
@@ -920,12 +924,22 @@ local tagDataHeaderStructure = {
     count = {type = "word", offset = 0xC}
 }
 
+---@class tag
+---@field class number Type of the tag
+---@field index number Tag Index
+---@field id number Tag ID
+---@field path string Path of the tag
+---@field data number Address of the tag data
+---@field indexed boolean Is tag indexed on an external map file
+
 -- Tag structure
 local tagHeaderStructure = {
     class = {type = "dword", offset = 0x0},
     index = {type = "word", offset = 0xC},
-    id = {type = "word", offset = 0xE},
-    fullId = {type = "dword", offset = 0xC},
+    -- //TODO This needs some review
+    -- id = {type = "word", offset = 0xE},
+    -- fullId = {type = "dword", offset = 0xC},
+    id = {type = "dword", offset = 0xC},
     path = {type = "dword", offset = 0x10},
     data = {type = "dword", offset = 0x14},
     indexed = {type = "dword", offset = 0x18}
@@ -1105,6 +1119,12 @@ local uiWidgetCollectionStructure = {
     }
 }
 
+---@class colorARGB
+---@field a number
+---@field r number
+---@field g number
+---@field b number
+
 ---@class anchorOffset
 ---@field x number
 ---@field y number
@@ -1113,12 +1133,14 @@ local uiWidgetCollectionStructure = {
 ---@field anchorOffset anchorOffset
 ---@field widthScale number
 ---@field heightScale number
+---@field defaultColor colorARGB
+---@field sequenceIndex number
 
 ---@class crosshair
 ---@field type number
 ---@field mapType number
 ---@field bitmap number
----@field overlays table
+---@field overlays crosshairOverlay[]
 
 ---@class weaponHudInterface
 ---@field childHud number
@@ -1126,7 +1148,7 @@ local uiWidgetCollectionStructure = {
 ---@field loadedAmmoCutOff number
 ---@field heatCutOff number
 ---@field ageCutOff number
----@field crosshairs crosshair
+---@field crosshairs crosshair[]
 
 -- Weapon HUD Interface structure
 local weaponHudInterfaceStructure = {
@@ -1180,50 +1202,73 @@ local weaponHudInterfaceStructure = {
                     heightScale = {
                         type = "float",
                         offset = 0x8
-                    }
-                    --[[
-                        anchorOffset = {
-                            type = "table",
-                            offset = 0x0,
-                            jump = 0,
-                            rows = {
-                                x = {
-                                    type = "word",
-                                    offset = 0x0
-                                },
-                                y = {
-                                    type = "word",
-                                    offset = 0x2
-                                }
+                    },
+                    anchorOffset = {
+                        type = "table",
+                        offset = 0x0,
+                        jump = 0,
+                        rows = {
+                            x = {
+                                type = "word",
+                                offset = 0x0
+                            },
+                            y = {
+                                type = "word",
+                                offset = 0x2
                             }
                         }
-                    scalingFlags = {
+                    },
+                    --[[scalingFlags = {
                         type = "table",
                         offset = 0xC,
                         jump = 0,
                         rows = {
-                            dontScaleOffset = {type = "bit", offset = 0x0, bitLevel = 0},
-                            dontScaleSize = {type = "bit", offset = 0x0, bitLevel = 1},
-                            useHighResScale = {type = "bit", offset = 0x0, bitLevel = 2},
-                            --padding1 = {type = "bit", offset = 0x0, bitLevel = 4}
+                            dontScaleOffset = {
+                                type = "bit",
+                                offset = 0x0,
+                                bitLevel = 0
+                            },
+                            dontScaleSize = {
+                                type = "bit",
+                                offset = 0x0,
+                                bitLevel = 1
+                            },
+                            useHighResScale = {
+                                type = "bit",
+                                offset = 0x0,
+                                bitLevel = 2
+                            }
+                            -- padding1 = {type = "bit", offset = 0x0, bitLevel = 4}
                         }
                     },
-                    --padding1 = {size = 0x2, offset = 0xE},
-                    --padding2 = {size = 0x14, offset = 0x10},
-                    --[[
+                    -- padding1 = {size = 0x2, offset = 0xE},
+                    -- padding2 = {size = 0x14, offset = 0x10},
                     defaultColor = {
                         type = "pointer",
                         pointerType = "table",
                         offset = 0x24,
                         jump = 0,
                         rows = {
-                            a = {type = "float", offset = 0x0},
-                            r = {type = "float", offset = 0x4},
-                            g = {type = "float", offset = 0x8},
-                            b = {type = "float", offset = 0xC}
+                            a = {
+                                type = "float",
+                                offset = 0x0
+                            },
+                            r = {
+                                type = "float",
+                                offset = 0x4
+                            },
+                            g = {
+                                type = "float",
+                                offset = 0x8
+                            },
+                            b = {
+                                type = "float",
+                                offset = 0xC
+                            }
                         }
-                    },
-                    flashingColor = {
+                    }]]
+                    --[[
+                            flashingColor = {
                         type = "pointer",
                         pointerType = "table",
                         offset = 0x28,
@@ -1261,16 +1306,17 @@ local weaponHudInterfaceStructure = {
                             b = {type = "float", offset = 0xC}
                         }
                     },
-                    
-                    --padding3 = {size = 0x4, offset = 0x40},
-                    frameRate = {type = "word", offset = 0x44},
-                    sequenceIndex = {type = "word", offset = 0x48},
-                    flags = {
+                    -- //FIXME This offsets are WRONG!
+                    --padding3 = {size = 0x4, offset = 0x40},]]
+                    --frameRate = {type = "word", offset = 0x44},
+                    --sequenceIndex = {type = "word", offset = 0x48},
+                    sequenceIndex = {type = "byte", offset = 0x46}
+                    --[[flags = {
                         type = "table",
                         offset = 0x48,
                         jump = 0,
                         rows = {
-                            flshaesWhenActive = {type = "bit", offset = 0x0, bitLevel = 0},
+                            flashesWhenActive = {type = "bit", offset = 0x0, bitLevel = 0},
                             notASprite = {type = "bit", offset = 0x0, bitLevel = 1},
                             showOnlyWhenZoomed = {type = "bit", offset = 0x0, bitLevel = 2},
                             showSniperData = {type = "bit", offset = 0x0, bitLevel = 3},
@@ -1278,8 +1324,8 @@ local weaponHudInterfaceStructure = {
                             oneZoomLevel = {type = "bit", offset = 0x0, bitLevel = 5},
                             dontShowWhenZoomed = {type = "bit", offset = 0x0, bitLevel = 6}
                         }
-                    },
-                    --padding4 = {size = 0x20, offset = 0x4C}]]
+                    }]],
+                    --padding4 = {size = 0x20, offset = 0x4C}
                 }
             }
             -- padding3 = {size = 0x28, offset = 0x40}
@@ -1451,6 +1497,19 @@ local collisionGeometryStructure = {
     }
 }
 
+---@class animationClass
+---@field name string Name of the animation
+---@field type number Type of the animation
+---@field frameCount number Frame count of the animation
+---@field nextAnimation number Next animation id of the animation
+---@field sound number Sound id of the animation
+
+---@class modelAnimations
+---@field fpAnimationCount number Number of first-person animations
+---@field fpAnimationList number[] List of first-person animations
+---@field animationCount number Number of animations of the model
+---@field animationList animationClass[] List of animations of the model
+
 -- Model Animation structure
 local modelAnimationsStructure = {
     fpAnimationCount = {
@@ -1460,6 +1519,7 @@ local modelAnimationsStructure = {
     fpAnimationList = {
         type = "list",
         offset = 0x94,
+        noOffset = true,
         elementsType = "byte",
         jump = 0x2
     },
@@ -1519,6 +1579,31 @@ local modelStructure = {
     }
 }
 
+---@class projectile : blamObject
+---@field action number Enumeration of denotation action
+---@field attachedToObjectId number Id of the attached object
+---@field xVel number Velocity in x direction
+---@field yVel number Velocity in y direction
+---@field zVel number Velocity in z direction
+---@field yaw number Rotation in yaw direction
+---@field pitch number Rotation in pitch direction
+---@field roll number Rotation in roll direction
+
+-- Projectile structure
+local projectileStructure = extendStructure(objectStructure, {
+    action = {type = "word", offset = 0x230},
+    attachedToObjectId = {
+        type = "dword",
+        offset = 0x11C
+    },
+    --[[xVel = {type = "float", offset = 0x254},
+    yVel = {type = "float", offset = 0x258},
+    zVel = {type = "float", offset = 0x25C},]]
+    pitch = {type = "float", offset = 0x264},
+    yaw = {type = "float", offset = 0x268},
+    roll = {type = "float", offset = 0x26C}
+})
+
 ------------------------------------------------------------------------------
 -- Object classes
 ------------------------------------------------------------------------------
@@ -1562,7 +1647,6 @@ local modelStructure = {
 ---@field team number Object multiplayer team
 ---@field playerId number Current player id if the object
 ---@field parentId number Current parent id of the object
----@field attachedToObjectId number Current id
 ---@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
 ---@field animationTagId number Current animation tag ID
 ---@field animation number Current animation index
@@ -1613,11 +1697,10 @@ local function bipedClassNew(address)
     return createObject(address, bipedStructure)
 end
 
----@class tag
----@field class number Type of the tag
----@field id number Tag ID
----@field path string Path of the tag
----@field indexed boolean Is the tag indexed?
+---@return projectile
+local function projectileClassNew(address)
+    return createObject(address, projectileStructure)
+end
 
 ---@return tag
 local function tagClassNew(address)
@@ -1654,8 +1737,8 @@ end
 ---@field spriteBudgetCount number
 ---@field colorPlateWidth number
 ---@field colorPlateHeight number 
--- @field compressedColorPlate data
--- @field processedPixelData data
+---@field compressedColorPlate string
+---@field processedPixelData string
 ---@field blurFilterSize number
 ---@field alphaBias number
 ---@field mipmapCount number
@@ -1738,12 +1821,6 @@ local function collisionGeometryClassNew(address)
     return createObject(address, collisionGeometryStructure)
 end
 
----@class modelAnimations
----@field fpAnimationCount number Number of first-person animations
----@field fpAnimationList table List of first-person animations
----@field animationCount number Number of animations of the model
----@field animationList table List of animations of the model
-
 ---@return modelAnimations
 local function modelAnimationsClassNew(address)
     return createObject(address, modelAnimationsStructure)
@@ -1762,24 +1839,23 @@ end
 ---@field nodeList table List of the model nodes
 ---@field regionCount number Number of regions
 ---@field regionList table List of regions
----
+
 ---@return model
 local function modelClassNew(address)
     return createObject(address, modelStructure)
 end
-
 ------------------------------------------------------------------------------
 -- LuaBlam globals
 ------------------------------------------------------------------------------
 
 -- Add blam! data tables to library
-luablam.addressList = addressList
-luablam.tagClasses = tagClasses
-luablam.objectClasses = objectClasses
-luablam.cameraTypes = cameraTypes
-luablam.netgameFlagTypes = netgameFlagTypes
-luablam.netgameEquipmentTypes = netgameEquipmentTypes
-luablam.consoleColors = consoleColors
+blam.addressList = addressList
+blam.tagClasses = tagClasses
+blam.objectClasses = objectClasses
+blam.cameraTypes = cameraTypes
+blam.netgameFlagTypes = netgameFlagTypes
+blam.netgameEquipmentTypes = netgameEquipmentTypes
+blam.consoleColors = consoleColors
 
 -- LuaBlam globals
 
@@ -1789,18 +1865,17 @@ luablam.consoleColors = consoleColors
 ---@field count number
 
 ---@type tagDataHeader
-luablam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
+blam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
 
 ------------------------------------------------------------------------------
 -- LuaBlam API
 ------------------------------------------------------------------------------
 
 -- Add utilities to library
-luablam.getObjects = getObjects
-luablam.dumpObject = dumpObject
-luablam.consoleOutput = consoleOutput
+blam.dumpObject = dumpObject
+blam.consoleOutput = consoleOutput
 
-function luablam.isNull(value)
+function blam.isNull(value)
     if (value == 0xFF or value == 0xFFFF or value == 0xFFFFFFFF) then
         return true
     end
@@ -1809,7 +1884,7 @@ end
 
 --- Get the camera type
 ---@return number
-function luablam.getCameraType()
+function blam.getCameraType()
     local camera = read_word(addressList.cameraType)
     local cameraType = nil
 
@@ -1831,7 +1906,7 @@ end
 --- Create a tag object from a given address. THIS OBJECT IS NOT DYNAMIC.
 ---@param address integer
 ---@return tag
-function luablam.tag(address)
+function blam.tag(address)
     if (address and address ~= 0) then
         -- Generate a new tag object from class
         local tag = tagClassNew(address)
@@ -1853,7 +1928,7 @@ end
 ---@param tagIdOrPath string | number
 ---@param class string
 ---@return tag
-function luablam.getTag(tagIdOrPath, class, ...)
+function blam.getTag(tagIdOrPath, class, ...)
     -- Arguments
     local tagId
     local tagPath
@@ -1864,6 +1939,8 @@ function luablam.getTag(tagIdOrPath, class, ...)
         tagId = tagIdOrPath
     elseif (isString(tagIdOrPath)) then
         tagPath = tagIdOrPath
+    elseif (not tagIdOrPath) then
+        return nil
     end
 
     if (...) then
@@ -1877,22 +1954,32 @@ function luablam.getTag(tagIdOrPath, class, ...)
     if (tagId) then
         if (tagId < 0xFFFF) then
             -- Calculate tag index
-            tagId = read_dword(luablam.tagDataHeader.array + (tagId * 0x20 + 0xC))
+            tagId = read_dword(blam.tagDataHeader.array + (tagId * 0x20 + 0xC))
         end
         tagAddress = get_tag(tagId)
     else
         tagAddress = get_tag(tagClass, tagPath)
     end
 
-    return luablam.tag(tagAddress)
+    return blam.tag(tagAddress)
 end
 
---- Create a ingame-object object from a given address
+--- Create a table/object from blamObject given address
 ---@param address integer
 ---@return blamObject
-function luablam.object(address)
+function blam.object(address)
     if (isValid(address)) then
         return objectClassNew(address)
+    end
+    return nil
+end
+
+--- Create a Projectile object given address
+---@param tag string | number
+---@return projectile
+function blam.projectile(address)
+    if (isValid(address)) then
+        return projectileClassNew(address)
     end
     return nil
 end
@@ -1900,7 +1987,7 @@ end
 --- Create a Biped object from a given address
 ---@param address number
 ---@return biped
-function luablam.biped(address)
+function blam.biped(address)
     if (isValid(address)) then
         return bipedClassNew(address)
     end
@@ -1910,9 +1997,9 @@ end
 --- Create a Unicode String List object from a tag path or id
 ---@param tag string | number
 ---@return unicodeStringList
-function luablam.unicodeStringList(tag)
+function blam.unicodeStringList(tag)
     if (isValid(tag)) then
-        local unicodeStringListTag = luablam.getTag(tag, tagClasses.unicodeStringList)
+        local unicodeStringListTag = blam.getTag(tag, tagClasses.unicodeStringList)
         return unicodeStringListClassNew(unicodeStringListTag.data)
     end
     return nil
@@ -1921,9 +2008,9 @@ end
 --- Create a bitmap object from a tag path or id
 ---@param tag string | number
 ---@return bitmap
-function luablam.bitmap(tag)
+function blam.bitmap(tag)
     if (isValid(tag)) then
-        local bitmapTag = luablam.getTag(tag, tagClasses.bitmap)
+        local bitmapTag = blam.getTag(tag, tagClasses.bitmap)
         return bitmapClassNew(bitmapTag.data)
     end
 end
@@ -1931,9 +2018,9 @@ end
 --- Create a UI Widget Definition object from a tag path or id
 ---@param tag string | number
 ---@return uiWidgetDefinition
-function luablam.uiWidgetDefinition(tag)
+function blam.uiWidgetDefinition(tag)
     if (isValid(tag)) then
-        local uiWidgetDefinitionTag = luablam.getTag(tag, tagClasses.uiWidgetDefinition)
+        local uiWidgetDefinitionTag = blam.getTag(tag, tagClasses.uiWidgetDefinition)
         return uiWidgetDefinitionClassNew(uiWidgetDefinitionTag.data)
     end
     return nil
@@ -1942,9 +2029,9 @@ end
 --- Create a UI Widget Collection object from a tag path or id
 ---@param tag string | number
 ---@return uiWidgetCollection
-function luablam.uiWidgetCollection(tag)
+function blam.uiWidgetCollection(tag)
     if (isValid(tag)) then
-        local uiWidgetCollectionTag = luablam.getTag(tag, tagClasses.uiWidgetCollection)
+        local uiWidgetCollectionTag = blam.getTag(tag, tagClasses.uiWidgetCollection)
         return uiWidgetCollectionClassNew(uiWidgetCollectionTag.data)
     end
     return nil
@@ -1953,9 +2040,9 @@ end
 --- Create a Tag Collection object from a tag path or id
 ---@param tag string | number
 ---@return tagCollection
-function luablam.tagCollection(tag)
+function blam.tagCollection(tag)
     if (isValid(tag)) then
-        local tagCollectionTag = luablam.getTag(tag, tagClasses.tagCollection)
+        local tagCollectionTag = blam.getTag(tag, tagClasses.tagCollection)
         return tagCollectionNew(tagCollectionTag.data)
     end
     return nil
@@ -1964,9 +2051,9 @@ end
 --- Create a Weapon HUD Interface object from a tag path or id
 ---@param tag string | number
 ---@return weaponHudInterface
-function luablam.weaponHudInterface(tag)
+function blam.weaponHudInterface(tag)
     if (isValid(tag)) then
-        local weaponHudInterfaceTag = luablam.getTag(tag, tagClasses.weaponHudInterface)
+        local weaponHudInterfaceTag = blam.getTag(tag, tagClasses.weaponHudInterface)
         return weaponHudInterfaceClassNew(weaponHudInterfaceTag.data)
     end
     return nil
@@ -1974,17 +2061,17 @@ end
 
 --- Create a Scenario object from a tag path or id
 ---@return scenario
-function luablam.scenario(tag)
-    local scenarioTag = luablam.getTag(tag or 0, tagClasses.scenario)
+function blam.scenario(tag)
+    local scenarioTag = blam.getTag(tag or 0, tagClasses.scenario)
     return scenarioClassNew(scenarioTag.data)
 end
 
 --- Create a Scenery object from a tag path or id
 ---@param tag string | number
 ---@return scenery
-function luablam.scenery(tag)
+function blam.scenery(tag)
     if (isValid(tag)) then
-        local sceneryTag = luablam.getTag(tag, tagClasses.scenery)
+        local sceneryTag = blam.getTag(tag, tagClasses.scenery)
         return sceneryClassNew(sceneryTag.data)
     end
     return nil
@@ -1993,9 +2080,9 @@ end
 --- Create a Collision Geometry object from a tag path or id
 ---@param tag string | number
 ---@return collisionGeometry
-function luablam.collisionGeometry(tag)
+function blam.collisionGeometry(tag)
     if (isValid(tag)) then
-        local collisionGeometryTag = luablam.getTag(tag, tagClasses.collisionGeometry)
+        local collisionGeometryTag = blam.getTag(tag, tagClasses.collisionGeometry)
         return collisionGeometryClassNew(collisionGeometryTag.data)
     end
     return nil
@@ -2004,9 +2091,9 @@ end
 --- Create a Model Animation object from a tag path or id
 ---@param tag string | number
 ---@return modelAnimations
-function luablam.modelAnimations(tag)
-    if (isValid()) then
-        local modelAnimationsTag = luablam.getTag(tag, tagClasses.modelAnimations)
+function blam.modelAnimations(tag)
+    if (isValid(tag)) then
+        local modelAnimationsTag = blam.getTag(tag, tagClasses.modelAnimations)
         return modelAnimationsClassNew(modelAnimationsTag.data)
     end
     return nil
@@ -2015,9 +2102,9 @@ end
 --- Create a Model Animation object from a tag path or id
 ---@param tag string | number
 ---@return weapon
-function luablam.weapon(tag)
+function blam.weaponTag(tag)
     if (isValid(tag)) then
-        local weaponTag = luablam.getTag(tag, tagClasses.weapon)
+        local weaponTag = blam.getTag(tag, tagClasses.weapon)
         return weaponClassNew(weaponTag)
     end
     return nil
@@ -2026,9 +2113,9 @@ end
 --- Create a Model Animation object from a tag path or id
 ---@param tag string | number
 ---@return model
-function luablam.model(tag)
+function blam.model(tag)
     if (isValid(tag)) then
-        local modelTag = luablam.getTag(tag, tagClasses.model)
+        local modelTag = blam.getTag(tag, tagClasses.model)
         return modelClassNew(modelTag.data)
     end
     return nil
@@ -2049,9 +2136,9 @@ luablam35.version = 3.5
 ---@param properties table
 ---@return table | nil
 local function proccessRequestedObject(class, param, properties)
-    local object = luablam[class](param)
+    local object = blam[class](param)
     if (properties == nil) then
-        return luablam.dumpObject(object)
+        return blam.dumpObject(object)
     else
         for k, v in pairs(properties) do
             object[k] = v
@@ -2084,7 +2171,7 @@ end
 ---@return uiWidgetDefinition
 function luablam35.uiWidgetDefinition(address, properties)
     if (address and address ~= 0) then
-        local tag = luablam.tag(address)
+        local tag = blam.tag(address)
         return proccessRequestedObject("uiWidgetDefinition", tag.path, properties)
     end
     return nil
@@ -2095,7 +2182,7 @@ end
 ---@return weaponHudInterface
 function luablam35.weaponHudInterface(address, properties)
     if (address and address ~= 0) then
-        local tag = luablam.tag(address)
+        local tag = blam.tag(address)
         return proccessRequestedObject("weaponHudInterface", tag.path, properties)
     end
     return nil
@@ -2106,7 +2193,7 @@ end
 ---@return unicodeStringList
 function luablam35.unicodeStringList(address, properties)
     if (address and address ~= 0) then
-        local tag = luablam.tag(address)
+        local tag = blam.tag(address)
         return proccessRequestedObject("unicodeStringList", tag.path, properties)
     end
     return nil
@@ -2117,7 +2204,7 @@ end
 ---@return scenario
 function luablam35.scenario(address, properties)
     if (address and address ~= nil) then
-        local tag = luablam.tag(address)
+        local tag = blam.tag(address)
         return proccessRequestedObject("scenario", tag.path, properties)
     end
 end
@@ -2127,7 +2214,7 @@ end
 ---@return scenery
 function luablam35.scenery(address, properties)
     if (address and address ~= 0) then
-        local tag = luablam.tag(address)
+        local tag = blam.tag(address)
         return proccessRequestedObject("scenery", tag.path, properties)
     end
     return nil
@@ -2138,7 +2225,7 @@ end
 ---@return collisionGeometry
 function luablam35.collisionGeometry(address, properties)
     if (address and address ~= 0) then
-        local tag = luablam.tag(address)
+        local tag = blam.tag(address)
         return proccessRequestedObject("collisionGeometry", tag.path, properties)
     end
 
@@ -2150,7 +2237,7 @@ end
 ---@return modelAnimations
 function luablam35.modelAnimations(address, properties)
     if (address and address ~= 0) then
-        local tag = luablam.tag(address)
+        local tag = blam.tag(address)
         return proccessRequestedObject("modelAnimations", tag.path, properties)
     end
     return nil
@@ -2161,7 +2248,7 @@ end
 ---@return tagCollection
 function luablam35.tagCollection(address, properties)
     if (address and address ~= 0) then
-        local tag = luablam.tag(address)
+        local tag = blam.tag(address)
         return proccessRequestedObject("tagCollection", tag.path, properties)
     end
     return nil
@@ -2169,13 +2256,13 @@ end
 
 --- Setup LuaBlam 3.5 API
 ---@return table
-function luablam.compat35()
+function blam.compat35()
     --- Return the id of a tag given tag type and tag path
     ---@param tagClass string
     ---@param tagPath string
     ---@return number
     get_tag_id = function(tagClass, tagPath)
-        local tag = luablam.getTag(tagPath, tagClass)
+        local tag = blam.getTag(tagPath, tagClass)
         if (tag) then
             return tag.fullId
         end
@@ -2187,8 +2274,8 @@ function luablam.compat35()
     ---@param path string
     ---@return number
     get_simple_tag_id = function(type, path)
-        for index = 0, luablam.tagDataHeader.count - 1 do
-            local tag = luablam.getTag(index)
+        for index = 0, blam.tagDataHeader.count - 1 do
+            local tag = blam.getTag(index)
             if (tag.path == path) then
                 return index
             end
@@ -2200,7 +2287,7 @@ function luablam.compat35()
     ---@param tagId number
     ---@return string
     get_tag_path = function(tagId)
-        local tag = luablam.getTag(tagId)
+        local tag = blam.getTag(tagId)
         if (tag) then
             return tag.path
         end
@@ -2211,7 +2298,7 @@ function luablam.compat35()
     ---@param tagId number
     ---@return string
     get_tag_type = function(tagId)
-        local tag = luablam.getTag(tagId)
+        local tag = blam.getTag(tagId)
         if (tag) then
             return tag.class
         end
@@ -2221,13 +2308,7 @@ function luablam.compat35()
     --- Return the count of tags in the current map
     ---@return number
     get_tags_count = function()
-        return luablam.tagDataHeader.count
-    end
-
-    --- Return the current existing objects in the current map
-    ---@return table objectsList
-    get_objects = function()
-        return luablam.getObjects()
+        return blam.tagDataHeader.count
     end
 
     return luablam35
@@ -2235,4 +2316,4 @@ end
 
 ------------------------------------------------------------------------------
 
-return luablam
+return blam

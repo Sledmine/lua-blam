@@ -6,7 +6,7 @@
 clua_version = 2.042
 
 local lu = require "luaunit"
-local blam = require "nlua-blam"
+local blam = require "blam"
 local glue = require "glue"
 local inspect = require "inspect"
 
@@ -75,7 +75,6 @@ end
 testObjects = {}
 
 function testObjects:testObjectsSpawnAndDelete()
-    glue.writefile("chimera_tests.txt", "test_Objects_Spawn_And_Delete", "t")
     local objectResult = false
     local objectId = spawn_object("biped", "characters\\cyborg_mp\\cyborg_mp", 31, -82, 0.061)
     lu.assertNotIsNil(objectId)
@@ -85,8 +84,7 @@ function testObjects:testObjectsSpawnAndDelete()
     -- lu.assertEquals(cyborgBiped.health, 0)
 end
 
-function testObjects:testGetObjectWithWhole_Id()
-    glue.writefile("chimera_tests.txt", "test_Get_Object_With_Whole_Id", "t")
+function testObjects:testGetObjectWithWholeId()
     local gameObjects = blam.getObjects()
     lu.assertNotIsNil(gameObjects)
     lu.assertEquals(#gameObjects > 0, true)
