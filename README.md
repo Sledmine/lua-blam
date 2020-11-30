@@ -1,4 +1,4 @@
-# lua-blam 4.2
+# lua-blam 1.0.0
 
 ### What is it?
 
@@ -13,7 +13,7 @@ LuaBlam aims to make easier and more understandable scripts providing simple syn
 - Simple to implement and simple to learn
 - Highly customizable
 - Cross-platform (Chimera, SAPP)
-- Auto completion for code editors (using [EmmyLua](https://github.com/EmmyLua))
+- Auto completion (using [EmmyLua](https://github.com/EmmyLua))
 
 ### Example with lua-blam:
 
