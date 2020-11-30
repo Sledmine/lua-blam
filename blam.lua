@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 -- Blam! library for Chimera/SAPP Lua scripting
 -- Sledmine, JerryBrick
--- Version 4.2
+-- Version 1.0.0
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
 local blam = {version = 4.2}

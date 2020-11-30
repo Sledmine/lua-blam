@@ -35,6 +35,7 @@ These are global variables that can be used by the script. Some of these variabl
 | local_player_index | `number` / `nil` | This is the index of the local player. This is a value between 0 and 15, this value does not match with player index in the server and is not instantly assigned after joining. |
 | local_player_index | `number` / `nil` | This is the index of the local player. This is a value between 0 and 15, this value does not match with player index in the server and is not instantly assigned after joining. |
 | map                | `string`         | This is the name of the current map.                                                                                                                                            |
+| map_is_protected   | `boolean`        | Return if the map has protected tags data                                                                                                                                       |
 | sandboxed          | `boolean`        | Return whether or not the script is sandboxed. See Sandoboxed Scripts for more information.                                                                                     |
 | script_name        | `string`         | This is the name of the script. If the script is a global script, it will be defined as the filename of the script. Otherwise, it will be the name of the map.                  |
 | script_type        | `string`         | This is the name of the script. If the script is a global script, it will be defined as the filename of the script. Otherwise, it will be the name of the map.                  |
@@ -52,7 +53,7 @@ Return true if the player has the console open.
 Example:
 ```lua
 if (console_is_open()) then
-    // Do something
+     Do something
 end
 ```
 ## `console_out`
@@ -147,8 +148,9 @@ local pistol_tag_address = get_tag("weapon","weapons\\pistol\\pistol")
 ```
 
 ## `hud_message`
-**WARNING!!!!** We found this function can cause random crashes, at least on our chimera build.
 Output text to the HUD.
+
+**WARNING!!!!** We found this function can cause random crashes, at least on our chimera lua build.
 
 **Takes:** `string` Output
 
