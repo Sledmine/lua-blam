@@ -1,4 +1,6 @@
-local blam = require "nlua-blam"
+-- Example for Chimera Lua
+
+local blam = require "blam"
 
 clua_version = 2.042
 
@@ -13,4 +15,4 @@ function OnTick()
     end
 end
 
-set_callback('tick', 'OnTick')
+set_callback("tick", "OnTick")

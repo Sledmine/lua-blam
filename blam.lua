@@ -4,7 +4,7 @@
 -- Version 1.0.0
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local blam = {version = 4.2}
+local blam = {_VERSION = "1.0.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal use
