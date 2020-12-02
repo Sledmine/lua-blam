@@ -53,7 +53,7 @@ Return true if the player has the console open.
 Example:
 ```lua
 if (console_is_open()) then
-     Do something
+    -- Do something
 end
 ```
 ## `console_out`
@@ -181,7 +181,7 @@ from scripts executed in the before, default, and after callbacks into account.
 Example:
 ```lua
 function OnTick()
-  -- Do stuff every tick event
+  -- Do something every tick event
 end 
 set_callback("tick", "OnTick")
 ```
