@@ -103,9 +103,11 @@ function testObjects:testWeaponHudInterface()
     lu.assertNotIsNil(wphi.crosshairs[1].overlays)
     lu.assertEquals(wphi.crosshairs[1].overlays[1].widthScale, 1)
     lu.assertEquals(wphi.crosshairs[1].overlays[1].heightScale, 1)
+    lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColorA, 0)
+    lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColorR, 40)
+    lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColorG, 150)
+    lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColorB, 255)
     lu.assertEquals(wphi.crosshairs[1].overlays[1].sequenceIndex, 0)
-    --lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColor.a, 1)
-    --lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColor.b, 1)
 end
 
 function testObjects:testTagCollectionCompat35()

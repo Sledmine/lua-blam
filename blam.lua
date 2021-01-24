@@ -1,7 +1,6 @@
 ------------------------------------------------------------------------------
 -- Blam! library for Chimera/SAPP Lua scripting
 -- Sledmine, JerryBrick
--- Version 1.0.0
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
 local blam = {_VERSION = "1.0.0"}
@@ -1203,132 +1202,25 @@ local weaponHudInterfaceStructure = {
                         type = "float",
                         offset = 0x8
                     },
-                    anchorOffset = {
-                        type = "table",
-                        offset = 0x0,
-                        jump = 0,
-                        rows = {
-                            x = {
-                                type = "word",
-                                offset = 0x0
-                            },
-                            y = {
-                                type = "word",
-                                offset = 0x2
-                            }
-                        }
+                    defaultColorB = {
+                        type = "byte",
+                        offset = 0x24
                     },
-                    --[[scalingFlags = {
-                        type = "table",
-                        offset = 0xC,
-                        jump = 0,
-                        rows = {
-                            dontScaleOffset = {
-                                type = "bit",
-                                offset = 0x0,
-                                bitLevel = 0
-                            },
-                            dontScaleSize = {
-                                type = "bit",
-                                offset = 0x0,
-                                bitLevel = 1
-                            },
-                            useHighResScale = {
-                                type = "bit",
-                                offset = 0x0,
-                                bitLevel = 2
-                            }
-                            -- padding1 = {type = "bit", offset = 0x0, bitLevel = 4}
-                        }
+                    defaultColorG = {
+                        type = "byte",
+                        offset = 0x25
                     },
-                    -- padding1 = {size = 0x2, offset = 0xE},
-                    -- padding2 = {size = 0x14, offset = 0x10},
-                    defaultColor = {
-                        type = "pointer",
-                        pointerType = "table",
-                        offset = 0x24,
-                        jump = 0,
-                        rows = {
-                            a = {
-                                type = "float",
-                                offset = 0x0
-                            },
-                            r = {
-                                type = "float",
-                                offset = 0x4
-                            },
-                            g = {
-                                type = "float",
-                                offset = 0x8
-                            },
-                            b = {
-                                type = "float",
-                                offset = 0xC
-                            }
-                        }
-                    }]]
-                    --[[
-                            flashingColor = {
-                        type = "pointer",
-                        pointerType = "table",
-                        offset = 0x28,
-                        jump = 0,
-                        rows = {
-                            a = {type = "float", offset = 0x0},
-                            r = {type = "float", offset = 0x4},
-                            g = {type = "float", offset = 0x8},
-                            b = {type = "float", offset = 0xC}
-                        }
+                    defaultColorR = {
+                        type = "byte",
+                        offset = 0x26
                     },
-                    
-                    flashPeriod = {type = "float", offset = 0x2C},
-                    flashDelay = {type = "float", offset = 0x30},
-                    numberOfFlashes = {type = "word", offset = 0x34},
-                    flashFlags = {
-                        type = "table",
-                        offset = 0x36,
-                        jump = 0,
-                        rows = {
-                            reverseDefault = {type = "bit", offset = 0x0, bitLevel = 0}
-                        }
+                    defaultColorA = {
+                        type = "byte",
+                        offset = 0x27
                     },
-                    flashLength = {type = "float", offset = 0x38},
-                    --[[
-                    disabledColor = {
-                        type = "pointer",
-                        pointerType = "table",
-                        offset = 0x3C,
-                        jump = 0,
-                        rows = {
-                            a = {type = "float", offset = 0x0},
-                            r = {type = "float", offset = 0x4},
-                            g = {type = "float", offset = 0x8},
-                            b = {type = "float", offset = 0xC}
-                        }
-                    },
-                    -- //FIXME This offsets are WRONG!
-                    --padding3 = {size = 0x4, offset = 0x40},]]
-                    --frameRate = {type = "word", offset = 0x44},
-                    --sequenceIndex = {type = "word", offset = 0x48},
                     sequenceIndex = {type = "byte", offset = 0x46}
-                    --[[flags = {
-                        type = "table",
-                        offset = 0x48,
-                        jump = 0,
-                        rows = {
-                            flashesWhenActive = {type = "bit", offset = 0x0, bitLevel = 0},
-                            notASprite = {type = "bit", offset = 0x0, bitLevel = 1},
-                            showOnlyWhenZoomed = {type = "bit", offset = 0x0, bitLevel = 2},
-                            showSniperData = {type = "bit", offset = 0x0, bitLevel = 3},
-                            hideAreaOutsideReticle = {type = "bit", offset = 0x0, bitLevel = 4},
-                            oneZoomLevel = {type = "bit", offset = 0x0, bitLevel = 5},
-                            dontShowWhenZoomed = {type = "bit", offset = 0x0, bitLevel = 6}
-                        }
-                    }]],
-                    --padding4 = {size = 0x20, offset = 0x4C}
                 }
             }
-            -- padding3 = {size = 0x28, offset = 0x40}
         }
     }
 
@@ -1582,6 +1474,7 @@ local modelStructure = {
 ---@class projectile : blamObject
 ---@field action number Enumeration of denotation action
 ---@field attachedToObjectId number Id of the attached object
+---@field armingTimer number PENDING
 ---@field xVel number Velocity in x direction
 ---@field yVel number Velocity in y direction
 ---@field zVel number Velocity in z direction
@@ -1596,6 +1489,7 @@ local projectileStructure = extendStructure(objectStructure, {
         type = "dword",
         offset = 0x11C
     },
+    armingTimer = {type = "float", offset = 0x248},
     --[[xVel = {type = "float", offset = 0x254},
     yVel = {type = "float", offset = 0x258},
     zVel = {type = "float", offset = 0x25C},]]

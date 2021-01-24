@@ -1,12 +1,15 @@
-# lua-blam 1.0.0
+# lua-blam v1.0.0
 
-### What is it?
+## What is lua-blam?
 
-Is a Lua library for scripting that allows you to handle Halo Custom Edition memory as objects in your script, including features as API extension and unification between Chimera and SAPP.
+Is a Lua library/module for scripting that allows you to handle Halo Custom Edition memory as
+objects in your script, it also includes some features as API extension and unification between
+Chimera and SAPP.
 
 ### What is intended for?
 
-LuaBlam aims to make easier and more understandable scripts providing simple syntax and accesible API functions making a standard for game memory editing.
+LuaBlam aims to make easier and more understandable scripts providing simple syntax and accesible
+API functions making a standard for game memory editing.
 
 ### Highlights
 
