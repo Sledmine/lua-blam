@@ -24,10 +24,8 @@ API functions making a standard for game memory editing.
 ```lua
 -- Make current player invisible with flashlight key
 local player = blam.biped(get_dynamic_player())
-if (player) then
-    if (player.flaslightKey) then
-        player.invisible = true
-    end
+if (player and player.flaslightKey) then
+    player.invisible = true
 end
 ```
 
@@ -54,4 +52,4 @@ end
 ## Support
 
 If you want to have assistance about how to use this module, join the
-[Shadowmods Discord Server](https://discord.shadowmods.net/) to get help on the "scripting" channel.
+[Shadowmods Discord Server](https://discord.shadowmods.net/) to get help on the scripting channel.
