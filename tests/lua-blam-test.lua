@@ -88,9 +88,6 @@ end
 
 function testObjects:testWeaponHudInterface()
     local wphi = blam.weaponHudInterface(self.assaultRifleWphiTagPath)
-    --[[local newCrosshairs = wphi.crosshairs
-    newCrosshairs[1].overlays[1].sequenceIndex = 2
-    wphi.crosshairs = newCrosshairs]]
     lu.assertEquals(wphi.childHud, 3800891673)
     lu.assertEquals(wphi.totalAmmoCutOff, 61)
     lu.assertEquals(wphi.loadedAmmoCutOff, 10)
@@ -108,17 +105,6 @@ function testObjects:testWeaponHudInterface()
     lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColorG, 150)
     lu.assertEquals(wphi.crosshairs[1].overlays[1].defaultColorB, 255)
     lu.assertEquals(wphi.crosshairs[1].overlays[1].sequenceIndex, 0)
-end
-
-function testObjects:testTagCollectionCompat35()
-    ---@type blam35
-    local blam35 = blam.compat35()
-    local uiDefaultProfiles = blam35.tagCollection(
-                                  get_tag(blam.tagClasses.tagCollection,
-                                          self.uiDefaultProfilesTagPath))
-    lu.assertEquals(uiDefaultProfiles.count, 4, "Tag collection count must be 4")
-    lu.assertEquals(uiDefaultProfiles.tagList, self.defaultProfilesTagList,
-                    "Tag collection list must match")
 end
 
 ------------------------------------------------------------------------------
