@@ -1,26 +1,29 @@
 # lua-blam v1.0.0
 
 ## What is lua-blam?
-
 Is a Lua library/module for scripting that allows you to handle Halo Custom Edition memory as
 objects in your script, it also includes some features as API extension and unification between
 Chimera and SAPP.
 
 ## What is intended for?
-
 LuaBlam aims to make easier and more understandable scripts providing simple syntax and accesible
 API functions making a standard for game memory editing.
 
-## Highlights
+## Why should I use it?
+Scripting with raw low level functions to edit memory can lead to undesirable situations where you
+can introduce lot of harmful errors if you are not careful enough to mantain your code secure and
+continuously tested, also readeability for your code is key when it comes to open source scripts or
+colaborative work, lua-blam is perfect for both, keeping all the memory handling isolated and tested
+separately and helping scripters to write simpler and understandable code with good abstraction.
 
+## Highlights
 - Simple to implement and simple to learn
 - Highly customizable
 - Cross-platform (Chimera, SAPP)
 - In code documentation
 - Auto completion (using [EmmyLua](https://github.com/EmmyLua))
 
-## Example with lua-blam:
-
+## Scripting with lua-blam:
 ```lua
 -- Make current player invisible with flashlight key
 local player = blam.biped(get_dynamic_player())
@@ -29,8 +32,7 @@ if (player and player.flaslightKey) then
 end
 ```
 
-## Example without lua-blam:
-
+## Scripting without lua-blam:
 ```lua
 -- Make current player invisible with flashlight key
 local playerAddress = get_dynamic_player()
@@ -46,10 +48,8 @@ end
 ```
 
 ## Visual Studio Code Integration using [VSCode-EmmyLua](https://github.com/EmmyLua/VSCode-EmmyLua):
-
 ![lua-blamvscode](https://i.imgur.com/Ai2SuFH.gif)
 
 ## Support
-
 If you want to have assistance about how to use this module, join the
 [Shadowmods Discord Server](https://discord.shadowmods.net/) to get help on the scripting channel.
