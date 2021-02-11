@@ -50,6 +50,13 @@ end
 ## Visual Studio Code Integration using [VSCode-EmmyLua](https://github.com/EmmyLua/VSCode-EmmyLua):
 ![lua-blamvscode](https://i.imgur.com/Ai2SuFH.gif)
 
+## Installation
+Place a copy of the `blam.lua` file in the project folder of your script to enable automcompletion,
+to use this module on Halo Custom Edition you need to place the `blam.lua` on the lua modules
+of your chimera folder `My Games\Halo CE\chimera\lua\modules`, however if you want to distribute your
+script with this module builtin you can take a look at bundling modular lua scripts using
+[Mercury](https://github.com/Sledmine/Mercury).
+
 ## Support
 If you want to have assistance about how to use this module, join the
 [Shadowmods Discord Server](https://discord.shadowmods.net/) to get help on the scripting channel.
