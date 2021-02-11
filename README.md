@@ -6,19 +6,20 @@ Is a Lua library/module for scripting that allows you to handle Halo Custom Edit
 objects in your script, it also includes some features as API extension and unification between
 Chimera and SAPP.
 
-### What is intended for?
+## What is intended for?
 
 LuaBlam aims to make easier and more understandable scripts providing simple syntax and accesible
 API functions making a standard for game memory editing.
 
-### Highlights
+## Highlights
 
 - Simple to implement and simple to learn
 - Highly customizable
 - Cross-platform (Chimera, SAPP)
+- In code documentation
 - Auto completion (using [EmmyLua](https://github.com/EmmyLua))
 
-### Example with lua-blam:
+## Example with lua-blam:
 
 ```lua
 -- Make current player invisible with flashlight key
@@ -30,7 +31,7 @@ if (player) then
 end
 ```
 
-### Example without lua-blam:
+## Example without lua-blam:
 
 ```lua
 -- Make current player invisible with flashlight key
@@ -46,10 +47,11 @@ if (playerAddress) then
 end
 ```
 
-### Visual Studio Code Integration using [VSCode-EmmyLua](https://github.com/EmmyLua/VSCode-EmmyLua):
+## Visual Studio Code Integration using [VSCode-EmmyLua](https://github.com/EmmyLua/VSCode-EmmyLua):
 
-![lua-blamvscode](https://i.imgur.com/eQea4mU.gif)
+![lua-blamvscode](https://i.imgur.com/Ai2SuFH.gif)
 
-### Documentation
+## Support
 
-See the [Wiki](https://github.com/Sledmine/LuaBlam/wiki) for more information!
+If you want to have assistance about how to use this module, join the
+[Shadowmods Discord Server](https://discord.shadowmods.net/) to get help on the "scripting" channel.

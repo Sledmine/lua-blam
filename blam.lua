@@ -6,7 +6,7 @@
 local blam = {_VERSION = "1.0.0"}
 
 ------------------------------------------------------------------------------
--- Useful functions for internal use
+-- Useful functions for internal usage
 ------------------------------------------------------------------------------
 
 -- From legacy glue library!
@@ -40,7 +40,7 @@ end
 -- Blam! engine data
 ------------------------------------------------------------------------------
 
--- Address list
+-- Engine address list
 local addressList = {
     tagDataHeader = 0x40440000,
     cameraType = 0x00647498, -- from Giraffe
@@ -48,7 +48,7 @@ local addressList = {
     gameOnMenus = 0x00622058
 }
 
--- Provide global tag classes by default
+-- Tag classes values
 local tagClasses = {
     actorVariant = "actv",
     actor = "actr",
@@ -134,7 +134,7 @@ local tagClasses = {
     wind = "wind"
 }
 
--- Provide global object classes by default
+-- Blam object classes values
 local objectClasses = {
     biped = 0,
     vehicle = 1,
@@ -344,7 +344,8 @@ local function consoleOutput(message, ...)
     local args = {...}
 
     if (message == nil or #args > 5) then
-        consoleOutput(debug.traceback("Wrong number of arguments on console output function", 2),
+        consoleOutput(debug.traceback(
+                          "Wrong number of arguments on console output function", 2),
                       consoleColors.error)
     end
 
@@ -390,12 +391,13 @@ local function b2b(bitOrBool)
     elseif (bitOrBool == false) then
         return 0
     end
-    error("B2B error, expected boolean or bit value, got " .. tostring(bitOrBool) .. " " ..
-              type(bitOrBool))
+    error(
+        "B2B error, expected boolean or bit value, got " .. tostring(bitOrBool) .. " " ..
+            type(bitOrBool))
 end
 
 ------------------------------------------------------------------------------
--- Objects data binding
+-- Data manipulation and binding
 ------------------------------------------------------------------------------
 
 local typesOperations
@@ -525,8 +527,9 @@ local function readList(address, propertyData)
     end
     local list = {}
     for currentElement = 1, elementCount do
-        list[currentElement] = operation.read(addressList +
-                                                  (propertyData.jump * (currentElement - 1)))
+        list[currentElement] = operation.read(
+                                   addressList +
+                                       (propertyData.jump * (currentElement - 1)))
     end
     return list
 end
@@ -544,8 +547,8 @@ local function writeList(address, propertyData, propertyValue)
         local elementValue = propertyValue[currentElement]
         if (elementValue) then
             -- Check if there are problems at sending property data here due to missing property data
-            operation.write(addressList + (propertyData.jump * (currentElement - 1)), propertyData,
-                            elementValue)
+            operation.write(addressList + (propertyData.jump * (currentElement - 1)),
+                            propertyData, elementValue)
         else
             if (currentElement > #propertyValue) then
                 break
@@ -563,9 +566,8 @@ local function readTable(address, propertyData)
         table[elementPosition] = {}
         for subProperty, subPropertyData in pairs(propertyData.rows) do
             local operation = typesOperations[subPropertyData.type]
-            table[elementPosition][subProperty] = operation.read(
-                                                      elementAddress + subPropertyData.offset,
-                                                      subPropertyData)
+            table[elementPosition][subProperty] =
+                operation.read(elementAddress + subPropertyData.offset, subPropertyData)
         end
     end
     return table
@@ -581,8 +583,8 @@ local function writeTable(address, propertyData, propertyValue)
                 local subPropertyData = propertyData.rows[subProperty]
                 if (subPropertyData) then
                     local operation = typesOperations[subPropertyData.type]
-                    operation.write(elementAddress + subPropertyData.offset, subPropertyData,
-                                    subPropertyValue)
+                    operation.write(elementAddress + subPropertyData.offset,
+                                    subPropertyData, subPropertyValue)
                 end
             end
         else
@@ -602,14 +604,8 @@ typesOperations = {
     int = {read = readInt, write = writeInt},
     dword = {read = readDword, write = writeDword},
     float = {read = readFloat, write = writeFloat},
-    string = {
-        read = readString,
-        write = writeString
-    },
-    ustring = {
-        read = readUnicodeString,
-        write = writeUnicodeString
-    },
+    string = {read = readString, write = writeString},
+    ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
     table = {read = readTable, write = writeTable}
 }
@@ -624,7 +620,8 @@ local dataBindingMetaTable = {
             local propertyAddress = object.address + propertyData.offset
             operation.write(propertyAddress, propertyData, propertyValue)
         else
-            local errorMessage = "Unable to write an invalid property ('" .. property .. "')"
+            local errorMessage = "Unable to write an invalid property ('" .. property ..
+                                     "')"
             consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
         end
     end,
@@ -636,7 +633,8 @@ local dataBindingMetaTable = {
             local propertyAddress = object.address + propertyData.offset
             return operation.read(propertyAddress, propertyData)
         else
-            local errorMessage = "Unable to read an invalid property ('" .. property .. "')"
+            local errorMessage = "Unable to read an invalid property ('" .. property ..
+                                     "')"
             consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
         end
     end
@@ -675,10 +673,6 @@ local function dumpObject(object)
     return dump
 end
 
-------------------------------------------------------------------------------
--- Object structures
-------------------------------------------------------------------------------
-
 --- Return a extended parent structure with another given structure
 ---@param parent table
 ---@param structure table
@@ -694,812 +688,8 @@ local function extendStructure(parent, structure)
     return extendedStructure
 end
 
--- blamObject structure
-local objectStructure = {
-    tagId = {type = "dword", offset = 0x0},
-    hasCollision = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 0
-    },
-    isOnGround = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 1
-    },
-    ignoreGravity = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 2
-    },
-    isInWater = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 3
-    },
-    isStationary = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 5
-    },
-    dynamicShading = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 14
-    },
-    isNotCastingShadow = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 18
-    },
-    frozen = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 20
-    },
-    isOutSideMap = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 21
-    },
-    isCollideable = {
-        type = "bit",
-        offset = 0x10,
-        bitLevel = 24
-    },
-    model = {type = "dword", offset = 0x34},
-    health = {type = "float", offset = 0xE0},
-    shield = {type = "float", offset = 0xE4},
-    redA = {type = "float", offset = 0x1B8},
-    greenA = {type = "float", offset = 0x1BC},
-    blueA = {type = "float", offset = 0x1C0},
-    x = {type = "float", offset = 0x5C},
-    y = {type = "float", offset = 0x60},
-    z = {type = "float", offset = 0x64},
-    xVel = {type = "float", offset = 0x68},
-    yVel = {type = "float", offset = 0x6C},
-    zVel = {type = "float", offset = 0x70},
-    vX = {type = "float", offset = 0x74},
-    vY = {type = "float", offset = 0x78},
-    vZ = {type = "float", offset = 0x7C},
-    v2X = {type = "float", offset = 0x80},
-    v2Y = {type = "float", offset = 0x84},
-    v2Z = {type = "float", offset = 0x88},
-    yawVel = {type = "float", offset = 0x8C},
-    pitchVel = {type = "float", offset = 0x90},
-    rollVel = {type = "float", offset = 0x94},
-    locationId = {type = "dword", offset = 0x98},
-    boundingRadius = {
-        type = "float",
-        offset = 0xAC
-    },
-    type = {type = "word", offset = 0xB4},
-    team = {type = "word", offset = 0xB8},
-    playerId = {type = "dword", offset = 0xC0},
-    parentId = {type = "dword", offset = 0xC4},
-    -- Experimental name properties
-    isHealthEmpty = {
-        type = "bit",
-        offset = 0x106,
-        bitLevel = 2
-    },
-    animationTagId = {
-        type = "dword",
-        offset = 0xCC
-    },
-    animation = {type = "word", offset = 0xD0},
-    animationFrame = {
-        type = "word",
-        offset = 0xD2
-    },
-    regionPermutation1 = {
-        type = "byte",
-        offset = 0x180
-    },
-    regionPermutation2 = {
-        type = "byte",
-        offset = 0x181
-    },
-    regionPermutation3 = {
-        type = "byte",
-        offset = 0x182
-    },
-    regionPermutation4 = {
-        type = "byte",
-        offset = 0x183
-    },
-    regionPermutation5 = {
-        type = "byte",
-        offset = 0x184
-    },
-    regionPermutation6 = {
-        type = "byte",
-        offset = 0x185
-    },
-    regionPermutation7 = {
-        type = "byte",
-        offset = 0x186
-    },
-    regionPermutation8 = {
-        type = "byte",
-        offset = 0x187
-    }
-}
-
--- Biped structure (extends object structure)
-local bipedStructure = extendStructure(objectStructure, {
-    invisible = {
-        type = "bit",
-        offset = 0x204,
-        bitLevel = 4
-    },
-    noDropItems = {
-        type = "bit",
-        offset = 0x204,
-        bitLevel = 20
-    },
-    ignoreCollision = {
-        type = "bit",
-        offset = 0x4CC,
-        bitLevel = 3
-    },
-    flashlight = {
-        type = "bit",
-        offset = 0x204,
-        bitLevel = 19
-    },
-    cameraX = {type = "float", offset = 0x230},
-    cameraY = {type = "float", offset = 0x234},
-    cameraZ = {type = "float", offset = 0x238},
-    crouchHold = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 0
-    },
-    jumpHold = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 1
-    },
-    actionKeyHold = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 14
-    },
-    actionKey = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 6
-    },
-    meleeKey = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 7
-    },
-    reloadKey = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 10
-    },
-    weaponPTH = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 11
-    },
-    weaponSTH = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 12
-    },
-    flashlightKey = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 4
-    },
-    grenadeHold = {
-        type = "bit",
-        offset = 0x208,
-        bitLevel = 13
-    },
-    crouch = {type = "byte", offset = 0x2A0},
-    shooting = {type = "float", offset = 0x284},
-    weaponSlot = {type = "byte", offset = 0x2A1},
-    zoomLevel = {type = "byte", offset = 0x320},
-    invisibleScale = {
-        type = "byte",
-        offset = 0x37C
-    },
-    primaryNades = {type = "byte", offset = 0x31E},
-    secondaryNades = {
-        type = "byte",
-        offset = 0x31F
-    }
-})
-
--- Tag data header structure
-local tagDataHeaderStructure = {
-    array = {type = "dword", offset = 0x0},
-    scenario = {type = "dword", offset = 0x4},
-    count = {type = "word", offset = 0xC}
-}
-
----@class tag
----@field class number Type of the tag
----@field index number Tag Index
----@field id number Tag ID
----@field path string Path of the tag
----@field data number Address of the tag data
----@field indexed boolean Is tag indexed on an external map file
-
--- Tag structure
-local tagHeaderStructure = {
-    class = {type = "dword", offset = 0x0},
-    index = {type = "word", offset = 0xC},
-    -- //TODO This needs some review
-    -- id = {type = "word", offset = 0xE},
-    -- fullId = {type = "dword", offset = 0xC},
-    id = {type = "dword", offset = 0xC},
-    path = {type = "dword", offset = 0x10},
-    data = {type = "dword", offset = 0x14},
-    indexed = {type = "dword", offset = 0x18}
-}
-
--- tagCollection structure
-local tagCollectionStructure = {
-    count = {type = "byte", offset = 0x0},
-    tagList = {
-        type = "list",
-        offset = 0x4,
-        elementsType = "dword",
-        jump = 0x10
-    }
-}
-
--- UnicodeStringList structure
-local unicodeStringListStructure = {
-    count = {type = "byte", offset = 0x0},
-    stringList = {
-        type = "list",
-        offset = 0x4,
-        elementsType = "ustring",
-        jump = 0x14
-    }
-}
-
--- Bitmap structure
-local bitmapStructure = {
-    type = {type = "word", offset = 0x0},
-    format = {type = "word", offset = 0x2},
-    usage = {type = "word", offset = 0x4},
-    usageFlags = {type = "word", offset = 0x6},
-    detailFadeFactor = {
-        type = "dword",
-        offset = 0x8
-    },
-    sharpenAmount = {type = "dword", offset = 0xC},
-    bumpHeight = {type = "dword", offset = 0x10},
-    spriteBudgetSize = {
-        type = "word",
-        offset = 0x14
-    },
-    spriteBudgetCount = {
-        type = "word",
-        offset = 0x16
-    },
-    colorPlateWidth = {
-        type = "word",
-        offset = 0x18
-    },
-    colorPlateHeight = {
-        type = "word",
-        offset = 0x1A
-    },
-    -- compressedColorPlate = {offset = 0x1C},
-    -- processedPixelData = {offset = 0x30},
-    blurFilterSize = {
-        type = "float",
-        offset = 0x44
-    },
-    alphaBias = {type = "float", offset = 0x48},
-    mipmapCount = {type = "word", offset = 0x4C},
-    spriteUsage = {type = "word", offset = 0x4E},
-    spriteSpacing = {type = "word", offset = 0x50},
-    -- padding1 = {size = 0x2, offset = 0x52},
-    sequencesCount = {
-        type = "byte",
-        offset = 0x54
-    },
-    sequences = {
-        type = "table",
-        offset = 0x58,
-        -- //FIXME Check if the jump field is correctly being used
-        jump = 0,
-        rows = {
-            name = {type = "string", offset = 0x0},
-            firstBitmapIndex = {
-                type = "word",
-                offset = 0x20
-            },
-            bitmapCount = {
-                type = "word",
-                offset = 0x22
-            }
-            -- padding = {size = 0x10, offset = 0x24},
-            --[[
-            sprites = {
-                type = "table",
-                offset = 0x34,
-                jump = 0x20,
-                rows = {
-                    bitmapIndex = {type = "word", offset = 0x0},
-                    --padding1 = {size = 0x2, offset = 0x2},
-                    --padding2 = {size = 0x4, offset = 0x4},
-                    left = {type = "float", offset = 0x8},
-                    right = {type = "float", offset = 0xC},
-                    top = {type = "float", offset = 0x10},
-                    bottom = {type = "float", offset = 0x14},
-                    registrationX = {type = "float", offset = 0x18},
-                    registrationY = {type = "float", offset = 0x1C}
-                }
-            }
-            ]]
-        }
-    },
-    bitmapsCount = {type = "byte", offset = 0x60},
-    bitmaps = {
-        type = "table",
-        offset = 0x64,
-        jump = 0x30,
-        rows = {
-            class = {type = "dword", offset = 0x0},
-            width = {type = "word", offset = 0x4},
-            height = {type = "word", offset = 0x6},
-            depth = {type = "word", offset = 0x8},
-            type = {type = "word", offset = 0xA},
-            format = {type = "word", offset = 0xC},
-            flags = {type = "word", offset = 0xE},
-            x = {type = "word", offset = 0x10},
-            y = {type = "word", offset = 0x12},
-            mipmapCount = {
-                type = "word",
-                offset = 0x14
-            },
-            -- padding1 = {size = 0x2, offset = 0x16},
-            pixelOffset = {
-                type = "dword",
-                offset = 0x18
-            }
-            -- padding2 = {size = 0x4, offset = 0x1C},
-            -- padding3 = {size = 0x4, offset = 0x20},
-            -- padding4 = {size = 0x4, offset= 0x24},
-            -- padding5 = {size = 0x8, offset= 0x28}
-        }
-    }
-}
-
--- UI Widget Definition structure
-local uiWidgetDefinitionStructure = {
-    type = {type = "word", offset = 0x0},
-    controllerIndex = {
-        type = "word",
-        offset = 0x2
-    },
-    name = {type = "string", offset = 0x4},
-    boundsY = {type = "short", offset = 0x24},
-    boundsX = {type = "short", offset = 0x26},
-    height = {type = "short", offset = 0x28},
-    width = {type = "short", offset = 0x2A},
-    backgroundBitmap = {
-        type = "word",
-        offset = 0x44
-    },
-    eventType = {type = "byte", offset = 0x03F0},
-    tagReference = {type = "word", offset = 0x400},
-    childWidgetsCount = {
-        type = "dword",
-        offset = 0x03E0
-    },
-    childWidgetsList = {
-        type = "list",
-        offset = 0x03E4,
-        elementsType = "dword",
-        jump = 0x50
-    }
-}
-
--- uiWidgetCollection structure
-local uiWidgetCollectionStructure = {
-    count = {type = "byte", offset = 0x0},
-    tagList = {
-        type = "list",
-        offset = 0x4,
-        elementsType = "dword",
-        jump = 0x10
-    }
-}
-
----@class colorARGB
----@field a number
----@field r number
----@field g number
----@field b number
-
----@class anchorOffset
----@field x number
----@field y number
-
----@class crosshairOverlay
----@field anchorOffset anchorOffset
----@field widthScale number
----@field heightScale number
----@field defaultColor colorARGB
----@field sequenceIndex number
-
----@class crosshair
----@field type number
----@field mapType number
----@field bitmap number
----@field overlays crosshairOverlay[]
-
----@class weaponHudInterface
----@field childHud number
----@field totalAmmoCutOff number
----@field loadedAmmoCutOff number
----@field heatCutOff number
----@field ageCutOff number
----@field crosshairs crosshair[]
-
--- Weapon HUD Interface structure
-local weaponHudInterfaceStructure = {
-    childHud = {type = "dword", offset = 0xC},
-    -- //TODO Check if this property should be moved to a nested property type
-    usingParentHudFlashingParameters = {
-        type = "bit",
-        offset = "word",
-        bitLevel = 1
-    },
-    -- padding1 = {type = "word", offset = 0x12},
-    totalAmmoCutOff = {
-        type = "word",
-        offset = 0x14
-    },
-    loadedAmmoCutOff = {
-        type = "word",
-        offset = 0x16
-    },
-    heatCutOff = {type = "word", offset = 0x18},
-    ageCutOff = {type = "word", offset = 0x1A},
-    -- padding2 = {size = 0x20, offset = 0x1C},
-    -- screenAlignment = {type = "word", },
-    -- padding3 = {size = 0x2, offset = 0x3E},
-    -- padding4 = {size = 0x20, offset = 0x40},
-    crosshairs = {
-        type = "table",
-        offset = 0x88,
-        jump = 0x68,
-        rows = {
-            type = {type = "word", offset = 0x0},
-            mapType = {
-                type = "word",
-                offset = 0x2
-            },
-            -- padding1 = {size = 0x2, offset = 0x4},
-            -- padding2 = {size = 0x1C, offset = 0x6},
-            bitmap = {
-                type = "dword",
-                offset = 0x30
-            },
-            overlays = {
-                type = "table",
-                offset = 0x38,
-                jump = 0x6C,
-                rows = {
-                    widthScale = {
-                        type = "float",
-                        offset = 0x4
-                    },
-                    heightScale = {
-                        type = "float",
-                        offset = 0x8
-                    },
-                    defaultColorB = {
-                        type = "byte",
-                        offset = 0x24
-                    },
-                    defaultColorG = {
-                        type = "byte",
-                        offset = 0x25
-                    },
-                    defaultColorR = {
-                        type = "byte",
-                        offset = 0x26
-                    },
-                    defaultColorA = {
-                        type = "byte",
-                        offset = 0x27
-                    },
-                    sequenceIndex = {type = "byte", offset = 0x46}
-                }
-            }
-        }
-    }
-
-    --[[
-    crosshairs = {type = "word", offset = 0x84},
-    defaultBlue = {type = "byte", offset = 0x208},
-    defaultGreen = {type = "byte", offset = 0x209},
-    defaultRed = {type = "byte", offset = 0x20A},
-    defaultAlpha = {type = "byte", offset = 0x20B},
-    sequenceIndex = {
-        type = "short",
-        offset = 0x22A
-    }
-    ]]
-}
-
--- Scenario structure
-local scenarioStructure = {
-    sceneryPaletteCount = {
-        type = "byte",
-        offset = 0x021C
-    },
-    sceneryPaletteList = {
-        type = "list",
-        offset = 0x0220,
-        elementsType = "dword",
-        jump = 0x30
-    },
-    spawnLocationCount = {
-        type = "byte",
-        offset = 0x354
-    },
-    spawnLocationList = {
-        type = "table",
-        offset = 0x358,
-        jump = 0x34,
-        rows = {
-            x = {type = "float", offset = 0x0},
-            y = {type = "float", offset = 0x4},
-            z = {type = "float", offset = 0x8},
-            rotation = {
-                type = "float",
-                offset = 0xC
-            },
-            teamIndex = {
-                type = "byte",
-                offset = 0x10
-            },
-            bspIndex = {
-                type = "short",
-                offset = 0x12
-            },
-            type = {type = "byte", offset = 0x14}
-        }
-    },
-    vehicleLocationCount = {
-        type = "byte",
-        offset = 0x240
-    },
-    vehicleLocationList = {
-        type = "table",
-        offset = 0x244,
-        jump = 0x78,
-        rows = {
-            type = {type = "word", offset = 0x0},
-            nameIndex = {
-                type = "word",
-                offset = 0x2
-            },
-            x = {type = "float", offset = 0x8},
-            y = {type = "float", offset = 0xC},
-            z = {type = "float", offset = 0x10},
-            yaw = {type = "float", offset = 0x14},
-            pitch = {
-                type = "float",
-                offset = 0x18
-            },
-            roll = {type = "float", offset = 0x1C}
-        }
-    },
-    netgameFlagsCount = {
-        type = "byte",
-        offset = 0x378
-    },
-    netgameFlagsList = {
-        type = "table",
-        offset = 0x37C,
-        jump = 0x94,
-        rows = {
-            x = {type = "float", offset = 0x0},
-            y = {type = "float", offset = 0x4},
-            z = {type = "float", offset = 0x8},
-            rotation = {
-                type = "float",
-                offset = 0xC
-            },
-            type = {type = "byte", offset = 0x10},
-            teamIndex = {
-                type = "word",
-                offset = 0x12
-            }
-        }
-    },
-    netgameEquipmentCount = {
-        type = "byte",
-        offset = 0x384
-    },
-    netgameEquipmentList = {
-        type = "table",
-        offset = 0x388,
-        jump = 0x90,
-        rows = {
-            levitate = {
-                type = "bit",
-                offset = 0x0,
-                bitLevel = 0
-            },
-            type1 = {type = "word", offset = 0x4},
-            type2 = {type = "word", offset = 0x6},
-            type3 = {type = "word", offset = 0x8},
-            type4 = {type = "word", offset = 0xA},
-            teamIndex = {
-                type = "byte",
-                offset = 0xC
-            },
-            spawnTime = {
-                type = "word",
-                offset = 0xE
-            },
-            x = {type = "float", offset = 0x40},
-            y = {type = "float", offset = 0x44},
-            z = {type = "float", offset = 0x48},
-            facing = {
-                type = "float",
-                offset = 0x4C
-            },
-            itemCollection = {
-                type = "dword",
-                offset = 0x5C
-            }
-        }
-    }
-}
-
--- Scenery structure
-local sceneryStructure = {
-    model = {type = "word", offset = 0x28 + 0xC},
-    modifierShader = {
-        type = "word",
-        offset = 0x90 + 0xC
-    }
-}
-
--- Collision Model structure
-local collisionGeometryStructure = {
-    vertexCount = {type = "byte", offset = 0x408},
-    vertexList = {
-        type = "table",
-        offset = 0x40C,
-        jump = 0x10,
-        rows = {
-            x = {type = "float", offset = 0x0},
-            y = {type = "float", offset = 0x4},
-            z = {type = "float", offset = 0x8}
-        }
-    }
-}
-
----@class animationClass
----@field name string Name of the animation
----@field type number Type of the animation
----@field frameCount number Frame count of the animation
----@field nextAnimation number Next animation id of the animation
----@field sound number Sound id of the animation
-
----@class modelAnimations
----@field fpAnimationCount number Number of first-person animations
----@field fpAnimationList number[] List of first-person animations
----@field animationCount number Number of animations of the model
----@field animationList animationClass[] List of animations of the model
-
--- Model Animation structure
-local modelAnimationsStructure = {
-    fpAnimationCount = {
-        type = "byte",
-        offset = 0x90
-    },
-    fpAnimationList = {
-        type = "list",
-        offset = 0x94,
-        noOffset = true,
-        elementsType = "byte",
-        jump = 0x2
-    },
-    animationCount = {
-        type = "byte",
-        offset = 0x74
-    },
-    animationList = {
-        type = "table",
-        offset = 0x78,
-        jump = 0xB4,
-        rows = {
-            name = {type = "string", offset = 0x0},
-            type = {type = "word", offset = 0x20},
-            frameCount = {
-                type = "byte",
-                offset = 0x22
-            },
-            nextAnimation = {
-                type = "byte",
-                offset = 0x38
-            },
-            sound = {type = "byte", offset = 0x3C}
-        }
-    }
-}
-
--- Weapon structure
-local weaponStructure = {
-    model = {type = "dword", offset = 0x34}
-}
-
--- Model structure
-local modelStructure = {
-    nodeCount = {type = "dword", offset = 0xB8},
-    nodeList = {
-        type = "table",
-        offset = 0xBC,
-        jump = 0x9C,
-        rows = {
-            x = {type = "float", offset = 0x28},
-            y = {type = "float", offset = 0x2C},
-            z = {type = "float", offset = 0x30}
-        }
-    },
-    regionCount = {type = "dword", offset = 0xC4},
-    regionList = {
-        type = "table",
-        offset = 0xC8,
-        jump = 76,
-        rows = {
-            permutationCount = {
-                type = "dword",
-                offset = 0x40
-            }
-        }
-    }
-}
-
----@class projectile : blamObject
----@field action number Enumeration of denotation action
----@field attachedToObjectId number Id of the attached object
----@field armingTimer number PENDING
----@field xVel number Velocity in x direction
----@field yVel number Velocity in y direction
----@field zVel number Velocity in z direction
----@field yaw number Rotation in yaw direction
----@field pitch number Rotation in pitch direction
----@field roll number Rotation in roll direction
-
--- Projectile structure
-local projectileStructure = extendStructure(objectStructure, {
-    action = {type = "word", offset = 0x230},
-    attachedToObjectId = {
-        type = "dword",
-        offset = 0x11C
-    },
-    armingTimer = {type = "float", offset = 0x248},
-    --[[xVel = {type = "float", offset = 0x254},
-    yVel = {type = "float", offset = 0x258},
-    zVel = {type = "float", offset = 0x25C},]]
-    pitch = {type = "float", offset = 0x264},
-    yaw = {type = "float", offset = 0x268},
-    roll = {type = "float", offset = 0x26C}
-})
-
 ------------------------------------------------------------------------------
--- Object classes
+-- Object structures
 ------------------------------------------------------------------------------
 
 ---@class blamObject
@@ -1554,10 +744,60 @@ local projectileStructure = extendStructure(objectStructure, {
 ---@field regionPermutation7 number
 ---@field regionPermutation8 number
 
----@return blamObject
-local function objectClassNew(address)
-    return createObject(address, objectStructure)
-end
+-- blamObject structure
+local objectStructure = {
+    tagId = {type = "dword", offset = 0x0},
+    hasCollision = {type = "bit", offset = 0x10, bitLevel = 0},
+    isOnGround = {type = "bit", offset = 0x10, bitLevel = 1},
+    ignoreGravity = {type = "bit", offset = 0x10, bitLevel = 2},
+    isInWater = {type = "bit", offset = 0x10, bitLevel = 3},
+    isStationary = {type = "bit", offset = 0x10, bitLevel = 5},
+    dynamicShading = {type = "bit", offset = 0x10, bitLevel = 14},
+    isNotCastingShadow = {type = "bit", offset = 0x10, bitLevel = 18},
+    frozen = {type = "bit", offset = 0x10, bitLevel = 20},
+    isOutSideMap = {type = "bit", offset = 0x10, bitLevel = 21},
+    isCollideable = {type = "bit", offset = 0x10, bitLevel = 24},
+    model = {type = "dword", offset = 0x34},
+    health = {type = "float", offset = 0xE0},
+    shield = {type = "float", offset = 0xE4},
+    redA = {type = "float", offset = 0x1B8},
+    greenA = {type = "float", offset = 0x1BC},
+    blueA = {type = "float", offset = 0x1C0},
+    x = {type = "float", offset = 0x5C},
+    y = {type = "float", offset = 0x60},
+    z = {type = "float", offset = 0x64},
+    xVel = {type = "float", offset = 0x68},
+    yVel = {type = "float", offset = 0x6C},
+    zVel = {type = "float", offset = 0x70},
+    vX = {type = "float", offset = 0x74},
+    vY = {type = "float", offset = 0x78},
+    vZ = {type = "float", offset = 0x7C},
+    v2X = {type = "float", offset = 0x80},
+    v2Y = {type = "float", offset = 0x84},
+    v2Z = {type = "float", offset = 0x88},
+    yawVel = {type = "float", offset = 0x8C},
+    pitchVel = {type = "float", offset = 0x90},
+    rollVel = {type = "float", offset = 0x94},
+    locationId = {type = "dword", offset = 0x98},
+    boundingRadius = {type = "float", offset = 0xAC},
+    type = {type = "word", offset = 0xB4},
+    team = {type = "word", offset = 0xB8},
+    playerId = {type = "dword", offset = 0xC0},
+    parentId = {type = "dword", offset = 0xC4},
+    -- Experimental name properties
+    isHealthEmpty = {type = "bit", offset = 0x106, bitLevel = 2},
+    animationTagId = {type = "dword", offset = 0xCC},
+    animation = {type = "word", offset = 0xD0},
+    animationFrame = {type = "word", offset = 0xD2},
+    regionPermutation1 = {type = "byte", offset = 0x180},
+    regionPermutation2 = {type = "byte", offset = 0x181},
+    regionPermutation3 = {type = "byte", offset = 0x182},
+    regionPermutation4 = {type = "byte", offset = 0x183},
+    regionPermutation5 = {type = "byte", offset = 0x184},
+    regionPermutation6 = {type = "byte", offset = 0x185},
+    regionPermutation7 = {type = "byte", offset = 0x186},
+    regionPermutation8 = {type = "byte", offset = 0x187}
+}
 
 ---@class biped : blamObject
 ---@field invisible boolean Biped invisible state
@@ -1586,38 +826,81 @@ end
 ---@field secondaryNades number Secondary grenades count
 ---@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard
 
----@return biped
-local function bipedClassNew(address)
-    return createObject(address, bipedStructure)
-end
+-- Biped structure (extends object structure)
+local bipedStructure = extendStructure(objectStructure, {
+    invisible = {type = "bit", offset = 0x204, bitLevel = 4},
+    noDropItems = {type = "bit", offset = 0x204, bitLevel = 20},
+    ignoreCollision = {type = "bit", offset = 0x4CC, bitLevel = 3},
+    flashlight = {type = "bit", offset = 0x204, bitLevel = 19},
+    cameraX = {type = "float", offset = 0x230},
+    cameraY = {type = "float", offset = 0x234},
+    cameraZ = {type = "float", offset = 0x238},
+    crouchHold = {type = "bit", offset = 0x208, bitLevel = 0},
+    jumpHold = {type = "bit", offset = 0x208, bitLevel = 1},
+    actionKeyHold = {type = "bit", offset = 0x208, bitLevel = 14},
+    actionKey = {type = "bit", offset = 0x208, bitLevel = 6},
+    meleeKey = {type = "bit", offset = 0x208, bitLevel = 7},
+    reloadKey = {type = "bit", offset = 0x208, bitLevel = 10},
+    weaponPTH = {type = "bit", offset = 0x208, bitLevel = 11},
+    weaponSTH = {type = "bit", offset = 0x208, bitLevel = 12},
+    flashlightKey = {type = "bit", offset = 0x208, bitLevel = 4},
+    grenadeHold = {type = "bit", offset = 0x208, bitLevel = 13},
+    crouch = {type = "byte", offset = 0x2A0},
+    shooting = {type = "float", offset = 0x284},
+    weaponSlot = {type = "byte", offset = 0x2A1},
+    zoomLevel = {type = "byte", offset = 0x320},
+    invisibleScale = {type = "byte", offset = 0x37C},
+    primaryNades = {type = "byte", offset = 0x31E},
+    secondaryNades = {type = "byte", offset = 0x31F}
+})
 
----@return projectile
-local function projectileClassNew(address)
-    return createObject(address, projectileStructure)
-end
+-- Tag data header structure
+local tagDataHeaderStructure = {
+    array = {type = "dword", offset = 0x0},
+    scenario = {type = "dword", offset = 0x4},
+    count = {type = "word", offset = 0xC}
+}
 
----@return tag
-local function tagClassNew(address)
-    return createObject(address, tagHeaderStructure)
-end
+---@class tag
+---@field class number Type of the tag
+---@field index number Tag Index
+---@field id number Tag ID
+---@field path string Path of the tag
+---@field data number Address of the tag data
+---@field indexed boolean Is tag indexed on an external map file
+
+-- Tag structure
+local tagHeaderStructure = {
+    class = {type = "dword", offset = 0x0},
+    index = {type = "word", offset = 0xC},
+    -- //TODO This needs some review
+    -- id = {type = "word", offset = 0xE},
+    -- fullId = {type = "dword", offset = 0xC},
+    id = {type = "dword", offset = 0xC},
+    path = {type = "dword", offset = 0x10},
+    data = {type = "dword", offset = 0x14},
+    indexed = {type = "dword", offset = 0x18}
+}
 
 ---@class tagCollection
 ---@field count number Number of tags in the collection
 ---@field tagList table List of tags
 
----@return tagCollection
-local function tagCollectionNew(address)
-    return createObject(address, tagCollectionStructure)
-end
+-- tagCollection structure
+local tagCollectionStructure = {
+    count = {type = "byte", offset = 0x0},
+    tagList = {type = "list", offset = 0x4, elementsType = "dword", jump = 0x10}
+}
 
 ---@class unicodeStringList
 ---@field count number Number of unicode strings
 ---@field stringList table List of unicode strings
 
----@return unicodeStringList
-local function unicodeStringListClassNew(address)
-    return createObject(address, unicodeStringListStructure)
-end
+-- UnicodeStringList structure
+local unicodeStringListStructure = {
+    count = {type = "byte", offset = 0x0},
+    stringList = {type = "list", offset = 0x4, elementsType = "ustring", jump = 0x14}
+}
 
 ---@class bitmap
 ---@field type number
@@ -1643,10 +926,83 @@ end
 ---@field bitmapsCount number
 ---@field bitmaps table
 
----@return bitmap
-local function bitmapClassNew(address)
-    return createObject(address, bitmapStructure)
-end
+-- Bitmap structure
+local bitmapStructure = {
+    type = {type = "word", offset = 0x0},
+    format = {type = "word", offset = 0x2},
+    usage = {type = "word", offset = 0x4},
+    usageFlags = {type = "word", offset = 0x6},
+    detailFadeFactor = {type = "dword", offset = 0x8},
+    sharpenAmount = {type = "dword", offset = 0xC},
+    bumpHeight = {type = "dword", offset = 0x10},
+    spriteBudgetSize = {type = "word", offset = 0x14},
+    spriteBudgetCount = {type = "word", offset = 0x16},
+    colorPlateWidth = {type = "word", offset = 0x18},
+    colorPlateHeight = {type = "word", offset = 0x1A},
+    -- compressedColorPlate = {offset = 0x1C},
+    -- processedPixelData = {offset = 0x30},
+    blurFilterSize = {type = "float", offset = 0x44},
+    alphaBias = {type = "float", offset = 0x48},
+    mipmapCount = {type = "word", offset = 0x4C},
+    spriteUsage = {type = "word", offset = 0x4E},
+    spriteSpacing = {type = "word", offset = 0x50},
+    -- padding1 = {size = 0x2, offset = 0x52},
+    sequencesCount = {type = "byte", offset = 0x54},
+    sequences = {
+        type = "table",
+        offset = 0x58,
+        -- //FIXME Check if the jump field is correctly being used
+        jump = 0,
+        rows = {
+            name = {type = "string", offset = 0x0},
+            firstBitmapIndex = {type = "word", offset = 0x20},
+            bitmapCount = {type = "word", offset = 0x22}
+            -- padding = {size = 0x10, offset = 0x24},
+            --[[
+            sprites = {
+                type = "table",
+                offset = 0x34,
+                jump = 0x20,
+                rows = {
+                    bitmapIndex = {type = "word", offset = 0x0},
+                    --padding1 = {size = 0x2, offset = 0x2},
+                    --padding2 = {size = 0x4, offset = 0x4},
+                    left = {type = "float", offset = 0x8},
+                    right = {type = "float", offset = 0xC},
+                    top = {type = "float", offset = 0x10},
+                    bottom = {type = "float", offset = 0x14},
+                    registrationX = {type = "float", offset = 0x18},
+                    registrationY = {type = "float", offset = 0x1C}
+                }
+            }
+            ]]
+        }
+    },
+    bitmapsCount = {type = "byte", offset = 0x60},
+    bitmaps = {
+        type = "table",
+        offset = 0x64,
+        jump = 0x30,
+        rows = {
+            class = {type = "dword", offset = 0x0},
+            width = {type = "word", offset = 0x4},
+            height = {type = "word", offset = 0x6},
+            depth = {type = "word", offset = 0x8},
+            type = {type = "word", offset = 0xA},
+            format = {type = "word", offset = 0xC},
+            flags = {type = "word", offset = 0xE},
+            x = {type = "word", offset = 0x10},
+            y = {type = "word", offset = 0x12},
+            mipmapCount = {type = "word", offset = 0x14},
+            -- padding1 = {size = 0x2, offset = 0x16},
+            pixelOffset = {type = "dword", offset = 0x18}
+            -- padding2 = {size = 0x4, offset = 0x1C},
+            -- padding3 = {size = 0x4, offset = 0x20},
+            -- padding4 = {size = 0x4, offset= 0x24},
+            -- padding5 = {size = 0x8, offset= 0x28}
+        }
+    }
+}
 
 ---@class uiWidgetDefinition
 ---@field type number Type of widget
@@ -1662,23 +1018,109 @@ end
 ---@field childWidgetsCount number Number of child widgets
 ---@field childWidgetsList table tag ID list of the child widgets
 
----@return uiWidgetDefinition
-local function uiWidgetDefinitionClassNew(address)
-    return createObject(address, uiWidgetDefinitionStructure)
-end
+-- UI Widget Definition structure
+local uiWidgetDefinitionStructure = {
+    type = {type = "word", offset = 0x0},
+    controllerIndex = {type = "word", offset = 0x2},
+    name = {type = "string", offset = 0x4},
+    boundsY = {type = "short", offset = 0x24},
+    boundsX = {type = "short", offset = 0x26},
+    height = {type = "short", offset = 0x28},
+    width = {type = "short", offset = 0x2A},
+    backgroundBitmap = {type = "word", offset = 0x44},
+    eventType = {type = "byte", offset = 0x03F0},
+    tagReference = {type = "word", offset = 0x400},
+    childWidgetsCount = {type = "dword", offset = 0x03E0},
+    childWidgetsList = {
+        type = "list",
+        offset = 0x03E4,
+        elementsType = "dword",
+        jump = 0x50
+    }
+}
 
 ---@class uiWidgetCollection
 ---@field count number Number of widgets in the collection
 ---@field tagList table Tag ID list of the widgets
 
----@return uiWidgetCollection
-local function uiWidgetCollectionClassNew(address)
-    return createObject(address, uiWidgetCollectionStructure)
-end
+-- uiWidgetCollection structure
+local uiWidgetCollectionStructure = {
+    count = {type = "byte", offset = 0x0},
+    tagList = {type = "list", offset = 0x4, elementsType = "dword", jump = 0x10}
+}
 
-local function weaponHudInterfaceClassNew(address)
-    return createObject(address, weaponHudInterfaceStructure)
-end
+---@class colorARGB
+---@field a number
+---@field r number
+---@field g number
+---@field b number
+
+---@class anchorOffset
+---@field x number
+---@field y number
+
+---@class crosshairOverlay
+---@field anchorOffset anchorOffset
+---@field widthScale number
+---@field heightScale number
+---@field defaultColor colorARGB
+---@field sequenceIndex number
+
+---@class crosshair
+---@field type number
+---@field mapType number
+---@field bitmap number
+---@field overlays crosshairOverlay[]
+
+---@class weaponHudInterface
+---@field childHud number
+---@field totalAmmoCutOff number
+---@field loadedAmmoCutOff number
+---@field heatCutOff number
+---@field ageCutOff number
+---@field crosshairs crosshair[]
+
+-- Weapon HUD Interface structure
+local weaponHudInterfaceStructure = {
+    childHud = {type = "dword", offset = 0xC},
+    -- //TODO Check if this property should be moved to a nested property type
+    usingParentHudFlashingParameters = {type = "bit", offset = "word", bitLevel = 1},
+    -- padding1 = {type = "word", offset = 0x12},
+    totalAmmoCutOff = {type = "word", offset = 0x14},
+    loadedAmmoCutOff = {type = "word", offset = 0x16},
+    heatCutOff = {type = "word", offset = 0x18},
+    ageCutOff = {type = "word", offset = 0x1A},
+    -- padding2 = {size = 0x20, offset = 0x1C},
+    -- screenAlignment = {type = "word", },
+    -- padding3 = {size = 0x2, offset = 0x3E},
+    -- padding4 = {size = 0x20, offset = 0x40},
+    crosshairs = {
+        type = "table",
+        offset = 0x88,
+        jump = 0x68,
+        rows = {
+            type = {type = "word", offset = 0x0},
+            mapType = {type = "word", offset = 0x2},
+            -- padding1 = {size = 0x2, offset = 0x4},
+            -- padding2 = {size = 0x1C, offset = 0x6},
+            bitmap = {type = "dword", offset = 0x30},
+            overlays = {
+                type = "table",
+                offset = 0x38,
+                jump = 0x6C,
+                rows = {
+                    widthScale = {type = "float", offset = 0x4},
+                    heightScale = {type = "float", offset = 0x8},
+                    defaultColorB = {type = "byte", offset = 0x24},
+                    defaultColorG = {type = "byte", offset = 0x25},
+                    defaultColorR = {type = "byte", offset = 0x26},
+                    defaultColorA = {type = "byte", offset = 0x27},
+                    sequenceIndex = {type = "byte", offset = 0x46}
+                }
+            }
+        }
+    }
+}
 
 ---@class scenario
 ---@field sceneryPaletteCount number Number of sceneries in the scenery palette
@@ -1692,23 +1134,269 @@ end
 ---@field netgameFlagsCount number Number of netgame equipments
 ---@field netgameFlagsList table List of netgame equipments
 
----@return scenario
-local function scenarioClassNew(address)
-    return createObject(address, scenarioStructure)
-end
+-- Scenario structure
+local scenarioStructure = {
+    sceneryPaletteCount = {type = "byte", offset = 0x021C},
+    sceneryPaletteList = {
+        type = "list",
+        offset = 0x0220,
+        elementsType = "dword",
+        jump = 0x30
+    },
+    spawnLocationCount = {type = "byte", offset = 0x354},
+    spawnLocationList = {
+        type = "table",
+        offset = 0x358,
+        jump = 0x34,
+        rows = {
+            x = {type = "float", offset = 0x0},
+            y = {type = "float", offset = 0x4},
+            z = {type = "float", offset = 0x8},
+            rotation = {type = "float", offset = 0xC},
+            teamIndex = {type = "byte", offset = 0x10},
+            bspIndex = {type = "short", offset = 0x12},
+            type = {type = "byte", offset = 0x14}
+        }
+    },
+    vehicleLocationCount = {type = "byte", offset = 0x240},
+    vehicleLocationList = {
+        type = "table",
+        offset = 0x244,
+        jump = 0x78,
+        rows = {
+            type = {type = "word", offset = 0x0},
+            nameIndex = {type = "word", offset = 0x2},
+            x = {type = "float", offset = 0x8},
+            y = {type = "float", offset = 0xC},
+            z = {type = "float", offset = 0x10},
+            yaw = {type = "float", offset = 0x14},
+            pitch = {type = "float", offset = 0x18},
+            roll = {type = "float", offset = 0x1C}
+        }
+    },
+    netgameFlagsCount = {type = "byte", offset = 0x378},
+    netgameFlagsList = {
+        type = "table",
+        offset = 0x37C,
+        jump = 0x94,
+        rows = {
+            x = {type = "float", offset = 0x0},
+            y = {type = "float", offset = 0x4},
+            z = {type = "float", offset = 0x8},
+            rotation = {type = "float", offset = 0xC},
+            type = {type = "byte", offset = 0x10},
+            teamIndex = {type = "word", offset = 0x12}
+        }
+    },
+    netgameEquipmentCount = {type = "byte", offset = 0x384},
+    netgameEquipmentList = {
+        type = "table",
+        offset = 0x388,
+        jump = 0x90,
+        rows = {
+            levitate = {type = "bit", offset = 0x0, bitLevel = 0},
+            type1 = {type = "word", offset = 0x4},
+            type2 = {type = "word", offset = 0x6},
+            type3 = {type = "word", offset = 0x8},
+            type4 = {type = "word", offset = 0xA},
+            teamIndex = {type = "byte", offset = 0xC},
+            spawnTime = {type = "word", offset = 0xE},
+            x = {type = "float", offset = 0x40},
+            y = {type = "float", offset = 0x44},
+            z = {type = "float", offset = 0x48},
+            facing = {type = "float", offset = 0x4C},
+            itemCollection = {type = "dword", offset = 0x5C}
+        }
+    }
+}
 
 ---@class scenery
 ---@field model number
 ---@field modifierShader number
 
----@return scenery
-local function sceneryClassNew(address)
-    return createObject(address, sceneryStructure)
-end
+-- Scenery structure
+local sceneryStructure = {
+    model = {type = "word", offset = 0x28 + 0xC},
+    modifierShader = {type = "word", offset = 0x90 + 0xC}
+}
 
 ---@class collisionGeometry
 ---@field vertexCount number Number of vertex in the collision geometry
 ---@field vertexList table List of vertex in the collision geometry
+
+-- Collision Model structure
+local collisionGeometryStructure = {
+    vertexCount = {type = "byte", offset = 0x408},
+    vertexList = {
+        type = "table",
+        offset = 0x40C,
+        jump = 0x10,
+        rows = {
+            x = {type = "float", offset = 0x0},
+            y = {type = "float", offset = 0x4},
+            z = {type = "float", offset = 0x8}
+        }
+    }
+}
+
+---@class animationClass
+---@field name string Name of the animation
+---@field type number Type of the animation
+---@field frameCount number Frame count of the animation
+---@field nextAnimation number Next animation id of the animation
+---@field sound number Sound id of the animation
+
+---@class modelAnimations
+---@field fpAnimationCount number Number of first-person animations
+---@field fpAnimationList number[] List of first-person animations
+---@field animationCount number Number of animations of the model
+---@field animationList animationClass[] List of animations of the model
+
+-- Model Animation structure
+local modelAnimationsStructure = {
+    fpAnimationCount = {type = "byte", offset = 0x90},
+    fpAnimationList = {
+        type = "list",
+        offset = 0x94,
+        noOffset = true,
+        elementsType = "byte",
+        jump = 0x2
+    },
+    animationCount = {type = "byte", offset = 0x74},
+    animationList = {
+        type = "table",
+        offset = 0x78,
+        jump = 0xB4,
+        rows = {
+            name = {type = "string", offset = 0x0},
+            type = {type = "word", offset = 0x20},
+            frameCount = {type = "byte", offset = 0x22},
+            nextAnimation = {type = "byte", offset = 0x38},
+            sound = {type = "byte", offset = 0x3C}
+        }
+    }
+}
+
+---@class weaponTag
+---@field model number Tag ID of the weapon model
+
+-- Weapon structure
+local weaponTagStructure = {model = {type = "dword", offset = 0x34}}
+
+---@class model
+---@field nodeCount number Number of nodes
+---@field nodeList table List of the model nodes
+---@field regionCount number Number of regions
+---@field regionList table List of regions
+
+-- Model structure
+local modelStructure = {
+    nodeCount = {type = "dword", offset = 0xB8},
+    nodeList = {
+        type = "table",
+        offset = 0xBC,
+        jump = 0x9C,
+        rows = {
+            x = {type = "float", offset = 0x28},
+            y = {type = "float", offset = 0x2C},
+            z = {type = "float", offset = 0x30}
+        }
+    },
+    regionCount = {type = "dword", offset = 0xC4},
+    regionList = {
+        type = "table",
+        offset = 0xC8,
+        jump = 76,
+        rows = {permutationCount = {type = "dword", offset = 0x40}}
+    }
+}
+
+---@class projectile : blamObject
+---@field action number Enumeration of denotation action
+---@field attachedToObjectId number Id of the attached object
+---@field armingTimer number PENDING
+---@field xVel number Velocity in x direction
+---@field yVel number Velocity in y direction
+---@field zVel number Velocity in z direction
+---@field yaw number Rotation in yaw direction
+---@field pitch number Rotation in pitch direction
+---@field roll number Rotation in roll direction
+
+-- Projectile structure
+local projectileStructure = extendStructure(objectStructure, {
+    action = {type = "word", offset = 0x230},
+    attachedToObjectId = {type = "dword", offset = 0x11C},
+    armingTimer = {type = "float", offset = 0x248},
+    --[[xVel = {type = "float", offset = 0x254},
+    yVel = {type = "float", offset = 0x258},
+    zVel = {type = "float", offset = 0x25C},]]
+    pitch = {type = "float", offset = 0x264},
+    yaw = {type = "float", offset = 0x268},
+    roll = {type = "float", offset = 0x26C}
+})
+
+------------------------------------------------------------------------------
+-- Object classes
+------------------------------------------------------------------------------
+
+---@return blamObject
+local function objectClassNew(address)
+    return createObject(address, objectStructure)
+end
+
+---@return biped
+local function bipedClassNew(address)
+    return createObject(address, bipedStructure)
+end
+
+---@return projectile
+local function projectileClassNew(address)
+    return createObject(address, projectileStructure)
+end
+
+---@return tag
+local function tagClassNew(address)
+    return createObject(address, tagHeaderStructure)
+end
+
+---@return tagCollection
+local function tagCollectionNew(address)
+    return createObject(address, tagCollectionStructure)
+end
+
+---@return unicodeStringList
+local function unicodeStringListClassNew(address)
+    return createObject(address, unicodeStringListStructure)
+end
+
+---@return bitmap
+local function bitmapClassNew(address)
+    return createObject(address, bitmapStructure)
+end
+
+---@return uiWidgetDefinition
+local function uiWidgetDefinitionClassNew(address)
+    return createObject(address, uiWidgetDefinitionStructure)
+end
+
+---@return uiWidgetCollection
+local function uiWidgetCollectionClassNew(address)
+    return createObject(address, uiWidgetCollectionStructure)
+end
+
+local function weaponHudInterfaceClassNew(address)
+    return createObject(address, weaponHudInterfaceStructure)
+end
+
+---@return scenario
+local function scenarioClassNew(address)
+    return createObject(address, scenarioStructure)
+end
+
+---@return scenery
+local function sceneryClassNew(address)
+    return createObject(address, sceneryStructure)
+end
 
 ---@return collisionGeometry
 local function collisionGeometryClassNew(address)
@@ -1720,19 +1408,10 @@ local function modelAnimationsClassNew(address)
     return createObject(address, modelAnimationsStructure)
 end
 
----@class weapon
----@field model number Tag ID of the weapon model
-
----@return weapon
-local function weaponClassNew(address)
-    return createObject(address, weaponStructure)
+---@return weaponTag
+local function weaponTagClassNew(address)
+    return createObject(address, weaponTagStructure)
 end
-
----@class model
----@field nodeCount number Number of nodes
----@field nodeList table List of the model nodes
----@field regionCount number Number of regions
----@field regionList table List of regions
 
 ---@return model
 local function modelClassNew(address)
@@ -1776,28 +1455,28 @@ function blam.isNull(value)
     return false
 end
 
---- Get the camera type
+--- Get the current game camera type
 ---@return number
 function blam.getCameraType()
     local camera = read_word(addressList.cameraType)
-    local cameraType = nil
-
-    if (camera == 22192) then
-        cameraType = 1
-    elseif (camera == 30400) then
-        cameraType = 2
-    elseif (camera == 30704) then
-        cameraType = 3
-    elseif (camera == 21952) then
-        cameraType = 4
-    elseif (camera == 23776) then
-        cameraType = 5
+    if (camera) then
+        if (camera == 22192) then
+            return cameraTypes.scripted
+        elseif (camera == 30400) then
+            return cameraTypes.firstPerson
+        elseif (camera == 30704) then
+            return cameraTypes.devcam
+            -- //FIXME Validate this value, it seems to be wrong!
+        elseif (camera == 21952) then
+            return cameraTypes.thirdPerson
+        elseif (camera == 23776) then
+            return cameraTypes.deadCamera
+        end
     end
-
-    return cameraType
+    return nil
 end
 
---- Create a tag object from a given address. THIS OBJECT IS NOT DYNAMIC.
+--- Create a tag object from a given address, this object is NOT dynamic.
 ---@param address integer
 ---@return tag
 function blam.tag(address)
@@ -1859,7 +1538,7 @@ function blam.getTag(tagIdOrPath, class, ...)
 end
 
 --- Create a table/object from blamObject given address
----@param address integer
+---@param address number
 ---@return blamObject
 function blam.object(address)
     if (isValid(address)) then
@@ -1869,7 +1548,7 @@ function blam.object(address)
 end
 
 --- Create a Projectile object given address
----@param tag string | number
+---@param address number
 ---@return projectile
 function blam.projectile(address)
     if (isValid(address)) then
@@ -1954,6 +1633,7 @@ function blam.weaponHudInterface(tag)
 end
 
 --- Create a Scenario object from a tag path or id
+---@param tag string | number
 ---@return scenario
 function blam.scenario(tag)
     local scenarioTag = blam.getTag(tag or 0, tagClasses.scenario)
@@ -1995,11 +1675,11 @@ end
 
 --- Create a Model Animation object from a tag path or id
 ---@param tag string | number
----@return weapon
+---@return weaponTag
 function blam.weaponTag(tag)
     if (isValid(tag)) then
         local weaponTag = blam.getTag(tag, tagClasses.weapon)
-        return weaponClassNew(weaponTag)
+        return weaponTagClassNew(weaponTag)
     end
     return nil
 end
@@ -2014,200 +1694,5 @@ function blam.model(tag)
     end
     return nil
 end
-
-------------------------------------------------------------------------------
--- LuaBlam 3.5 compatibility layer
-------------------------------------------------------------------------------
----@class blam35
-local luablam35 = {}
-
--- Set compatibility layer version
-luablam35.version = 3.5
-
---- LuaBlam old API binding
----@param class string
----@param param string | number
----@param properties table
----@return table | nil
-local function proccessRequestedObject(class, param, properties)
-    local object = blam[class](param)
-    if (properties == nil) then
-        return blam.dumpObject(object)
-    else
-        for k, v in pairs(properties) do
-            object[k] = v
-        end
-    end
-end
-
----@param address number
----@param properties nil | table
----@return blamObject
-function luablam35.object(address, properties)
-    if (address and address ~= 0) then
-        return proccessRequestedObject("object", address, properties)
-    end
-    return nil
-end
-
----@param address number
----@param properties nil | table
----@return biped
-function luablam35.biped(address, properties)
-    if (address and address ~= 0) then
-        return proccessRequestedObject("biped", address, properties)
-    end
-    return nil
-end
-
----@param address number
----@param properties nil | table
----@return uiWidgetDefinition
-function luablam35.uiWidgetDefinition(address, properties)
-    if (address and address ~= 0) then
-        local tag = blam.tag(address)
-        return proccessRequestedObject("uiWidgetDefinition", tag.path, properties)
-    end
-    return nil
-end
-
----@param address number
----@param properties nil | table
----@return weaponHudInterface
-function luablam35.weaponHudInterface(address, properties)
-    if (address and address ~= 0) then
-        local tag = blam.tag(address)
-        return proccessRequestedObject("weaponHudInterface", tag.path, properties)
-    end
-    return nil
-end
-
----@param address number
----@param properties nil | table
----@return unicodeStringList
-function luablam35.unicodeStringList(address, properties)
-    if (address and address ~= 0) then
-        local tag = blam.tag(address)
-        return proccessRequestedObject("unicodeStringList", tag.path, properties)
-    end
-    return nil
-end
-
----@param address number
----@param properties nil | table
----@return scenario
-function luablam35.scenario(address, properties)
-    if (address and address ~= nil) then
-        local tag = blam.tag(address)
-        return proccessRequestedObject("scenario", tag.path, properties)
-    end
-end
-
----@param address number
----@param properties nil | table
----@return scenery
-function luablam35.scenery(address, properties)
-    if (address and address ~= 0) then
-        local tag = blam.tag(address)
-        return proccessRequestedObject("scenery", tag.path, properties)
-    end
-    return nil
-end
-
----@param address number
----@param properties nil | table
----@return collisionGeometry
-function luablam35.collisionGeometry(address, properties)
-    if (address and address ~= 0) then
-        local tag = blam.tag(address)
-        return proccessRequestedObject("collisionGeometry", tag.path, properties)
-    end
-
-    return nil
-end
-
----@param address number
----@param properties nil | table
----@return modelAnimations
-function luablam35.modelAnimations(address, properties)
-    if (address and address ~= 0) then
-        local tag = blam.tag(address)
-        return proccessRequestedObject("modelAnimations", tag.path, properties)
-    end
-    return nil
-end
-
----@param address number
----@param properties nil | table
----@return tagCollection
-function luablam35.tagCollection(address, properties)
-    if (address and address ~= 0) then
-        local tag = blam.tag(address)
-        return proccessRequestedObject("tagCollection", tag.path, properties)
-    end
-    return nil
-end
-
---- Setup LuaBlam 3.5 API
----@return table
-function blam.compat35()
-    --- Return the id of a tag given tag type and tag path
-    ---@param tagClass string
-    ---@param tagPath string
-    ---@return number
-    get_tag_id = function(tagClass, tagPath)
-        local tag = blam.getTag(tagPath, tagClass)
-        if (tag) then
-            return tag.fullId
-        end
-        return nil
-    end
-
-    --- Return the simple id of a tag given tag type and tag path
-    ---@param type string
-    ---@param path string
-    ---@return number
-    get_simple_tag_id = function(type, path)
-        for index = 0, blam.tagDataHeader.count - 1 do
-            local tag = blam.getTag(index)
-            if (tag.path == path) then
-                return index
-            end
-        end
-        return nil
-    end
-
-    --- Return the tag path given tag id
-    ---@param tagId number
-    ---@return string
-    get_tag_path = function(tagId)
-        local tag = blam.getTag(tagId)
-        if (tag) then
-            return tag.path
-        end
-        return nil
-    end
-
-    --- Return the type of a tag given tag id
-    ---@param tagId number
-    ---@return string
-    get_tag_type = function(tagId)
-        local tag = blam.getTag(tagId)
-        if (tag) then
-            return tag.class
-        end
-        return nil
-    end
-
-    --- Return the count of tags in the current map
-    ---@return number
-    get_tags_count = function()
-        return blam.tagDataHeader.count
-    end
-
-    return luablam35
-end
-
-------------------------------------------------------------------------------
 
 return blam

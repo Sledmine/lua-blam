@@ -21,6 +21,8 @@
   - [`ticks`](#ticks)
 - [I/O Memory Functions](#io-memory-functions)
 - [Isolated Functions](#isolated-functions)
+  - [`create_directory`](#create_directory)
+  - [`remove_directory`](#remove_directory)
 
 # Global Variables
 
@@ -280,11 +282,41 @@ segmentation fault. This will invariably result in an exception error.
 
 # Isolated Functions
 
-These functions perform operations that only can access data for the current script.
+These functions perform operations that only can access data for the current script, these functions will operate only on the "chimera/lua/data" folder on it
 
-bool create_directory(directory)
+## `create_directory`
+Attempt create a directory with the given path. An error will occur if the directory can not be created.
 
-bool remove_directory(directory)
+**Takes:** `string` DirectoryName, `directoryName` X, `number` Y, `number` Z
+
+**Returns:** `boolean` Result
+
+Example:
+```lua
+local result = create_directory("logs")
+if (result) then
+    console_out("Logs folder has been created.")
+else
+    console_out("A problem occurred at creating logs folder.")
+end
+```
+
+## `remove_directory`
+Attemp to remove a directory given path for it.
+
+**Takes:** `string` DirectoryName
+
+**Returns:** `boolean` Result
+
+Example:
+```lua
+local result = remove_directory("logs")
+if (result) then
+    console_out("Logs folder has been removed.")
+else
+    console_out("A problem occurred at removing logs folder.")
+end
+```
 
 table list_directory(directory)
 
