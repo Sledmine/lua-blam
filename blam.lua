@@ -458,6 +458,14 @@ local function writeFloat(address, propertyData, propertyValue)
     return write_float(address, propertyValue)
 end
 
+local function readChar(address)
+    return read_char(address)
+end
+
+local function writeChar(address, propertyData, propertyValue)
+    return write_char(address, propertyValue)
+end
+
 local function readString(address)
     return read_string(address)
 end
@@ -604,6 +612,7 @@ typesOperations = {
     int = {read = readInt, write = writeInt},
     dword = {read = readDword, write = writeDword},
     float = {read = readFloat, write = writeFloat},
+    char = {read = readChar, write = writeChar},
     string = {read = readString, write = writeString},
     ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
@@ -825,7 +834,6 @@ local objectStructure = {
 ---@field primaryNades number Primary grenades count
 ---@field secondaryNades number Secondary grenades count
 ---@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard, blam.isNull otherwise
----@field walkingDirection string Walking direction state, 0 when not walking, 1 when walking forward, etc
 
 -- Biped structure (extends object structure)
 local bipedStructure = extendStructure(objectStructure, {
@@ -853,8 +861,7 @@ local bipedStructure = extendStructure(objectStructure, {
     invisibleScale = {type = "byte", offset = 0x37C},
     primaryNades = {type = "byte", offset = 0x31E},
     secondaryNades = {type = "byte", offset = 0x31F},
-    landing = {type = "byte", offset = 0x508},
-    walkingDirection = {type = "byte", offset = 0x503}
+    landing = {type = "byte", offset = 0x508}
 })
 
 -- Tag data header structure
@@ -1053,6 +1060,8 @@ local uiWidgetCollectionStructure = {
 }
 
 ---@class crosshairOverlay
+---@field x number
+---@field y number
 ---@field widthScale number
 ---@field heightScale number
 ---@field defaultColorA number
@@ -1104,6 +1113,8 @@ local weaponHudInterfaceStructure = {
                 offset = 0x38,
                 jump = 0x6C,
                 rows = {
+                    x = {type = "word", offset = 0x0},
+                    y = {type = "word", offset = 0x2},
                     widthScale = {type = "float", offset = 0x4},
                     heightScale = {type = "float", offset = 0x8},
                     defaultColorB = {type = "byte", offset = 0x24},
