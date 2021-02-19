@@ -3,7 +3,7 @@
 -- Sledmine, JerryBrick
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local blam = {_VERSION = "1.0.0"}
+local blam = {_VERSION = "1.1.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -824,7 +824,8 @@ local objectStructure = {
 ---@field invisibleScale number Opacity amount of biped invisiblity
 ---@field primaryNades number Primary grenades count
 ---@field secondaryNades number Secondary grenades count
----@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard
+---@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard, blam.isNull otherwise
+---@field walkingDirection string Walking direction state, 0 when not walking, 1 when walking forward, etc
 
 -- Biped structure (extends object structure)
 local bipedStructure = extendStructure(objectStructure, {
@@ -851,7 +852,9 @@ local bipedStructure = extendStructure(objectStructure, {
     zoomLevel = {type = "byte", offset = 0x320},
     invisibleScale = {type = "byte", offset = 0x37C},
     primaryNades = {type = "byte", offset = 0x31E},
-    secondaryNades = {type = "byte", offset = 0x31F}
+    secondaryNades = {type = "byte", offset = 0x31F},
+    landing = {type = "byte", offset = 0x508},
+    walkingDirection = {type = "byte", offset = 0x503}
 })
 
 -- Tag data header structure
@@ -1049,21 +1052,13 @@ local uiWidgetCollectionStructure = {
     tagList = {type = "list", offset = 0x4, elementsType = "dword", jump = 0x10}
 }
 
----@class colorARGB
----@field a number
----@field r number
----@field g number
----@field b number
-
----@class anchorOffset
----@field x number
----@field y number
-
 ---@class crosshairOverlay
----@field anchorOffset anchorOffset
 ---@field widthScale number
 ---@field heightScale number
----@field defaultColor colorARGB
+---@field defaultColorA number
+---@field defaultColorR number
+---@field defaultColorG number
+---@field defaultColorB number
 ---@field sequenceIndex number
 
 ---@class crosshair

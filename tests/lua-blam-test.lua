@@ -119,6 +119,8 @@ function testObjects:testBipedObject()
     lu.assertEquals(bipedObject.invisible, false)
     lu.assertEquals(bipedObject.shield, 1)
     lu.assertEquals(bipedObject.health, 1)
+    lu.assertIsTrue(blam.isNull(bipedObject.landing))
+    lu.assertEquals(bipedObject.walkingDirection, 0)
 end
 
 -- Mocked arguments and executions for standalone execution and in game execution
