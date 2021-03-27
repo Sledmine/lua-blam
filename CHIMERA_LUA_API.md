@@ -252,11 +252,16 @@ local object_id = spawn_object("weapon","weapons\\pistol\\pistol", 0, 10, -4.5)
 Get or set the tick rate. The tick rate cannot be set lower than 0.01.
 
 **Takes:** optional `number` NewTickRate
+
 **Returns:** `number` TickRate
 
 Example:
 ```lua
+-- Set tick rate
 tick_rate(60)
+
+-- Get tick rate
+console_out(tick_rate())
 ```
 
 ## `ticks`
@@ -282,7 +287,7 @@ segmentation fault. This will invariably result in an exception error.
 
 # Isolated Functions
 
-These functions perform operations that only can access data for the current script, these functions will operate only on the "chimera/lua/data" folder on it
+These functions perform operations that only can access and write data related to the current script, these functions will operate only on the "chimera/lua/data" in a folder with the same name of the script.
 
 ## `create_directory`
 Attempt create a directory with the given path. An error will occur if the directory can not be created.

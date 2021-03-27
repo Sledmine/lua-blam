@@ -28,14 +28,6 @@ function OnCommand(command)
         runner:setOutputType("junit", "chimera_tests_results")
         runner:runSuite()
         return false
-    elseif (command == "cob") then
-        for index, objectId in pairs(blam.getObjects()) do
-            local tempObject = blam.object(get_object(objectId))
-            local objectType = glue.index(blam.objectClasses)[tempObject.type]
-            if (objectType == "biped") then
-                console_out(objectType .. " " .. objectId)
-            end
-        end
     end
 end
 
@@ -79,18 +71,7 @@ function testObjects:testObjectsSpawnAndDelete()
     local objectId = spawn_object("biped", "characters\\cyborg_mp\\cyborg_mp", 31, -82, 0.061)
     lu.assertNotIsNil(objectId)
     delete_object(objectId)
-    -- objectAddress = get_object(objectId)
-    -- local cyborgBiped = blam.biped(objectAddress)
-    -- lu.assertEquals(cyborgBiped.health, 0)
 end
-
-function testObjects:testGetObjectWithWholeId()
-    local gameObjects = blam.getObjects()
-    lu.assertNotIsNil(gameObjects)
-    lu.assertEquals(#gameObjects > 0, true)
-end
-
---function testObjects:test_Get_Object_With_Index() end
 
 -- Mocked arguments and executions for standalone execution and in game execution
 if (not arg) then
