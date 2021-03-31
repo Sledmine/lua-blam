@@ -114,13 +114,14 @@ end
 ------------------------------------------------------------------------------
 
 function testObjects:testBipedObject()
-    ---@type biped
     local bipedObject = blam.biped(get_dynamic_player())
     lu.assertNotIsNil(bipedObject)
     lu.assertNotIsNil(bipedObject.structure)
-    lu.assertEquals(bipedObject.invisible, false)
+    lu.assertEquals(bipedObject.invisible, false, "Biped should not have camouflage active")
     lu.assertEquals(bipedObject.shield, 1)
     lu.assertEquals(bipedObject.health, 1)
+    lu.assertEquals(bipedObject.isNotDamageable, false)
+    lu.assertEquals(bipedObject.bumpedObjectId, 0)
     lu.assertIsTrue(blam.isNull(bipedObject.landing))
 end
 

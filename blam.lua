@@ -3,7 +3,7 @@
 -- Sledmine, JerryBrick
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local blam = {_VERSION = "1.1.0"}
+local blam = {_VERSION = "1.2.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -704,7 +704,7 @@ end
 ---@class blamObject
 ---@field address number
 ---@field tagId number Object tag ID
----@field hasCollision boolean Check if object has or has not collision
+---@field isGhost boolean Set object in some type of ghost mode
 ---@field isOnGround boolean Is the object touching ground
 ---@field ignoreGravity boolean Make object to ignore gravity
 ---@field isInWater boolean Is the object touching on water
@@ -744,6 +744,7 @@ end
 ---@field animationTagId number Current animation tag ID
 ---@field animation number Current animation index
 ---@field animationFrame number Current animation frame
+---@field isNotDamageable boolean Make the object undamageable
 ---@field regionPermutation1 number
 ---@field regionPermutation2 number
 ---@field regionPermutation3 number
@@ -756,7 +757,7 @@ end
 -- blamObject structure
 local objectStructure = {
     tagId = {type = "dword", offset = 0x0},
-    hasCollision = {type = "bit", offset = 0x10, bitLevel = 0},
+    isGhost = {type = "bit", offset = 0x10, bitLevel = 0},
     isOnGround = {type = "bit", offset = 0x10, bitLevel = 1},
     ignoreGravity = {type = "bit", offset = 0x10, bitLevel = 2},
     isInWater = {type = "bit", offset = 0x10, bitLevel = 3},
@@ -784,6 +785,7 @@ local objectStructure = {
     v2X = {type = "float", offset = 0x80},
     v2Y = {type = "float", offset = 0x84},
     v2Z = {type = "float", offset = 0x88},
+    -- FIXME Some order from this values is probaby wrong, expected order is pitch, yaw, roll
     yawVel = {type = "float", offset = 0x8C},
     pitchVel = {type = "float", offset = 0x90},
     rollVel = {type = "float", offset = 0x94},
@@ -798,6 +800,7 @@ local objectStructure = {
     animationTagId = {type = "dword", offset = 0xCC},
     animation = {type = "word", offset = 0xD0},
     animationFrame = {type = "word", offset = 0xD2},
+    isNotDamageable = {type = "bit", offset = 0x106, bitLevel = 11},
     regionPermutation1 = {type = "byte", offset = 0x180},
     regionPermutation2 = {type = "byte", offset = 0x181},
     regionPermutation3 = {type = "byte", offset = 0x182},
@@ -834,6 +837,7 @@ local objectStructure = {
 ---@field primaryNades number Primary grenades count
 ---@field secondaryNades number Secondary grenades count
 ---@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard, blam.isNull otherwise
+---@field bumpedObjectId number Object ID that the biped is bumping, vehicles, bipeds, etc, keeps the previous value if not bumping a new object
 
 -- Biped structure (extends object structure)
 local bipedStructure = extendStructure(objectStructure, {
@@ -861,7 +865,8 @@ local bipedStructure = extendStructure(objectStructure, {
     invisibleScale = {type = "byte", offset = 0x37C},
     primaryNades = {type = "byte", offset = 0x31E},
     secondaryNades = {type = "byte", offset = 0x31F},
-    landing = {type = "byte", offset = 0x508}
+    landing = {type = "byte", offset = 0x508},
+    bumpedObjectId = {type = "dword", offset = 0x4FC}
 })
 
 -- Tag data header structure
