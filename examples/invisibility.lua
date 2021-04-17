@@ -2,7 +2,7 @@
 
 local blam = require "blam"
 
-clua_version = 2.042
+clua_version = 2.056
 
 function OnTick()
     local player = blam.biped(get_dynamic_player())

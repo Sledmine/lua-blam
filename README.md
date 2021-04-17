@@ -2,7 +2,7 @@
 
 ## What is lua-blam?
 Is a Lua library/module for scripting that allows you to handle Halo Custom Edition memory as
-objects in your script, it also includes some features as API extension and unification between
+objects (tables) in your script, it also includes some features as API extension and unification between
 Chimera and SAPP.
 
 ## What is intended for?
@@ -56,6 +56,16 @@ to use this module on Halo Custom Edition you need to place the `blam.lua` on th
 of your chimera folder `My Games\Halo CE\chimera\lua\modules`, however if you want to distribute your
 script with this module builtin you can take a look at bundling modular lua scripts using
 [Mercury](https://github.com/Sledmine/Mercury).
+
+## Documentation
+As mentioned above lua-blam provides in code documentation, basically by using EmmyLua all the
+documentation needed can be found via automcompletion of the IDE.
+
+There is a WIP documentation for Chimera Lua scripting on this repository, also a Changelog is
+hosted here:
+
+- [Chimera Lua API Documentation (Work In Progress)](CHIMERA_LUA_API.md)
+- [Changelog](CHANGELOG.md)
 
 ## Support
 If you want to have assistance about how to use this module, join the

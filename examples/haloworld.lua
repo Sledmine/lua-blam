@@ -1,10 +1,9 @@
 -- Halo World
--- Example for text printing via commands
+-- Example to text printing via commands
 
-clua_version = 2.042
+clua_version = 2.056
 
 function OnCommand(command)
-    -- Wohooo!
     if (command == "test") then
         console_out("Halo World")
         --[[ Return false if we are intercepting the correct command to prevent the game from 

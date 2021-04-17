@@ -1,5 +1,10 @@
 
 # Chimera - Lua API
+
+This is an alternative documentation for the Chimera Lua API for `chimera-581`, updated to the
+latest API available on `chimera-1.0.0-r875`, some parts are missing so if you don't find what you
+need here, take a look at the [original documentation](https://docs.google.com/document/d/1F3Q0blvHPgc7VfLJmhATIJrWZ0gMQ_KenkMsOQ7KKS0/edit) on Google Docs.
+
 - [Chimera - Lua API](#chimera---lua-api)
 - [Global Variables](#global-variables)
 - [Game Functions](#game-functions)

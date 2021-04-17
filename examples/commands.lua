@@ -1,9 +1,8 @@
--- Example for Chimera Lua
 -- Commands
 -- Example of how to use Chimera custom commands with blam
 local blam = require "blam"
 
-clua_version = 2.042
+clua_version = 2.056
 
 function OnCommand(command)
     -- Wohooo!
