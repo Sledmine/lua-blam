@@ -60,4 +60,7 @@ end
 set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")
 
-OnMapLoad()
+-- Allow fast reload of this script on local/development mode
+if (server_type == "local") then
+    OnMapLoad()
+end
