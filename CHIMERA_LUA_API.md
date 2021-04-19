@@ -24,6 +24,7 @@ need here, take a look at the [original documentation](https://docs.google.com/d
   - [`spawn_object`](#spawn_object)
   - [`tick_rate`](#tick_rate)
   - [`ticks`](#ticks)
+  - [`load_ui_widget`](#load_ui_widget)
 - [I/O Memory Functions](#io-memory-functions)
 - [Isolated Functions](#isolated-functions)
   - [`create_directory`](#create_directory)
@@ -277,6 +278,24 @@ of time that has passed between ticks.
 Example:
 ```lua
 console_out("Ticks that have passed " .. tostring(ticks()))
+```
+
+## `load_ui_widget`
+Attempt to load and open a ui widget in the game given tag path.
+
+**Takes:** `string` TagPath
+
+**Returns:** `boolean` Success
+
+Example:
+```lua
+local success = load_ui_widget("ui\\shell\\multiplayer_game\\pause_game\\1p_pause_game")
+if (success) then
+    console_out("Widget was loaded correctly!")
+else
+    console_out("An error ocurred at trying to load widget!")
+end
+
 ```
 
 # I/O Memory Functions

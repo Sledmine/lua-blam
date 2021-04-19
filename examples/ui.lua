@@ -1,5 +1,5 @@
--- UI Widgets
--- Example of how to get and modify data from uiWidgets using lua-blam
+-- UI
+-- Example of how to get and modify data from ui widgets using lua-blam
 
 clua_version = 2.056
 
@@ -46,7 +46,7 @@ function OnTick()
     local playerBiped = blam.biped(get_dynamic_player())
     if (playerBiped) then
         if (playerBiped.flashlightKey) then
-            -- Open UI Widget when the player uses the flashlightKey
+            -- Open ui widget when the player uses the flashlightKey
             local widgetLoaded = load_ui_widget("ui\\shell\\multiplayer_game\\pause_game\\1p_pause_game")
             if (not widgetLoaded) then
                 console_out("An error occurred while loading ui widget!")
