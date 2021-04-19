@@ -61,6 +61,8 @@ script with this module builtin you can take a look at bundling modular lua scri
 As mentioned above lua-blam provides in code documentation, basically by using EmmyLua all the
 documentation needed can be found via automcompletion of the IDE.
 
+Give a look to the examples folder in this repository for real use cases and examples of how to use implement lua-blam.
+
 There is a WIP documentation for Chimera Lua scripting on this repository, also a Changelog is
 hosted here:
 
