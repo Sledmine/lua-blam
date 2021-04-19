@@ -1,15 +1,15 @@
--- Halo World
--- Example to text printing via commands
+-- Halo World (Chimera Script)
+-- Example to text print if the blam module was loaded successfully
 
+local blam = require "blam"
+
+-- Set Chimera API version
 clua_version = 2.056
 
 function OnCommand(command)
-    if (command == "test") then
+    if (blam) then
         console_out("Halo World")
-        --[[ Return false if we are intercepting the correct command to prevent the game from 
-        sending the "Requested function blabla" message]]
-        return false
     end
 end
 
-set_callback("command", "OnCommand")
+set_callback("map load", "OnMapLoad")

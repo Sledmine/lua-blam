@@ -1,9 +1,12 @@
--- UI
+-- UI (Chimera Script)
 -- Example of how to get and modify data from ui widgets using lua-blam
 
+-- Set Chimera API version
 clua_version = 2.056
 
+-- Import blam module
 local blam = require "blam"
+
 -- Provide global and short syntax for multiple tag classes references
 tagClasses = blam.tagClasses
 

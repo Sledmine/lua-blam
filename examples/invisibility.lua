@@ -1,16 +1,18 @@
--- Example for Chimera Lua
+-- Invisiblity (Chimera Script)
+-- Example of how to get and modifY data from biped objects
 
 local blam = require "blam"
 
+-- Chimera API version
 clua_version = 2.056
 
 function OnTick()
-    local player = blam.biped(get_dynamic_player())
-    if (player) then
-        if (player.crouchHold) then
-            player.invisible = true
+    local playerBiped = blam.biped(get_dynamic_player())
+    if (playerBiped) then
+        if (playerBiped.crouchHold) then
+            playerBiped.invisible = true
         else
-            player.invisible = false
+            playerBiped.invisible = false
         end
     end
 end
