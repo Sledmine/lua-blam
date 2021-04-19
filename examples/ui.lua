@@ -61,6 +61,7 @@ set_callback("map load", "OnMapLoad")
 set_callback("tick", "OnTick")
 
 -- Allow fast reload of this script on local/development mode
+-- My recommendation is to remove this on release due to triggering the same function twice
 if (server_type == "local") then
     OnMapLoad()
 end
