@@ -1,9 +1,10 @@
 -- Invisiblity (Chimera Script)
--- Example of how to get and modifY data from biped objects
+-- Example of how to get and modify data from biped objects
 
+-- Import blam module
 local blam = require "blam"
 
--- Chimera API version
+-- Set Chimera API version
 clua_version = 2.056
 
 function OnTick()
