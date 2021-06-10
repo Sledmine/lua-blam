@@ -3,7 +3,7 @@
 -- Sledmine, JerryBrick
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local blam = {_VERSION = "1.2.0"}
+local blam = {_VERSION = "1.3.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -482,7 +482,7 @@ local function writeString(address, propertyData, propertyValue)
     return write_string(address, propertyValue)
 end
 
--- //TODO Refactor this tu support full unicode char size
+-- //TODO Refactor this to support full unicode char size
 --- Return the string of a unicode string given address
 ---@param address number
 ---@param rawRead boolean
@@ -861,6 +861,10 @@ local objectStructure = {
 ---@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard, null otherwise
 ---@field bumpedObjectId number Object ID that the biped is bumping, vehicles, bipeds, etc, keeps the previous value if not bumping a new object
 ---@field vehicleSeatIndex number Current vehicle seat index of this biped
+---@field walkingDirection number Biped walking state, 0 when not walking, 1 when walking forward, etc
+---@field motionState number Biped motion state, 0 = standing , 1 = walking , 2 = idle/turning/falling , 3 = other
+
+
 
 -- Biped structure (extends object structure)
 local bipedStructure = extendStructure(objectStructure, {
@@ -890,7 +894,9 @@ local bipedStructure = extendStructure(objectStructure, {
     secondaryNades = {type = "byte", offset = 0x31F},
     landing = {type = "byte", offset = 0x508},
     bumpedObjectId = {type = "dword", offset = 0x4FC},
-    vehicleSeatIndex = {type = "word", offset = 0x2F0}
+    vehicleSeatIndex = {type = "word", offset = 0x2F0},
+    walkingDirection = {type = "char", offset = 0x503},
+    motionState = {type = "byte", offset = 0x4D2}
 })
 
 -- Tag data header structure

@@ -131,6 +131,8 @@ function testObjects:testBipedObject()
         lu.assertEquals(bipedObject.vehicleSeatIndex, 0, "Biped is seated on seat index 0")
     end
     lu.assertIsTrue(blam.isNull(bipedObject.landing), "Biped should not be landing")
+    lu.assertEquals(bipedObject.walkingDirection, 0, "Biped should not be walking")
+    lu.assertEquals(bipedObject.motionState, 0, "Biped should not be in motion")
 end
 
 ------------------------------------------------------------------------------

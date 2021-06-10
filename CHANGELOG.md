@@ -1,8 +1,12 @@
 # Changelog
 
+# 1.2.3
+- Added `walkingDirection` property to `biped` structure
+- Added `motionState` property to `biped` structure
+
 # 1.2.0
 - Added `vehicleObjectId` property to `object` structure
-- Added `bumpedObjectId` property to `biped` structure
+- Added 
 - Added `vehicleSeatIndex` property to `biped` structure
 - Added `player` structure, it returns data from the players table entry
 
