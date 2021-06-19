@@ -3,9 +3,10 @@
 -- Sledmine
 -- SAPP bindings for Chimera Lua functions, also EmmyLua helper
 ------------------------------------------------------------------------------
+-- All the functions at the top of the module are for EmmyLua autocompletion purposes!
+-- They do not have a real implementation and are not supossed to be imported
 if (variableThatObviouslyDoesNotExist) then
-    -- All the functions at the top of the module are for EmmyLua autocompletion purposes!
-    -- They do not have a real implementation and are not supossed to be imported
+    
     --- Attempt to spawn an object given tag id and coordinates or tag type and class plus coordinates
     ---@param tagId number Optional tag id of the object to spawn
     ---@param tagType string Type of the tag to spawn
