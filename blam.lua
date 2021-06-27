@@ -1603,15 +1603,18 @@ local playerStructure = {
     ping = {type = "dword", offset = 0xDC}
 }
 
+---@class firstPersonInterface number
+---@field firstPersonHands number
+
 ---@class multiplayerInformation
 ---@field flag number Tag ID of the flag object used for multiplayer games
 ---@field unit number Tag ID of the unit object used for multiplayer games
 
 ---@class globalsTag
 ---@field multiplayerInformation multiplayerInformation[]
+---@field firstPersonInterface firstPersonInterface[]
 
 local globalsTagStructure = {
-    -- WARNING Separeted properties for easier accesibility, structure is an array of properties
     multiplayerInformation = {
         type = "table",
         jump = 0x0,
@@ -1620,15 +1623,19 @@ local globalsTagStructure = {
             flag = {type = "dword", offset = 0xC},
             unit = {type = "dword", offset = 0x1C}
         }
+    },
+    firstPersonInterface = {
+        type = "table",
+        jump = 0x0,
+        offset = 0x180,
+        rows = {firstPersonHands = {type = "dword", offset = 0xC}}
     }
 }
 
 ---@class firstPerson
 ---@field weaponObjectId number Weapon Id from the first person view
 
-local firstPersonStructure = {
-    weaponObjectId = {type = "dword", offset = 0x10}
-}
+local firstPersonStructure = {weaponObjectId = {type = "dword", offset = 0x10}}
 
 ------------------------------------------------------------------------------
 -- LuaBlam globals

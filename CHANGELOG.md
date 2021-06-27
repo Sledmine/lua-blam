@@ -40,8 +40,10 @@ Example:
 local globals = blam.globalsTag()
 -- globals.multiplayerInformation[1].flag
 -- globals.multiplayerInformation[1].unit
+-- globals.firstPersonInterface[1].firstPersonHands
 
--- NOTE: For some reason the game handles multiplayer info as an static array of one index
+-- NOTE: For some reason the game handles multiplayer info and first person interface as an static array of one index
+-- That's why we need to access the first element in the list to interact with the data
 ```
 **Warning:** Like almost every tag reference on lua-blam it only considers tag id reference,
 attempting to replace these properties this with a different tag type can result in game crashes,

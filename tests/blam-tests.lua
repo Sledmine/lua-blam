@@ -59,6 +59,7 @@ function testTagObjects:setUp()
     }
     self.multiplayerFlag = 3897165526
     self.multiplayerUnit = 3792109715
+    self.firstPersonHands = 3905095503
 end
 
 function testTagObjects:testTag()
@@ -113,6 +114,7 @@ function testTagObjects:testGlobalsTag()
     lu.assertIsTrue(#globals.multiplayerInformation > 0, "Globals must have multiplayer information")
     lu.assertEquals(globals.multiplayerInformation[1].flag, self.multiplayerFlag)
     lu.assertEquals(globals.multiplayerInformation[1].unit, self.multiplayerUnit)
+    lu.assertEquals(globals.firstPersonInterface[1].firstPersonHands, self.firstPersonHands)
 end
 
 ------------------------------------------------------------------------------
