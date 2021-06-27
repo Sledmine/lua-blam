@@ -1786,6 +1786,7 @@ function blam.getTag(tagIdOrTagPath, tagClass, ...)
 end
 
 --- Create a player object given player entry table address
+---@return player
 function blam.player(address)
     if (isValid(address)) then
         return createObject(address, playerStructure)
