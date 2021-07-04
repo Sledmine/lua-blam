@@ -814,7 +814,7 @@ local dataBindingMetaTable = {
         else
             local errorMessage = "Unable to write an invalid property ('" .. property ..
                                      "')"
-            consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
+            error(debug.traceback(errorMessage, 2))
         end
     end,
     __index = function(object, property)
@@ -827,7 +827,7 @@ local dataBindingMetaTable = {
         else
             local errorMessage = "Unable to read an invalid property ('" .. property ..
                                      "')"
-            consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
+            error(debug.traceback(errorMessage, 2))
         end
     end
 }
