@@ -861,8 +861,8 @@ local objectStructure = {
 ---@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard, null otherwise
 ---@field bumpedObjectId number Object ID that the biped is bumping, vehicles, bipeds, etc, keeps the previous value if not bumping a new object
 ---@field vehicleSeatIndex number Current vehicle seat index of this biped
----@field walkingDirection number Biped walking state, 0 when not walking, 1 when walking forward, etc
----@field motionState number Biped motion state, 0 = standing , 1 = walking , 2 = idle/turning/falling , 3 = other
+---@field walkingState number Biped walking state, 0 = not walking, 1 = walking, 2 = stoping walking, 3 = stationary
+---@field motionState number Biped motion state, 0 = standing , 1 = walking , 2 = jumping/falling
 
 
 
@@ -895,7 +895,7 @@ local bipedStructure = extendStructure(objectStructure, {
     landing = {type = "byte", offset = 0x508},
     bumpedObjectId = {type = "dword", offset = 0x4FC},
     vehicleSeatIndex = {type = "word", offset = 0x2F0},
-    walkingDirection = {type = "char", offset = 0x503},
+    walkingState = {type = "char", offset = 0x503},
     motionState = {type = "byte", offset = 0x4D2}
 })
 
