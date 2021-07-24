@@ -1,7 +1,7 @@
 # Changelog
 
-# 1.2.3
-- Added `walkingDirection` property to `biped` structure
+# 1.3.0
+- Added `walkingState` property to `biped` structure
 - Added `motionState` property to `biped` structure
 
 # 1.2.0
