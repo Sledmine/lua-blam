@@ -1,7 +1,8 @@
 # Changelog
 
 # 1.3.0
-- Fixed a missing return annotation for `blam.player`
+- Added `kills` property to `player` structure
+- Fixed a missing return annotation to function `blam.player`
 - Added `firstPerson` object structure, returns data from player first person elements
 
 Example:
