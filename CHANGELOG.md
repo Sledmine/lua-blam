@@ -1,6 +1,8 @@
 # Changelog
 
 # 1.3.0
+- Added `walkingState` property to `biped` structure
+- Added `motionState` property to `biped` structure
 - Added `kills` property to `player` structure
 - Fixed a missing return annotation to function `blam.player`
 - Added `firstPerson` object structure, returns data from player first person elements
@@ -53,7 +55,7 @@ also the property is a list/array by default due to how the game expects that gl
 
 # 1.2.0
 - Added `vehicleObjectId` property to `object` structure
-- Added `bumpedObjectId` property to `biped` structure
+- Added 
 - Added `vehicleSeatIndex` property to `biped` structure
 - Added `player` structure, it returns data from the players table entry
 
