@@ -3,6 +3,55 @@
 # 1.3.0
 - Added `walkingState` property to `biped` structure
 - Added `motionState` property to `biped` structure
+- Added `kills` property to `player` structure
+- Fixed a missing return annotation to function `blam.player`
+- Added `firstPerson` object structure, returns data from player first person elements
+
+Example:
+```lua
+-- Get first person object
+local firstPerson = blam.firstPerson()
+-- firstPerson.weaponObjectId
+```
+
+- Added `weapon` object structure, returns data from weapon objects
+
+Example:
+```lua
+-- Get weapon object data
+local weapon = blam.weapon(get_object(weaponObjectAddress))
+-- weapon.isWeaponPunching
+-- weapon.pressedReloadKey
+```
+
+- Added `getJoystickInput` method, returns input data from the joystick attached to to the
+game
+
+Example:
+```lua
+-- Get button 1 input from the controller
+local button1 = blam.getJoystickInput(blam.joystickInputs.button1)
+if (button1) then
+    console_out("Button 1 is being pressed!")
+end
+```
+
+- Added `globalsTag` structure, it returns some data from the globals tag from the map
+
+Example:
+```lua
+-- Looks for "globals\\globals" by default if there is no tag path or tag id
+local globals = blam.globalsTag()
+-- globals.multiplayerInformation[1].flag
+-- globals.multiplayerInformation[1].unit
+-- globals.firstPersonInterface[1].firstPersonHands
+
+-- NOTE: For some reason the game handles multiplayer info and first person interface as an static array of one index
+-- That's why we need to access the first element in the list to interact with the data
+```
+**Warning:** Like almost every tag reference on lua-blam it only considers tag id reference,
+attempting to replace these properties this with a different tag type can result in game crashes,
+also the property is a list/array by default due to how the game expects that globals data.
 
 # 1.2.0
 - Added `vehicleObjectId` property to `object` structure

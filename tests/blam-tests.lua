@@ -57,6 +57,9 @@ function testTagObjects:setUp()
         3909355406,
         3909420943,
     }
+    self.multiplayerFlag = 3897165526
+    self.multiplayerUnit = 3792109715
+    self.firstPersonHands = 3905095503
 end
 
 function testTagObjects:testTag()
@@ -105,6 +108,15 @@ function testTagObjects:testWeaponHudInterface()
     lu.assertEquals(wphi.crosshairs[1].overlays[1].sequenceIndex, 0)
 end
 
+function testTagObjects:testGlobalsTag()
+    local globals = blam.globalsTag()
+    lu.assertNotIsNil(globals, "Globals should must not be nil")
+    lu.assertIsTrue(#globals.multiplayerInformation > 0, "Globals must have multiplayer information")
+    lu.assertEquals(globals.multiplayerInformation[1].flag, self.multiplayerFlag)
+    lu.assertEquals(globals.multiplayerInformation[1].unit, self.multiplayerUnit)
+    lu.assertEquals(globals.firstPersonInterface[1].firstPersonHands, self.firstPersonHands)
+end
+
 ------------------------------------------------------------------------------
 -- Game Objects
 ------------------------------------------------------------------------------
@@ -133,6 +145,30 @@ function testObjects:testBipedObject()
     lu.assertIsTrue(blam.isNull(bipedObject.landing), "Biped should not be landing")
     lu.assertEquals(bipedObject.walkingState, 0, "Biped should not be walking")
     lu.assertEquals(bipedObject.motionState, 0, "Biped should not be in motion")
+end
+
+function testObjects:testFirstPersonObject()
+    local firstPerson = blam.firstPerson()
+    lu.assertNotIsNil(firstPerson)
+    lu.assertIsTrue(not blam.isNull(firstPerson.weaponObjectId))
+    local object = blam.object(get_object(firstPerson.weaponObjectId))
+    lu.assertNotIsNil(object)
+    local tag = blam.getTag(object.tagId)
+    lu.assertNotIsNil(tag)
+    local isAnExpectedWeapon
+    if (tag.path:find("plasma pistol") or tag.path:find("assault rifle")) then
+        isAnExpectedWeapon = true
+    end
+    lu.assertIsTrue(isAnExpectedWeapon)
+end
+
+function testObjects:testWeaponObject()
+    local firstPerson = blam.firstPerson()
+    lu.assertNotIsNil(firstPerson)
+    local weapon = blam.weapon(get_object(firstPerson.weaponObjectId))
+    lu.assertNotIsNil(weapon)
+    lu.assertIsFalse(weapon.isWeaponPunching)
+    lu.assertIsFalse(weapon.pressedReloadKey)
 end
 
 ------------------------------------------------------------------------------

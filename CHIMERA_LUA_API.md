@@ -2,7 +2,7 @@
 # Chimera - Lua API
 
 This is an alternative documentation for the Chimera Lua API for `chimera-581`, updated to the
-latest API available on `chimera-1.0.0-r875`, some parts are missing so if you don't find what you
+latest API available on `chimera-1.0.0-r881`, some parts are missing so if you don't find what you
 need here, take a look at the [original documentation](https://docs.google.com/document/d/1F3Q0blvHPgc7VfLJmhATIJrWZ0gMQ_KenkMsOQ7KKS0/edit) on Google Docs.
 
 - [Chimera - Lua API](#chimera---lua-api)
@@ -64,7 +64,8 @@ if (console_is_open()) then
 end
 ```
 ## `console_out`
-Output text to the console, optional text colors avoid sending console messages if console_is_open() is true to avoid annoying the player.
+Output text to the console, optional text colors avoid sending console messages if console_is_open()
+is true to avoid annoying the player.
 
 **Takes (a):** `string` Output
 
@@ -90,7 +91,8 @@ delete_object(31456126446)
 ```
 
 ## `execute_script`
-Execute a custom Halo script. A script can be either a standalone Halo command or a Lisp-formatted Halo scripting block.
+Execute a custom Halo script. A script can be either a standalone Halo command or a Lisp-formatted
+Halo scripting block.
 
 **Takes:** `string` Script
 
@@ -100,7 +102,8 @@ execute_script("sv_players")
 ```
 
 ## `get_dynamic_player`
-Attempt to get the address to the player’s unit object, returning nil on failure. If no argument is given, the address to the local player’s unit object is returned, instead.
+Attempt to get the address to the player’s unit object, returning nil on failure. If no argument is
+given, the address to the local player’s unit object is returned, instead.
 
 
 **Takes:** optional `number` PlayerIndex
@@ -141,7 +144,8 @@ local object_address = get_object(3456789065)
 ```
 
 ## `get_tag`
-Attempt to get the address to the entry of a specified tag in the tag array, returning nil on failure.
+Attempt to get the address to the entry of a specified tag in the tag array, returning nil on
+failure.
 
 **Takes (a):** `number` TagID
 
@@ -177,7 +181,7 @@ Priorities are as follows:
   - **final:** The callback is executed latest and any returned values are disregarded from this
   - callback.
 
-**Takes:** `string` EventName, `optional` string CallbackFunctionName, optional `string` CallbackPriority
+**Takes:** `string` EventName, `optional` string CallbackFunctionName, optional `string`CallbackPriority
 
 **Note:** If multiple scripts have the same callback with the same priority, the callbacks will be
 executed in script load order.
@@ -310,10 +314,13 @@ segmentation fault. This will invariably result in an exception error.
 
 # Isolated Functions
 
-These functions perform operations that only can access and write data related to the current script, these functions will operate only on the "chimera/lua/data" in a folder with the same name of the script.
+These functions perform operations that only can access and write data related to the current
+script, these functions will operate only on the "chimera/lua/data" in a folder with the same name
+of the script.
 
 ## `create_directory`
-Attempt create a directory with the given path. An error will occur if the directory can not be created.
+Attempt create a directory with the given path. An error will occur if the directory can not be
+created.
 
 **Takes:** `string` DirectoryName, `directoryName` X, `number` Y, `number` Z
 

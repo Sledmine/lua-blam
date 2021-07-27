@@ -45,7 +45,9 @@ local addressList = {
     tagDataHeader = 0x40440000,
     cameraType = 0x00647498, -- from Giraffe
     gamePaused = 0x004ACA79,
-    gameOnMenus = 0x00622058
+    gameOnMenus = 0x00622058,
+    joystickInput = 0x64D998, -- from aLTis
+    firstPerson = 0x40000EB8 -- from aLTis
 }
 
 -- Tag classes values
@@ -159,6 +161,7 @@ local cameraTypes = {
     deadCamera = 5 -- 23776
 }
 
+-- Netgame flags type 
 local netgameFlagTypes = {
     ctfFlag = 0,
     ctfVehicle = 1,
@@ -171,6 +174,7 @@ local netgameFlagTypes = {
     hillFlag = 8
 }
 
+-- Netgame equipment types
 local netgameEquipmentTypes = {
     none = 0,
     ctf = 1,
@@ -189,7 +193,7 @@ local netgameEquipmentTypes = {
     allExceptRaceCtf = 14
 }
 
--- Console colors
+-- Standard console colors
 local consoleColors = {
     success = {1, 0.235, 0.82, 0},
     warning = {1, 0.94, 0.75, 0.098},
@@ -197,12 +201,152 @@ local consoleColors = {
     unknown = {1, 0.66, 0.66, 0.66}
 }
 
+-- Offset input from the joystick game data
+local joystickInputs = {
+    -- No zero values also pressed time until maxmimum byte size
+    button1 = 0, -- Triangle
+    button2 = 1, -- Circle
+    button3 = 2, -- Cross
+    button4 = 3, -- Square
+    leftBumper = 4,
+    rightBumper = 5,
+    leftTrigger = 6,
+    rightTrigger = 7,
+    backButton = 8,
+    startButton = 9,
+    leftStick = 10,
+    rightStick = 11,
+    -- Multiple values on the same offset, check dPadValues table
+    dPad = 96,
+    -- Non zero values
+    dPadUp = 100,
+    dPadDown = 104,
+    dPadLeft = 106,
+    dPadRight = 102,
+    dPadUpRight = 101,
+    dPadDownRight = 103,
+    dPadUpLeft = 107,
+    dPadDownLeft = 105
+    -- TODO Add joys axis
+    -- rightJoystick = 30,
+}
+
+-- Values for the possible dPad values from the joystick inputs
+local dPadValues = {
+    noButton = 1020,
+    upRight = 766,
+    downRight = 768,
+    upLeft = 772,
+    downLeft = 770,
+    left = 771,
+    right = 767,
+    down = 769,
+    up = 765
+}
+
 ------------------------------------------------------------------------------
 -- SAPP API bindings
 ------------------------------------------------------------------------------
+-- All the functions at the top of the module are for EmmyLua autocompletion purposes!
+-- They do not have a real implementation and are not supossed to be imported
+if (variableThatObviouslyDoesNotExist) then
 
--- Create and bind Chimera functions to the ones in SAPP
+    --- Attempt to spawn an object given tag id and coordinates or tag type and class plus coordinates
+    ---@param tagId number Optional tag id of the object to spawn
+    ---@param tagType string Type of the tag to spawn
+    ---@param tagPath string Path of object to spawn
+    ---@param x number
+    ---@param y number
+    ---@param z number
+    function spawn_object(tagType, tagPath, x, y, z)
+    end
+
+    --- Get object address from a specific player given playerIndex
+    ---@param playerIndex number
+    ---@return number Player object memory address
+    function get_dynamic_player(playerIndex)
+    end
+end
 if (api_version) then
+    -- Provide global server type variable on SAPP
+    server_type = "sapp"
+
+    local split = function(s, sep)
+        if (sep == nil or sep == "") then
+            return 1
+        end
+        local position, array = 0, {}
+        for st, sp in function()
+            return string.find(s, sep, position, true)
+        end do
+            table.insert(array, string.sub(s, position, st - 1))
+            position = sp + 1
+        end
+        table.insert(array, string.sub(s, position))
+        return array
+    end
+
+    --- Function wrapper for file writing from Chimera to SAPP
+    ---@param path string Path to the file to write
+    ---@param content string Content to write into the file
+    ---@return boolean | nil, string True if successful otherwise nil, error
+    function write_file(path, content)
+        local file, error = io.open(path, "w")
+        if (not file) then
+            return nil, error
+        end
+        local success, err = file:write(content)
+        file:close()
+        if (not success) then
+            os.remove(path)
+            return nil, err
+        else
+            return true
+        end
+    end
+
+    --- Function wrapper for file reading from Chimera to SAPP
+    ---@param path string Path to the file to read
+    ---@return string | nil, string Content of the file otherwise nil, error
+    function read_file(path)
+        local file, error = io.open(path, "r")
+        if (not file) then
+            return nil, error
+        end
+        local content, error = file:read("*a")
+        if (content == nil) then
+            return nil, error
+        end
+        file:close()
+        return content
+    end
+
+    -- TODO PENDING FUNCTION!!
+    function directory_exists(dir)
+        return true
+    end
+
+    --- Function wrapper for directory listing from Chimera to SAPP
+    ---@param dir string
+    function list_directory(dir)
+        -- TODO This needs a way to separate folders from files
+        if (dir) then
+            local command = "dir " .. dir .. " /B"
+            local pipe = io.popen(command, "r")
+            local output = pipe:read("*a")
+            if (output) then
+                local items = split(output, "\n")
+                for index, item in pairs(items) do
+                    if (item and item == "") then
+                        items[index] = nil
+                    end
+                end
+                return items
+            end
+        end
+        return nil
+    end
+
     --- Return the memory address of a tag given tagId or tagClass and tagPath
     ---@param tagIdOrTagType string | number
     ---@param tagPath string
@@ -242,20 +386,41 @@ if (api_version) then
 
     --- Print text into console
     ---@param message string
-    -- TODO Add color printing to this function
-    function console_out(message)
+    ---@param red number
+    ---@param green number
+    ---@param blue number
+    function console_out(message, red, green, blue)
+        -- TODO Add color printing to this function
         cprint(message)
     end
 
-    local sapp_get_dynamic_player = get_dynamic_player
-    --- Get object address from a specific player given playerIndex
-    ---@param playerIndex number
-    ---@return number
-    function get_dynamic_player(playerIndex)
-        return sapp_get_dynamic_player(playerIndex)
+    --- Get if the game console is opened \
+    --- Always returns true on SAPP.
+    ---@return boolean
+    function console_is_open()
+        return true
     end
 
-    print("Chimera API functions are available now with LuaBlam!")
+    --- Get the value of a Halo scripting global\
+    ---An error will occur if the global is not found.
+    ---@param name string Name of the global variable to get from hsc
+    ---@return boolean | number
+    function get_global(name)
+        error("SAPP can't retrieve global variables as Chimera does.. yet!")
+    end
+
+    --- Print messages to the player HUD\
+    ---Server messages will be printed if executed from SAPP.
+    ---@param message string
+    function hud_message(message)
+        for playerIndex = 1, 16 do
+            if (player_present(playerIndex)) then
+                rprint(playerIndex, message)
+            end
+        end
+    end
+
+    print("Compatibility with Chimera Lua API has been loaded!")
 end
 
 ------------------------------------------------------------------------------
@@ -551,9 +716,9 @@ local function readList(address, propertyData)
     end
     local list = {}
     for currentElement = 1, elementCount do
-        list[currentElement] = operation.read(
-                                   addressList +
-                                       (propertyData.jump * (currentElement - 1)))
+        list[currentElement] = operation.read(addressList +
+                                                  (propertyData.jump *
+                                                      (currentElement - 1)))
     end
     return list
 end
@@ -649,7 +814,7 @@ local dataBindingMetaTable = {
         else
             local errorMessage = "Unable to write an invalid property ('" .. property ..
                                      "')"
-            consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
+            error(debug.traceback(errorMessage, 2))
         end
     end,
     __index = function(object, property)
@@ -662,7 +827,7 @@ local dataBindingMetaTable = {
         else
             local errorMessage = "Unable to read an invalid property ('" .. property ..
                                      "')"
-            consoleOutput(debug.traceback(errorMessage, 2), consoleColors.error)
+            error(debug.traceback(errorMessage, 2))
         end
     end
 }
@@ -671,7 +836,7 @@ local dataBindingMetaTable = {
 -- Object functions
 ------------------------------------------------------------------------------
 
---- Create a LuaBlam object
+--- Create a blam object
 ---@param address number
 ---@param struct table
 ---@return table
@@ -1318,23 +1483,32 @@ local modelAnimationsStructure = {
     }
 }
 
+---@class weapon : blamObject
+---@field pressedReloadKey boolean Is weapon trying to reload
+---@field isWeaponPunching boolean Is weapon playing melee or grenade animation
+
+local weaponStructure = extendStructure(objectStructure, {
+    pressedReloadKey = {type = "bit", offset = 0x230, bitLevel = 3},
+    isWeaponPunching = {type = "bit", offset = 0x230, bitLevel = 4}
+})
+
 ---@class weaponTag
 ---@field model number Tag ID of the weapon model
 
 -- Weapon structure
 local weaponTagStructure = {model = {type = "dword", offset = 0x34}}
 
---@class modelMarkers
---@field name string
---@field nodeIndex number
+-- @class modelMarkers
+-- @field name string
+-- @field nodeIndex number
 -- TODO Add rotation fields, check Guerilla tag
---@field x number
---@field y number
---@field z number
+-- @field x number
+-- @field y number
+-- @field z number
 
 ---@class modelRegion
 ---@field permutationCount number
---@field markersList modelMarkers[]
+-- @field markersList modelMarkers[]
 
 ---@class modelNode
 ---@field x number
@@ -1366,7 +1540,7 @@ local modelStructure = {
         offset = 0xC8,
         jump = 76,
         rows = {
-            permutationCount = {type = "dword", offset = 0x40},
+            permutationCount = {type = "dword", offset = 0x40}
             --[[permutationsList = {
                 type = "table",
                 offset = 0x16C,
@@ -1422,6 +1596,7 @@ local projectileStructure = extendStructure(objectStructure, {
 ---@field index number Local index of this player (0-15
 ---@field speed number Current speed of this player
 ---@field ping number Ping amount from server of this player in milliseconds
+---@field kills number Kills quantity done by this player
 
 local playerStructure = {
     id = {type = "word", offset = 0x0},
@@ -1432,110 +1607,58 @@ local playerStructure = {
     color = {type = "word", offset = 0x60},
     index = {type = "byte", offset = 0x67},
     speed = {type = "float", offset = 0x6C},
-    ping = {type = "dword", offset = 0xDC}
+    ping = {type = "dword", offset = 0xDC},
+    kills = {type = "word", offset = 0x9C}
 }
 
-------------------------------------------------------------------------------
--- Object classes
-------------------------------------------------------------------------------
+---@class firstPersonInterface number
+---@field firstPersonHands number
 
----@return player
-local function playerClassNew(address)
-    return createObject(address, playerStructure)
-end
+---@class multiplayerInformation
+---@field flag number Tag ID of the flag object used for multiplayer games
+---@field unit number Tag ID of the unit object used for multiplayer games
 
----@return blamObject
-local function objectClassNew(address)
-    return createObject(address, objectStructure)
-end
+---@class globalsTag
+---@field multiplayerInformation multiplayerInformation[]
+---@field firstPersonInterface firstPersonInterface[]
 
----@return biped
-local function bipedClassNew(address)
-    return createObject(address, bipedStructure)
-end
+local globalsTagStructure = {
+    multiplayerInformation = {
+        type = "table",
+        jump = 0x0,
+        offset = 0x168,
+        rows = {
+            flag = {type = "dword", offset = 0xC},
+            unit = {type = "dword", offset = 0x1C}
+        }
+    },
+    firstPersonInterface = {
+        type = "table",
+        jump = 0x0,
+        offset = 0x180,
+        rows = {firstPersonHands = {type = "dword", offset = 0xC}}
+    }
+}
 
----@return projectile
-local function projectileClassNew(address)
-    return createObject(address, projectileStructure)
-end
+---@class firstPerson
+---@field weaponObjectId number Weapon Id from the first person view
 
----@return tag
-local function tagClassNew(address)
-    return createObject(address, tagHeaderStructure)
-end
+local firstPersonStructure = {weaponObjectId = {type = "dword", offset = 0x10}}
 
----@return tagCollection
-local function tagCollectionNew(address)
-    return createObject(address, tagCollectionStructure)
-end
-
----@return unicodeStringList
-local function unicodeStringListClassNew(address)
-    return createObject(address, unicodeStringListStructure)
-end
-
----@return bitmap
-local function bitmapClassNew(address)
-    return createObject(address, bitmapStructure)
-end
-
----@return uiWidgetDefinition
-local function uiWidgetDefinitionClassNew(address)
-    return createObject(address, uiWidgetDefinitionStructure)
-end
-
----@return uiWidgetCollection
-local function uiWidgetCollectionClassNew(address)
-    return createObject(address, uiWidgetCollectionStructure)
-end
-
-local function weaponHudInterfaceClassNew(address)
-    return createObject(address, weaponHudInterfaceStructure)
-end
-
----@return scenario
-local function scenarioClassNew(address)
-    return createObject(address, scenarioStructure)
-end
-
----@return scenery
-local function sceneryClassNew(address)
-    return createObject(address, sceneryStructure)
-end
-
----@return collisionGeometry
-local function collisionGeometryClassNew(address)
-    return createObject(address, collisionGeometryStructure)
-end
-
----@return modelAnimations
-local function modelAnimationsClassNew(address)
-    return createObject(address, modelAnimationsStructure)
-end
-
----@return weaponTag
-local function weaponTagClassNew(address)
-    return createObject(address, weaponTagStructure)
-end
-
----@return gbxModel
-local function modelClassNew(address)
-    return createObject(address, modelStructure)
-end
 ------------------------------------------------------------------------------
 -- LuaBlam globals
 ------------------------------------------------------------------------------
 
--- Add blam! data tables to library
+-- Provide with public blam! data tables
 blam.addressList = addressList
 blam.tagClasses = tagClasses
 blam.objectClasses = objectClasses
+blam.joystickInputs = joystickInputs
+blam.dPadValues = dPadValues
 blam.cameraTypes = cameraTypes
 blam.netgameFlagTypes = netgameFlagTypes
 blam.netgameEquipmentTypes = netgameEquipmentTypes
 blam.consoleColors = consoleColors
-
--- LuaBlam globals
 
 ---@class tagDataHeader
 ---@field array any
@@ -1573,7 +1696,7 @@ function blam.getCameraType()
             return cameraTypes.firstPerson
         elseif (camera == 30704) then
             return cameraTypes.devcam
-            -- //FIXME Validate this value, it seems to be wrong!
+            -- FIXME Validate this value, it seems to be wrong!
         elseif (camera == 21952) then
             return cameraTypes.thirdPerson
         elseif (camera == 23776) then
@@ -1583,13 +1706,41 @@ function blam.getCameraType()
     return nil
 end
 
+--- Get input from the joystick in the game
+-- Based on aLTis controller method
+-- TODO Check if it is better to return an entire table with all input values 
+---@param joystickOffset number Offset input from the joystick data, use blam.joystickInputs
+---@return boolean | number Value of the joystick input
+function blam.getJoystickInput(joystickOffset)
+    joystickOffset = joystickOffset or 0
+    -- Nothing is pressed by default
+    local inputValue = false
+    -- Look for every input from every joystick available
+    for controllerId = 0, 3 do
+        local inputAddress = addressList.joystickInput + controllerId * 0xA0
+        if (joystickOffset >= 30 and joystickOffset <= 38) then
+            -- Sticks
+            inputValue = inputValue + read_long(inputAddress + joystickOffset)
+        elseif (joystickOffset > 96) then
+            -- D-pad related
+            local tempValue = read_word(inputAddress + 96)
+            if (tempValue == joystickOffset - 100) then
+                inputValue = true
+            end
+        else
+            inputValue = inputValue + read_byte(inputAddress + joystickOffset)
+        end
+    end
+    return inputValue
+end
+
 --- Create a tag object from a given address, this object can't write data to game memory
 ---@param address integer
 ---@return tag
 function blam.tag(address)
     if (address and address ~= 0) then
         -- Generate a new tag object from class
-        local tag = tagClassNew(address)
+        local tag = createObject(address, tagHeaderStructure)
 
         -- Get all the tag info
         local tagInfo = dumpObject(tag)
@@ -1643,9 +1794,10 @@ function blam.getTag(tagIdOrTagPath, tagClass, ...)
 end
 
 --- Create a player object given player entry table address
+---@return player
 function blam.player(address)
     if (isValid(address)) then
-        return playerClassNew(address)
+        return createObject(address, playerStructure)
     end
     return nil
 end
@@ -1655,7 +1807,7 @@ end
 ---@return blamObject
 function blam.object(address)
     if (isValid(address)) then
-        return objectClassNew(address)
+        return createObject(address, objectStructure)
     end
     return nil
 end
@@ -1665,7 +1817,7 @@ end
 ---@return projectile
 function blam.projectile(address)
     if (isValid(address)) then
-        return projectileClassNew(address)
+        return createObject(address, projectileStructure)
     end
     return nil
 end
@@ -1675,7 +1827,7 @@ end
 ---@return biped
 function blam.biped(address)
     if (isValid(address)) then
-        return bipedClassNew(address)
+        return createObject(address, bipedStructure)
     end
     return nil
 end
@@ -1686,7 +1838,7 @@ end
 function blam.unicodeStringList(tag)
     if (isValid(tag)) then
         local unicodeStringListTag = blam.getTag(tag, tagClasses.unicodeStringList)
-        return unicodeStringListClassNew(unicodeStringListTag.data)
+        return createObject(unicodeStringListTag.data, unicodeStringListStructure)
     end
     return nil
 end
@@ -1697,7 +1849,7 @@ end
 function blam.bitmap(tag)
     if (isValid(tag)) then
         local bitmapTag = blam.getTag(tag, tagClasses.bitmap)
-        return bitmapClassNew(bitmapTag.data)
+        return createObject(bitmapTag.data, bitmapStructure)
     end
 end
 
@@ -1707,7 +1859,7 @@ end
 function blam.uiWidgetDefinition(tag)
     if (isValid(tag)) then
         local uiWidgetDefinitionTag = blam.getTag(tag, tagClasses.uiWidgetDefinition)
-        return uiWidgetDefinitionClassNew(uiWidgetDefinitionTag.data)
+        return createObject(uiWidgetDefinitionTag.data, uiWidgetDefinitionStructure)
     end
     return nil
 end
@@ -1718,7 +1870,7 @@ end
 function blam.uiWidgetCollection(tag)
     if (isValid(tag)) then
         local uiWidgetCollectionTag = blam.getTag(tag, tagClasses.uiWidgetCollection)
-        return uiWidgetCollectionClassNew(uiWidgetCollectionTag.data)
+        return createObject(uiWidgetCollectionTag.data, uiWidgetCollectionStructure)
     end
     return nil
 end
@@ -1729,7 +1881,7 @@ end
 function blam.tagCollection(tag)
     if (isValid(tag)) then
         local tagCollectionTag = blam.getTag(tag, tagClasses.tagCollection)
-        return tagCollectionNew(tagCollectionTag.data)
+        return createObject(tagCollectionTag.data, tagCollectionStructure)
     end
     return nil
 end
@@ -1740,7 +1892,7 @@ end
 function blam.weaponHudInterface(tag)
     if (isValid(tag)) then
         local weaponHudInterfaceTag = blam.getTag(tag, tagClasses.weaponHudInterface)
-        return weaponHudInterfaceClassNew(weaponHudInterfaceTag.data)
+        return createObject(weaponHudInterfaceTag.data, weaponHudInterfaceStructure)
     end
     return nil
 end
@@ -1750,7 +1902,7 @@ end
 ---@return scenario
 function blam.scenario(tag)
     local scenarioTag = blam.getTag(tag or 0, tagClasses.scenario)
-    return scenarioClassNew(scenarioTag.data)
+    return createObject(scenarioTag.data, scenarioStructure)
 end
 
 --- Create a Scenery object from a tag path or id
@@ -1759,7 +1911,7 @@ end
 function blam.scenery(tag)
     if (isValid(tag)) then
         local sceneryTag = blam.getTag(tag, tagClasses.scenery)
-        return sceneryClassNew(sceneryTag.data)
+        return createObject(sceneryTag.data, sceneryStructure)
     end
     return nil
 end
@@ -1770,42 +1922,73 @@ end
 function blam.collisionGeometry(tag)
     if (isValid(tag)) then
         local collisionGeometryTag = blam.getTag(tag, tagClasses.collisionGeometry)
-        return collisionGeometryClassNew(collisionGeometryTag.data)
+        return createObject(collisionGeometryTag.data, collisionGeometryStructure)
     end
     return nil
 end
 
---- Create a Model Animation object from a tag path or id
+--- Create a Model Animations object from a tag path or id
 ---@param tag string | number
 ---@return modelAnimations
 function blam.modelAnimations(tag)
     if (isValid(tag)) then
         local modelAnimationsTag = blam.getTag(tag, tagClasses.modelAnimations)
-        return modelAnimationsClassNew(modelAnimationsTag.data)
+        return createObject(modelAnimationsTag.data, modelAnimationsStructure)
     end
     return nil
 end
 
---- Create a Model Animation object from a tag path or id
+--- Create a Weapon object from the given object address
+---@param address number
+---@return weapon
+function blam.weapon(address)
+    if (isValid(address)) then
+        return createObject(address, weaponStructure)
+    end
+    return nil
+end
+
+--- Create a Weapon tag object from a tag path or id
 ---@param tag string | number
 ---@return weaponTag
 function blam.weaponTag(tag)
     if (isValid(tag)) then
         local weaponTag = blam.getTag(tag, tagClasses.weapon)
-        return weaponTagClassNew(weaponTag)
+        return createObject(weaponTag.data, weaponTagStructure)
     end
     return nil
 end
 
---- Create a Model Animation object from a tag path or id
+--- Create a model (gbxmodel) object from a tag path or id
 ---@param tag string | number
 ---@return gbxModel
 function blam.model(tag)
     if (isValid(tag)) then
         local modelTag = blam.getTag(tag, tagClasses.model)
-        return modelClassNew(modelTag.data)
+        return createObject(modelTag.data, modelStructure)
     end
     return nil
+end
+-- Alias
+blam.gbxmodel = blam.model
+
+--- Create a Globals tag object from a tag path or id
+---@param tag string | number
+---@return globalsTag
+function blam.globalsTag(tag)
+    local tag = tag or "globals\\globals"
+    if (isValid(tag)) then
+        local globalsTag = blam.getTag(tag, tagClasses.globals)
+        return createObject(globalsTag.data, globalsTagStructure)
+    end
+    return nil
+end
+
+--- Create a First person object from a given address, game known address by default
+---@param address number
+---@return firstPerson
+function blam.firstPerson(address)
+    return createObject(address or addressList.firstPerson, firstPersonStructure)
 end
 
 return blam
