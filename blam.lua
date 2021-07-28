@@ -1112,6 +1112,11 @@ local unicodeStringListStructure = {
     stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14}
 }
 
+---@class bitmapSequence
+---@field name string
+---@field firtBitmapIndex number
+---@field bitmapCount number
+
 ---@class bitmap
 ---@field type number
 ---@field format number
@@ -1132,7 +1137,7 @@ local unicodeStringListStructure = {
 ---@field spriteUsage number
 ---@field spriteSpacing number
 ---@field sequencesCount number
----@field sequences table
+---@field sequences bitmapSequence[]
 ---@field bitmapsCount number
 ---@field bitmaps table
 

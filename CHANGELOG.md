@@ -1,6 +1,7 @@
 # Changelog
 
 # 1.3.0
+- Fixed return annotation for property `sequences` on `bitmap` structure
 - Added `walkingState` property to `biped` structure
 - Added `motionState` property to `biped` structure
 - Added `kills` property to `player` structure
