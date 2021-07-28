@@ -1166,8 +1166,7 @@ local bitmapStructure = {
     sequences = {
         type = "table",
         offset = 0x58,
-        -- //FIXME Check if the jump field is correctly being used
-        jump = 0,
+        jump = 0x40,
         rows = {
             name = {type = "string", offset = 0x0},
             firstBitmapIndex = {type = "word", offset = 0x20},

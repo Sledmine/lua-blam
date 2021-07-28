@@ -1,6 +1,7 @@
 # Changelog
 
 # 1.3.0
+- Fixed jump structure intepretation on property `sequences` on `bitmap` structure
 - Fixed return annotation for property `sequences` on `bitmap` structure
 - Added `walkingState` property to `biped` structure
 - Added `motionState` property to `biped` structure
