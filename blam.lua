@@ -1615,7 +1615,7 @@ local playerStructure = {
     kills = {type = "word", offset = 0x9C}
 }
 
----@class firstPersonInterface number
+---@class firstPersonInterface
 ---@field firstPersonHands number
 
 ---@class multiplayerInformation
