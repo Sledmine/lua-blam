@@ -3,7 +3,7 @@
 -- Sledmine, JerryBrick
 -- Improves memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local blam = {_VERSION = "1.3.0"}
+local blam = {_VERSION = "1.4.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -517,8 +517,7 @@ local function consoleOutput(message, ...)
     local args = {...}
 
     if (message == nil or #args > 5) then
-        consoleOutput(debug.traceback(
-                          "Wrong number of arguments on console output function", 2),
+        consoleOutput(debug.traceback("Wrong number of arguments on console output function", 2),
                       consoleColors.error)
     end
 
@@ -564,9 +563,8 @@ local function b2b(bitOrBool)
     elseif (bitOrBool == false) then
         return 0
     end
-    error(
-        "B2B error, expected boolean or bit value, got " .. tostring(bitOrBool) .. " " ..
-            type(bitOrBool))
+    error("B2B error, expected boolean or bit value, got " .. tostring(bitOrBool) .. " " ..
+              type(bitOrBool))
 end
 
 ------------------------------------------------------------------------------
@@ -717,15 +715,14 @@ local function readList(address, propertyData)
     local list = {}
     for currentElement = 1, elementCount do
         list[currentElement] = operation.read(addressList +
-                                                  (propertyData.jump *
-                                                      (currentElement - 1)))
+                                                  (propertyData.jump * (currentElement - 1)))
     end
     return list
 end
 
 local function writeList(address, propertyData, propertyValue)
     local operation = typesOperations[propertyData.elementsType]
-    local elementCount = read_byte(address - 0x4)
+    local elementCount = read_word(address - 0x4)
     local addressList
     if (propertyData.noOffset) then
         addressList = read_dword(address)
@@ -736,8 +733,8 @@ local function writeList(address, propertyData, propertyValue)
         local elementValue = propertyValue[currentElement]
         if (elementValue) then
             -- Check if there are problems at sending property data here due to missing property data
-            operation.write(addressList + (propertyData.jump * (currentElement - 1)),
-                            propertyData, elementValue)
+            operation.write(addressList + (propertyData.jump * (currentElement - 1)), propertyData,
+                            elementValue)
         else
             if (currentElement > #propertyValue) then
                 break
@@ -755,8 +752,9 @@ local function readTable(address, propertyData)
         table[elementPosition] = {}
         for subProperty, subPropertyData in pairs(propertyData.rows) do
             local operation = typesOperations[subPropertyData.type]
-            table[elementPosition][subProperty] =
-                operation.read(elementAddress + subPropertyData.offset, subPropertyData)
+            table[elementPosition][subProperty] = operation.read(elementAddress +
+                                                                     subPropertyData.offset,
+                                                                 subPropertyData)
         end
     end
     return table
@@ -772,8 +770,8 @@ local function writeTable(address, propertyData, propertyValue)
                 local subPropertyData = propertyData.rows[subProperty]
                 if (subPropertyData) then
                     local operation = typesOperations[subPropertyData.type]
-                    operation.write(elementAddress + subPropertyData.offset,
-                                    subPropertyData, subPropertyValue)
+                    operation.write(elementAddress + subPropertyData.offset, subPropertyData,
+                                    subPropertyValue)
                 end
             end
         else
@@ -812,8 +810,7 @@ local dataBindingMetaTable = {
             local propertyAddress = object.address + propertyData.offset
             operation.write(propertyAddress, propertyData, propertyValue)
         else
-            local errorMessage = "Unable to write an invalid property ('" .. property ..
-                                     "')"
+            local errorMessage = "Unable to write an invalid property ('" .. property .. "')"
             error(debug.traceback(errorMessage, 2))
         end
     end,
@@ -825,8 +822,7 @@ local dataBindingMetaTable = {
             local propertyAddress = object.address + propertyData.offset
             return operation.read(propertyAddress, propertyData)
         else
-            local errorMessage = "Unable to read an invalid property ('" .. property ..
-                                     "')"
+            local errorMessage = "Unable to read an invalid property ('" .. property .. "')"
             error(debug.traceback(errorMessage, 2))
         end
     end
@@ -921,6 +917,7 @@ end
 ---@field boundingRadius number Radius amount of the object in radians
 ---@field type number Object type
 ---@field team number Object multiplayer team
+---@field nameListIndex number Index of object name in the scenario tag
 ---@field playerId number Current player id if the object
 ---@field parentId number Current parent id of the object
 ---@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
@@ -979,6 +976,7 @@ local objectStructure = {
     boundingRadius = {type = "float", offset = 0xAC},
     type = {type = "word", offset = 0xB4},
     team = {type = "word", offset = 0xB8},
+    nameListIndex = {type = "word", offset = 0xBA},
     playerId = {type = "dword", offset = 0xC0},
     parentId = {type = "dword", offset = 0xC4},
     -- Experimental name properties
@@ -1028,8 +1026,6 @@ local objectStructure = {
 ---@field vehicleSeatIndex number Current vehicle seat index of this biped
 ---@field walkingState number Biped walking state, 0 = not walking, 1 = walking, 2 = stoping walking, 3 = stationary
 ---@field motionState number Biped motion state, 0 = standing , 1 = walking , 2 = jumping/falling
-
-
 
 -- Biped structure (extends object structure)
 local bipedStructure = extendStructure(objectStructure, {
@@ -1245,12 +1241,7 @@ local uiWidgetDefinitionStructure = {
     eventType = {type = "byte", offset = 0x03F0},
     tagReference = {type = "word", offset = 0x400},
     childWidgetsCount = {type = "dword", offset = 0x03E0},
-    childWidgetsList = {
-        type = "list",
-        offset = 0x03E4,
-        elementsType = "dword",
-        jump = 0x50
-    }
+    childWidgetsList = {type = "list", offset = 0x03E4, elementsType = "dword", jump = 0x50}
 }
 
 ---@class uiWidgetCollection
@@ -1343,16 +1334,13 @@ local weaponHudInterfaceStructure = {
 ---@field netgameEquipmentList table List of netgame equipments
 ---@field netgameFlagsCount number Number of netgame equipments
 ---@field netgameFlagsList table List of netgame equipments
+---@field objectNamesCount number Count of the object names in the scenario
+---@field objectNames string[] List of all the object names in the scenario
 
 -- Scenario structure
 local scenarioStructure = {
     sceneryPaletteCount = {type = "byte", offset = 0x021C},
-    sceneryPaletteList = {
-        type = "list",
-        offset = 0x0220,
-        elementsType = "dword",
-        jump = 0x30
-    },
+    sceneryPaletteList = {type = "list", offset = 0x0220, elementsType = "dword", jump = 0x30},
     spawnLocationCount = {type = "byte", offset = 0x354},
     spawnLocationList = {
         type = "table",
@@ -1417,6 +1405,14 @@ local scenarioStructure = {
             facing = {type = "float", offset = 0x4C},
             itemCollection = {type = "dword", offset = 0x5C}
         }
+    },
+    objectNamesCount = {type = "dword", offset = 0x204},
+    objectNames = {
+        type = "list",
+        offset = 0x208,
+        elementsType = "string",
+        jump = 36,
+        noOffset = true
     }
 }
 
@@ -1631,10 +1627,7 @@ local globalsTagStructure = {
         type = "table",
         jump = 0x0,
         offset = 0x168,
-        rows = {
-            flag = {type = "dword", offset = 0xC},
-            unit = {type = "dword", offset = 0x1C}
-        }
+        rows = {flag = {type = "dword", offset = 0xC}, unit = {type = "dword", offset = 0x1C}}
     },
     firstPersonInterface = {
         type = "table",

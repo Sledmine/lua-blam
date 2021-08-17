@@ -1,5 +1,15 @@
 # Changelog
 
+# 1.4.0
+- Added `objectNameIndex` property to `object` structure
+- Added `objectNamesCount` property to `scenario` structure
+- Added `objectNames` property to `scenario` structure
+Example:
+```lua
+local scenario = blam.scenario()
+console_out(scenario.objectNames[1]) -- "covenant_box"
+```
+
 # 1.3.0
 - Fixed jump structure intepretation on property `sequences` on `bitmap` structure
 - Fixed return annotation for property `sequences` on `bitmap` structure

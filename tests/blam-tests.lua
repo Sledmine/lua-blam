@@ -62,6 +62,13 @@ function testTagObjects:setUp()
     self.firstPersonHands = 3905095503
 end
 
+function testTagObjects:testScenarioTag()
+    local scenario = blam.scenario()
+    lu.assertNotIsNil(scenario, "Scenario tag must not be nil")
+    lu.assertEquals(scenario.objectNamesCount, 0)
+    lu.assertEquals(scenario.objectNames, {})
+end
+
 function testTagObjects:testTag()
     local cyborgMpTag = blam.getTag(self.bipedTagPath, blam.tagClasses.biped)
     lu.assertNotIsNil(cyborgMpTag, "Cyborg tag must not be nil")
@@ -145,6 +152,7 @@ function testObjects:testBipedObject()
     lu.assertIsTrue(blam.isNull(bipedObject.landing), "Biped should not be landing")
     lu.assertEquals(bipedObject.walkingState, 0, "Biped should not be walking")
     lu.assertEquals(bipedObject.motionState, 0, "Biped should not be in motion")
+    lu.assertIsTrue(blam.isNull(bipedObject.nameListIndex), "Biped should not have a name list index")
 end
 
 function testObjects:testFirstPersonObject()
