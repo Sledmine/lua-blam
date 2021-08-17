@@ -917,7 +917,7 @@ end
 ---@field boundingRadius number Radius amount of the object in radians
 ---@field type number Object type
 ---@field team number Object multiplayer team
----@field nameListIndex number Index of object name in the scenario tag
+---@field nameIndex number Index of object name in the scenario tag
 ---@field playerId number Current player id if the object
 ---@field parentId number Current parent id of the object
 ---@field isHealthEmpty boolean Is the object health deploeted, also marked as "dead"
@@ -976,7 +976,7 @@ local objectStructure = {
     boundingRadius = {type = "float", offset = 0xAC},
     type = {type = "word", offset = 0xB4},
     team = {type = "word", offset = 0xB8},
-    nameListIndex = {type = "word", offset = 0xBA},
+    nameIndex = {type = "word", offset = 0xBA},
     playerId = {type = "dword", offset = 0xC0},
     parentId = {type = "dword", offset = 0xC4},
     -- Experimental name properties

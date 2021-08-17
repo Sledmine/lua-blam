@@ -1,7 +1,7 @@
 # Changelog
 
 # 1.4.0
-- Added `objectNameIndex` property to `object` structure
+- Added `nameIndex` property to `object` structure
 - Added `objectNamesCount` property to `scenario` structure
 - Added `objectNames` property to `scenario` structure
 Example:

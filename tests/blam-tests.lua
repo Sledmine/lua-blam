@@ -152,7 +152,7 @@ function testObjects:testBipedObject()
     lu.assertIsTrue(blam.isNull(bipedObject.landing), "Biped should not be landing")
     lu.assertEquals(bipedObject.walkingState, 0, "Biped should not be walking")
     lu.assertEquals(bipedObject.motionState, 0, "Biped should not be in motion")
-    lu.assertIsTrue(blam.isNull(bipedObject.nameListIndex), "Biped should not have a name list index")
+    lu.assertIsTrue(blam.isNull(bipedObject.nameIndex), "Biped should not have a name list index")
 end
 
 function testObjects:testFirstPersonObject()
