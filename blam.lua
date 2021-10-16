@@ -2134,7 +2134,7 @@ end
 
 --- Return a blam object given object index or id
 ---@param idOrIndex number
----@return blamObject
+---@return blamObject, number
 function blam.getObject(idOrIndex)
     local objectId
     local objectAddress
@@ -2160,7 +2160,7 @@ function blam.getObject(idOrIndex)
 
         objectAddress = get_object(objectId)
 
-        return blam.object(objectAddress)
+        return blam.object(objectAddress), objectId
     end
     return nil
 end
