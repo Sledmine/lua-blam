@@ -1,6 +1,84 @@
 # Changelog
 
 # 1.4.0
+- Added `getDeviceGroup` function, similar util function to `getTag` and `getObject` but oriented
+to device machines
+
+Example:
+```lua
+-- Blam uses a on memory table to store data about device machines state changes
+-- This function provides an easy way to retrieve data from that table
+
+-- Get device machine object properties
+local machine = blam.deviceMachine(get_object(machineAddress))
+-- This does not return accurate data on the server side, just in client side
+local currentMachinePosition = machine.position
+-- Luckily this works on server and client but just for retrieving data, not writing
+local desiredMachinePosition = blam.getDeviceGroup(machine.positionGroupIndex)
+```
+- Added `getObject` function, similar util function to `getTag`
+
+Example:
+```lua
+-- Helps to keep a unique codebase due to SAPP limitations to only retrieve data by id
+
+-- Get blam object by index
+local object = blam.getObject(1)
+
+-- Get blam object by id
+local object = blam.getObject(3526457484)
+```
+- Added few handy functions to get game host mode
+```lua
+blam.isGameHost()
+blam.isGameSinglePlayer()
+blam.isGameDedicated()
+blam.isGameSAPP()
+```
+- Added `hudGlobals` tag structure, returns data from hud globals tags
+
+Example:
+```lua
+local hudGlobals = blam.hudGlobals(3464573488)
+-- hudGlobals.anchor
+-- hudGlobals.x
+-- hudGlobals.y
+-- hudGlobals.width
+-- hudGlobals.height
+-- hudGlobals.upTime
+-- hudGlobals.fadeTime
+-- hudGlobals.iconColorA
+-- hudGlobals.iconColorR
+-- hudGlobals.iconColorG
+-- hudGlobals.iconColorB
+-- hudGlobals.textSpacing
+```
+- Added `deviceMachine` object structure, returns data from machine objects
+
+Example:
+```lua
+local machine = blam.deviceMachine(get_object(machineAddress))
+-- machine.powerGroupIndex
+-- machine.power
+-- machine.powerChange
+-- machine.positonGroupIndex 
+-- machine.position
+-- machine.positionChange
+```
+- Added `bipedTag` structure, returns data from biped tags
+
+Example:
+```lua
+local cyborgBipedTag = blam.bipedTag(34574363363)
+-- cyborgBipedTag.disableCollision
+```
+- Moved `mostRecentDamagerPlayer` property to `biped` structure
+- Moved `vehicleObjectId` property to `biped` structure
+- Fixed wrong class declaration in `firstPersonInterface` annotation
+- Added new blam engine general addresses
+- Added property `isCollideable` and `hasNoCollision` to `object` structure
+- Added `bipedTag` structure, returns data from a biped tag
+- Fixed missing return annotation in property `spawnLocationList` for `scenario` structure
 - Added `nameIndex` property to `object` structure
 - Added `objectNamesCount` property to `scenario` structure
 - Added `objectNames` property to `scenario` structure

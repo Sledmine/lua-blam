@@ -22,6 +22,58 @@ local function tprint(message, ...)
     end
 end
 
+--- Get index value from an id value type
+---@param id number
+---@return number index
+local function getIndexById(id)
+    local hex = glue.string.tohex(id)
+    local bytes = {}
+    for i = 5, #hex, 2 do
+        glue.append(bytes, hex:sub(i, i + 1))
+    end
+    return tonumber(table.concat(bytes, ""), 16)
+end
+
+---@class vector3D
+---@field x number
+---@field y number
+---@field z number
+
+--- Covert euler into game rotation array, optional rotation matrix
+-- Based on https://www.mecademic.com/en/how-is-orientation-in-space-represented-with-euler-angles
+--- @param yaw number
+--- @param pitch number
+--- @param roll number
+--- @return vector3D, vector3D
+local function eulerToRotation(yaw, pitch, roll)
+    local yaw = math.rad(yaw)
+    local pitch = math.rad(-pitch) -- Negative pitch due to Sapien handling anticlockwise pitch
+    local roll = math.rad(roll)
+    local matrix = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}
+
+    -- Roll, Pitch, Yaw = a, b, y
+    local cosA = math.cos(roll)
+    local sinA = math.sin(roll)
+    local cosB = math.cos(pitch)
+    local sinB = math.sin(pitch)
+    local cosY = math.cos(yaw)
+    local sinY = math.sin(yaw)
+
+    matrix[1][1] = cosB * cosY
+    matrix[1][2] = -cosB * sinY
+    matrix[1][3] = sinB
+    matrix[2][1] = cosA * sinY + sinA * sinB * cosY
+    matrix[2][2] = cosA * cosY - sinA * sinB * sinY
+    matrix[2][3] = -sinA * cosB
+    matrix[3][1] = sinA * sinY - cosA * sinB * cosY
+    matrix[3][2] = sinA * cosY + cosA * sinB * sinY
+    matrix[3][3] = cosA * cosB
+
+    local rollVector = {x = matrix[1][1], y = matrix[2][1], z = matrix[3][1]}
+    local yawVector = {x = matrix[1][3], y = matrix[2][3], z = matrix[3][3]}
+    return rollVector, yawVector, matrix
+end
+
 function OnCommand(command)
     if (command == "ltest") then
         local runner = lu.LuaUnit.new()
@@ -124,6 +176,27 @@ function testTagObjects:testGlobalsTag()
     lu.assertEquals(globals.firstPersonInterface[1].firstPersonHands, self.firstPersonHands)
 end
 
+function testTagObjects:testHudGlobalsTag()
+    local hudGlobals = blam.hudGlobals([[ui\hud\default]])
+    lu.assertNotIsNil(hudGlobals, "HUD Globals should must not be nil")
+    lu.assertEquals(hudGlobals.anchor, 0)
+    lu.assertEquals(hudGlobals.x, 0)
+    lu.assertEquals(hudGlobals.y, 60)
+    lu.assertEquals(hudGlobals.width, 0)
+    lu.assertEquals(hudGlobals.height, 0)
+    lu.assertEquals(hudGlobals.upTime, 2)
+    lu.assertEquals(hudGlobals.fadeTime, 2)
+    lu.assertEquals(hudGlobals.iconColorA, 0.5)
+    lu.assertAlmostEquals(hudGlobals.iconColorR, 0.458824, 0.000001)
+    lu.assertAlmostEquals(hudGlobals.iconColorG, 0.729412, 0.000001)
+    lu.assertEquals(hudGlobals.textColorB, 1)
+    lu.assertEquals(hudGlobals.textColorA, 0.5)
+    lu.assertAlmostEquals(hudGlobals.textColorR, 0.458824, 0.000001)
+    lu.assertAlmostEquals(hudGlobals.textColorG, 0.729412, 0.000001)
+    lu.assertEquals(hudGlobals.textColorB, 1)
+    lu.assertAlmostEquals(hudGlobals.textSpacing, 1.35, 0.000001)
+end
+
 ------------------------------------------------------------------------------
 -- Game Objects
 ------------------------------------------------------------------------------
@@ -131,6 +204,19 @@ testObjects = {}
 
 function testObjects:setUp()
     self.assaultRifleTagPath = "weapons\\assault rifle\\assault rifle"
+end
+
+function testObjects:testGetObject()
+    local player = blam.player(get_player())
+    if (player) then
+        local playerBiped = blam.biped(get_object(player.objectId))
+        local bipedObjectFromObjectId = blam.getObject(player.objectId)
+        lu.assertEquals(playerBiped.address, bipedObjectFromObjectId.address, "Address from biped object must match address from object id")
+        
+        local objectIndex = getIndexById(player.objectId)
+        local bipedObjectFromObjectIndex = blam.getObject(objectIndex)
+        lu.assertEquals(playerBiped.address, bipedObjectFromObjectIndex.address, "Address from biped object must match address from object index")
+    end
 end
 
 function testObjects:testBipedObject()
@@ -197,6 +283,48 @@ function testObjects:testPlayerDataObject()
     lu.assertEquals(player.index, 0, "Player index should be 0")
     lu.assertEquals(player.speed, 1, "Player speed should be 1")
     lu.assertIsTrue((player.ping >= 0), "Player ping should be greater than 0 or equal 0")
+end
+
+------------------------------------------------------------------------------
+-- Module utilities
+------------------------------------------------------------------------------
+testUtilities = {}
+
+function testUtilities:testGetIndexById()
+    local player = blam.player(get_player())
+    if (player) then
+        local fmod = math.fmod
+        -- Benchamark different index substraction methods
+
+        -- Index from hex values
+        local time = os.clock()
+        local index
+        for i = 1, 2048 do
+            index = getIndexById(player.objectId)
+        end
+        local timeFromHex = os.clock() - time
+        --console_out(string.format("Index Hex based took: %f\n", timeFromHex))
+        --console_out(index)
+        
+        -- Index from calculation
+        local time = os.clock()
+        local indexFromMultiplication
+        for i = 1, 2048 do
+            -- This should be almost 8 times faster than substracting the index from hex
+            indexFromMultiplication = fmod(player.objectId, 0x10000)
+        end
+        local timeFromFormula = os.clock() - time
+        --console_out(string.format("Index Formula based took: %f\n", timeFromFormula))
+        --console_out(indexFromMultiplication)
+
+        lu.assertEquals(index, indexFromMultiplication, "Player index must match in either method")
+        lu.assertIsTrue(timeFromFormula < timeFromHex, "Index from Formula must take less time than Index from Hex")
+    end
+end
+
+function testUtilities:testRotationFunctions()
+    local yaw, roll, matrix = eulerToRotation(90, 180)
+    lu.assertAlmostEquals(yaw, {x = 0.707, y = 0.707, z = 0})
 end
 
 -- Mocked arguments and executions for standalone execution and in game execution
