@@ -1,5 +1,22 @@
 # Changelog
 
+# 1.5.0
+- Fixed bad count reading on `list` type object properties
+- Added `cutsceneFlag` property to `scenario` structure
+
+Example:
+```lua
+local cutsceneFlag = blam.scenario(0).cutsceneFlags[1]
+--- cutsceneFlag.name
+--- cutsceneFlag.x
+--- cutsceneFlag.y
+--- cutsceneFlag.z
+--- cutsceneFlag.vX
+--- cutsceneFlag.vY
+```
+- Improved EmmyLua autocompletion, added more Chimera and SAPP functions/bindings.
+- Added beta structure for ui widget manipulation and server request methods.
+
 # 1.4.0
 - Added `getDeviceGroup` function, similar util function to `getTag` and `getObject` but oriented
 to device machines

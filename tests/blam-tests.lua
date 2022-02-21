@@ -119,6 +119,8 @@ function testTagObjects:testScenarioTag()
     lu.assertNotIsNil(scenario, "Scenario tag must not be nil")
     lu.assertEquals(scenario.objectNamesCount, 0)
     lu.assertEquals(scenario.objectNames, {})
+    lu.assertEquals(scenario.cutsceneFlagsCount, 0)
+    lu.assertEquals(scenario.cutsceneFlags, {})
 end
 
 function testTagObjects:testTag()
@@ -279,10 +281,15 @@ function testObjects:testPlayerDataObject()
     lu.assertEquals(player.team, 0, "Player team should be red")
     lu.assertNotIsNil(player.objectId, "Player objectId mut not be nil")
     lu.assertEquals(get_object(player.objectId), get_dynamic_player(), "Player object id address should match address from player object")
-    lu.assertNotIsNil(player.color, 0, "Player color must not be nil")
+    lu.assertNotIsNil(player.color, "Player color must not be nil")
     lu.assertEquals(player.index, 0, "Player index should be 0")
     lu.assertEquals(player.speed, 1, "Player speed should be 1")
     lu.assertIsTrue((player.ping >= 0), "Player ping should be greater than 0 or equal 0")
+    lu.assertEquals(player.kills, 0, "Player kills should be 0")
+    lu.assertEquals(player.assists, 0, "Player assists should be 0")
+    lu.assertEquals(player.betraysAndSuicides, 0, "Player betrays and suicides should be 0")
+    lu.assertEquals(player.deaths, 0, "Player deaths should be 0")
+    lu.assertEquals(player.suicides, 0, "Player suicides should be 0")
 end
 
 ------------------------------------------------------------------------------
@@ -323,8 +330,8 @@ function testUtilities:testGetIndexById()
 end
 
 function testUtilities:testRotationFunctions()
-    local yaw, roll, matrix = eulerToRotation(90, 180)
-    lu.assertAlmostEquals(yaw, {x = 0.707, y = 0.707, z = 0})
+    --local yaw, roll, matrix = eulerToRotation(90, 180)
+    --lu.assertAlmostEquals(yaw, {x = 0.707, y = 0.707, z = 0})
 end
 
 -- Mocked arguments and executions for standalone execution and in game execution

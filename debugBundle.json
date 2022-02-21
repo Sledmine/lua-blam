@@ -1,0 +1,14 @@
+{
+    "name": "Debug Tools",
+    "target": "lua53",
+    "include": [
+        "./",
+        "modules/"
+    ],
+    "modules": [
+        "glue",
+        "blam"
+    ],
+    "main": "debug",
+    "output": "dist/debug.lua"
+}
