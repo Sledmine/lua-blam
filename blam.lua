@@ -43,11 +43,11 @@ end
 -- Engine address list
 local addressList = {
     tagDataHeader = 0x40440000,
-    cameraType = 0x00647498, --from giraffe
+    cameraType = 0x00647498, -- from giraffe
     gamePaused = 0x004ACA79,
     gameOnMenus = 0x00622058,
-    joystickInput = 0x64D998, --from aLTis
-    firstPerson = 0x40000EB8, --from aLTis
+    joystickInput = 0x64D998, -- from aLTis
+    firstPerson = 0x40000EB8, -- from aLTis
     objectTable = 0x400506B4,
     deviceGroupsTable = 0x00816110
 }
@@ -169,7 +169,7 @@ local cameraTypes = {
 }
 
 -- Netgame flags type
-local netgameFlagTypes = {
+local netgameFlagClasses = {
     ctfFlag = 0,
     ctfVehicle = 1,
     ballSpawn = 2,
@@ -182,7 +182,7 @@ local netgameFlagTypes = {
 }
 
 -- Netgame equipment types
-local netgameEquipmentTypes = {
+local gameTypeClasses = {
     none = 0,
     ctf = 1,
     slayer = 2,
@@ -198,6 +198,21 @@ local netgameEquipmentTypes = {
     allGames = 12,
     allExceptCtf = 13,
     allExceptRaceCtf = 14
+}
+
+local multiplayerTeamClasses = {red = 0, blue = 1}
+
+local unitTeamClasses = {
+    defaultByUnit = 0,
+    player = 1,
+    human = 2,
+    covenant = 3,
+    flood = 4,
+    sentinel = 5,
+    unused6 = 6,
+    unused7 = 7,
+    unused8 = 8,
+    unused9 = 9
 }
 
 -- Standard console colors
@@ -255,7 +270,7 @@ local dPadValues = {
 -- Functions below do not have a real implementation and are not supossed to be imported
 if (variableThatObviouslyDoesNotExist) then
     ---Attempt to spawn an object given tag class and path plus coordinates
-    ---@overload fun(tagId: string, x: number, y: number, z: number):number
+    ---@overload fun(tagId: number, x: number, y: number, z: number):number
     ---@param tagType string Type of the tag to spawn
     ---@param tagPath string Path of object to spawn
     ---@param x number
@@ -797,6 +812,16 @@ local function writeTable(address, propertyData, propertyValue)
     end
 end
 
+local function readTagReference(address)
+    -- local tagClass = read_dword(address)
+    local tagId = read_dword(address - 0x4)
+    return tagId
+end
+
+local function writeTagReference(address, propertyData, propertyValue)
+    write_dword(address - 0x4, propertyValue)
+end
+
 -- Data types operations references
 typesOperations = {
     bit = {read = readBit, write = writeBit},
@@ -812,7 +837,8 @@ typesOperations = {
     pustring = {read = readPointerUnicodeString, write = writePointerUnicodeString},
     ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
-    table = {read = readTable, write = writeTable}
+    table = {read = readTable, write = writeTable},
+    tagref = {read = readTagReference, write = writeTagReference}
 }
 
 -- Magic luablam metatable
@@ -1258,6 +1284,19 @@ local bitmapStructure = {
     }
 }
 
+---@class uiWidgetDefinitionChild
+---@class widgetTag number Child uiWidgetDefinition reference
+---@class name number Child widget name
+---@class customControllerIndex number Custom controller index for this child widget
+---@class verticalOffset number Offset in Y axis of this child, relative to the parent
+---@class horizontalOffset number Offset in X axis of this child, relative to the parent
+
+---@class uiWidgetDefinitionEventHandler
+---@class eventType number Type of the event
+---@class gameFunction Game function of this event
+---@class widgetTag number uiWidgetDefinition tag id of the event
+---@class script string Name of the script function assigned to this event
+
 ---@class uiWidgetDefinition
 ---@field type number Type of widget
 ---@field controllerIndex number Index of the player controller
@@ -1267,10 +1306,15 @@ local bitmapStructure = {
 ---@field height number Bottom bound of the widget
 ---@field width number Right bound of the widget
 ---@field backgroundBitmap number Tag ID of the background bitmap
----@field eventType number
----@field tagReference number
+---@field eventHandlers uiWidgetDefinitionEventHandler[] tag ID list of the child widgets
+---@field unicodeStringListTag number Tag ID of the unicodeStringList from this widget
+---@field fontTag number Tag ID of the font from this widget
+---@field justification number Text justification of the text from this widget
+---@field stringListIndex number Text index from the unicodeStringList tag from this widget
+---@field textHorizontalOffset number Text offset in X axis from this widget
+---@field textVerticalOffset number Text offset in Y axis from this widget
 ---@field childWidgetsCount number Number of child widgets
----@field childWidgetsList table tag ID list of the child widgets
+---@field childWidgets uiWidgetDefinitionChild[] tag ID list of the child widgets
 
 -- UI Widget Definition structure
 local uiWidgetDefinitionStructure = {
@@ -1282,10 +1326,48 @@ local uiWidgetDefinitionStructure = {
     height = {type = "short", offset = 0x28},
     width = {type = "short", offset = 0x2A},
     backgroundBitmap = {type = "word", offset = 0x44},
+    eventHandlers = {
+        type = "table",
+        offset = 0x54,
+        jump = 0x48,
+        rows = {
+            -- TODO Add real flags support, or a subtyping of table instead
+            -- flags = {type = "number", offset = 0x0},
+            eventType = {type = "word", offset = 0x4},
+            gameFunction = {type = "word", offset = 0x6},
+            widgetTag = {type = "tagref", offset = 0x8},
+            soundEffectTag = {type = "tagref", offset = 0x18},
+            script = {type = "string", offset = 0x28}
+        }
+    },
+    unicodeStringListTag = {type = "tagref", offset = 0xEC},
+    fontTag = {type = "tagref", offset = 0xFC},
+    -- TODO Add color support for hex and rgb values
+    -- textColor = {type = "realargbcolor", offset = 0x10C},
+    justification = {type = "word", offset = 0x11C},
+    stringListIndex = {type = "short", offset = 0x12E},
+    textHorizontalOffset = {type = "short", offset = 0x130},
+    textVerticalOffset = {type = "short", offset = 0x132},
+    -- Deprecated
     eventType = {type = "byte", offset = 0x03F0},
+    -- Deprecated
     tagReference = {type = "word", offset = 0x400},
     childWidgetsCount = {type = "dword", offset = 0x03E0},
-    childWidgetsList = {type = "list", offset = 0x03E4, elementsType = "dword", jump = 0x50}
+    -- Deprecated
+    childWidgetsList = {type = "list", offset = 0x03E4, elementsType = "dword", jump = 0x50},
+    childWidgets = {
+        type = "table",
+        offset = 0x03E4,
+        jump = 0x50,
+        rows = {
+            widgetTag = {type = "tagref", offset = 0x0},
+            name = {type = "string", offset = 0x10},
+            -- flags = {type = "integer", offset = 0x30},
+            customControllerIndex = {type = "short", offset = 0x34},
+            verticalOffset = {type = "short", offset = 0x36},
+            horizontalOffset = {type = "short", offset = 0x38}
+        }
+    }
 }
 
 ---@class uiWidgetCollection
@@ -1813,9 +1895,11 @@ blam.objectClasses = objectClasses
 blam.joystickInputs = joystickInputs
 blam.dPadValues = dPadValues
 blam.cameraTypes = cameraTypes
-blam.netgameFlagTypes = netgameFlagTypes
-blam.netgameEquipmentTypes = netgameEquipmentTypes
 blam.consoleColors = consoleColors
+blam.netgameFlagClasses = netgameFlagClasses
+blam.gameTypeClasses = gameTypeClasses
+blam.multiplayerTeamClasses = multiplayerTeamClasses
+blam.unitTeamClasses = unitTeamClasses
 
 ---@class tagDataHeader
 ---@field array any
@@ -1842,18 +1926,26 @@ function blam.isNull(value)
     return false
 end
 
+---Return if game instance is host
+---@return boolean
 function blam.isGameHost()
     return server_type == "local"
 end
 
+---Return if game instance is single player
+---@return boolean
 function blam.isGameSinglePlayer()
     return server_type == "none"
 end
 
+---Return if the game instance is running on a dedicated server or connected as a "network client"
+---@return boolean
 function blam.isGameDedicated()
     return server_type == "dedicated"
 end
 
+---Return if the game instance is a SAPP server
+---@return boolean
 function blam.isGameSAPP()
     return server_type == "sapp" or api_version
 end
@@ -2259,15 +2351,12 @@ local requestPathMaxLength = 60
 ---Send a server request to current server trough rcon
 ---@param method '"GET"' | '"SEND"'
 ---@param url string Path or name of the resource we want to get
----@param timeout number Time this request will wait for a response
+---@param timeout number Time this request will wait for a response, 120ms by default
 ---@param callback function<boolean, string> Callback function to call when this response returns
 ---@param retry boolean Retry this request if timeout reaches it's limit
 ---@param params table<string, any> Optional parameters to send in the request, careful, this will create two requests, one for the resource and another one for the parameters
 ---@return boolean success
 function blam.request(method, url, timeout, callback, retry, params)
-    if (not timeout) then
-        timeout = 120
-    end
     if (server_type ~= "dedicated") then
         console_out("Warning, requests only work while connected to a dedicated server.")
     end
@@ -2280,7 +2369,7 @@ function blam.request(method, url, timeout, callback, retry, params)
             local rconRequest = ("rcon blam ?%s?%s"):format(requestId, url)
             requestQueue[requestId] = {
                 requestString = rconRequest,
-                timeout = timeout,
+                timeout = timeout or 120,
                 callback = callback
             }
             console_out(rconRequest)
