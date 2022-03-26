@@ -1285,17 +1285,17 @@ local bitmapStructure = {
 }
 
 ---@class uiWidgetDefinitionChild
----@class widgetTag number Child uiWidgetDefinition reference
----@class name number Child widget name
----@class customControllerIndex number Custom controller index for this child widget
----@class verticalOffset number Offset in Y axis of this child, relative to the parent
----@class horizontalOffset number Offset in X axis of this child, relative to the parent
+---@field widgetTag number Child uiWidgetDefinition reference
+---@field name number Child widget name
+---@field customControllerIndex number Custom controller index for this child widget
+---@field verticalOffset number Offset in Y axis of this child, relative to the parent
+---@field horizontalOffset number Offset in X axis of this child, relative to the parent
 
 ---@class uiWidgetDefinitionEventHandler
----@class eventType number Type of the event
----@class gameFunction Game function of this event
----@class widgetTag number uiWidgetDefinition tag id of the event
----@class script string Name of the script function assigned to this event
+---@field eventType number Type of the event
+---@field gameFunction Game function of this event
+---@field widgetTag number uiWidgetDefinition tag id of the event
+---@field script string Name of the script function assigned to this event
 
 ---@class uiWidgetDefinition
 ---@field type number Type of widget
@@ -1314,9 +1314,8 @@ local bitmapStructure = {
 ---@field textHorizontalOffset number Text offset in X axis from this widget
 ---@field textVerticalOffset number Text offset in Y axis from this widget
 ---@field childWidgetsCount number Number of child widgets
----@field childWidgets uiWidgetDefinitionChild[] tag ID list of the child widgets
+---@field childWidgets uiWidgetDefinitionChild[] List of the child widgets
 
--- UI Widget Definition structure
 local uiWidgetDefinitionStructure = {
     type = {type = "word", offset = 0x0},
     controllerIndex = {type = "word", offset = 0x2},
