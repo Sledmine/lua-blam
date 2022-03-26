@@ -814,12 +814,13 @@ end
 
 local function readTagReference(address)
     -- local tagClass = read_dword(address)
-    local tagId = read_dword(address - 0x4)
+    -- local tagPathPointer = read_dword(address = 0x4)
+    local tagId = read_dword(address + 0xC)
     return tagId
 end
 
 local function writeTagReference(address, propertyData, propertyValue)
-    write_dword(address - 0x4, propertyValue)
+    write_dword(address + 0xC, propertyValue)
 end
 
 -- Data types operations references
