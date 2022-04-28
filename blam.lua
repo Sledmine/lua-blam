@@ -282,7 +282,7 @@ if (variableThatObviouslyDoesNotExist) then
     end
 
     ---Get object address from a specific player given playerIndex
-    ---@param playerIndex number
+    ---@param playerIndex? number
     ---@return number objectAddress
     function get_dynamic_player(playerIndex)
     end
@@ -378,7 +378,7 @@ if (api_version) then
 
     ---Return the memory address of a tag given tagId or tagClass and tagPath
     ---@param tagIdOrTagType string | number
-    ---@param tagPath string
+    ---@param tagPath? string
     ---@return number
     function get_tag(tagIdOrTagType, tagPath)
         if (not tagPath) then
@@ -415,9 +415,9 @@ if (api_version) then
 
     ---Print text into console
     ---@param message string
-    ---@param red number
-    ---@param green number
-    ---@param blue number
+    ---@param red? number
+    ---@param green? number
+    ---@param blue? number
     function console_out(message, red, green, blue)
         -- TODO Add color printing to this function on SAPP
         cprint(message)
