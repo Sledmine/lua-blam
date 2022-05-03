@@ -2231,8 +2231,8 @@ end
 -- Alias
 blam.gbxmodel = blam.model
 
---- Create a Globals tag object from a tag path or id
----@param tag string | number
+--- Create a Globals tag object from a tag path or id, default globals path by default
+---@param tag? string | number
 ---@return globalsTag
 function blam.globalsTag(tag)
     local tag = tag or "globals\\globals"
@@ -2244,7 +2244,7 @@ function blam.globalsTag(tag)
 end
 
 --- Create a First person object from a given address, game known address by default
----@param address number
+---@param address? number
 ---@return firstPerson
 function blam.firstPerson(address)
     return createObject(address or addressList.firstPerson, firstPersonStructure)
