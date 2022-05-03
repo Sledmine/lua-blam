@@ -1,4 +1,4 @@
-# lua-blam v1.4.0
+# blam-1.5.0
 
 ## What is lua-blam?
 Is a Lua library/module for scripting that allows you to handle Halo Custom Edition memory as
