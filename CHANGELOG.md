@@ -1,6 +1,29 @@
 # Changelog
 
 # 1.5.0
+- Added `findTag` and `findTagsList` functions to search tags using a keyword or partial tag path
+
+Example:
+```lua
+-- Returns first Tag found matching keyworkd in the tag path, if no tag was found
+local assaultRifle = blam.findTag("assault", blam.tagClasses.weapon)
+--- assaultRifle.id
+--- assaultRifle.path
+--- assaultRifle.class
+--- assaultRifle.index
+--- assaultRifle.indexed
+
+-- Returns a Tag list of multiple matching keywords, nil if no tags found
+local weapons = blam.findTagsList("weapons\\", blam.tagClasses.weapon)
+for _, weaponTag in pairs(weapons) do
+    --- weaponTag.id
+    --- weaponTag.path
+    --- weaponTag.class
+    --- weaponTag.index
+    --- weaponTag.indexed
+end
+```
+- Fixed wrong chimera functions annotations
 - Fixed bad count reading on `list` type object properties
 - Added `cutsceneFlag` property to `scenario` structure
 
@@ -14,8 +37,8 @@ local cutsceneFlag = blam.scenario(0).cutsceneFlags[1]
 --- cutsceneFlag.vX
 --- cutsceneFlag.vY
 ```
-- Improved EmmyLua autocompletion, added more Chimera and SAPP functions/bindings.
-- Added beta structure for ui widget manipulation and server request methods.
+- Improved EmmyLua autocompletion, added more Chimera and SAPP functions/bindings
+- Added more properties to `uiWidgetDefintion` tag structure
 
 # 1.4.0
 - Added `getDeviceGroup` function, similar util function to `getTag` and `getObject` but oriented
