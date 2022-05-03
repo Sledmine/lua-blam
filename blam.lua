@@ -1868,36 +1868,6 @@ local hudGlobalsStructure = {
     textSpacing = {type = "float", offset = 0x90}
 }
 
----@class uiWidgetInstance
----@field tagId number
----@field name string
----@field frameX number
----@field frameY number
----@field widgetType number
----@field visible boolean
----@field opacity number
----@field previousWidget number
----@field nextWidget number
----@field parentWidget number
----@field childWidget number
----@field text string
----@field cursorIndex number
----@field focused boolean
-local uiWidgetInstanceStructure = {
-    tagId = {type = "dword", offset = 0},
-    -- Needs a pointer implementation
-    -- name = {type = "string", offset = 4},
-    -- hidden? = {type = "word", offset = 8},
-    frameX = {type = "short", offset = 10},
-    frameY = {type = "short", offset = 12},
-    widgetType = {type = "word", offset = 14},
-    isVisible = {type = "bit", offset = 16, bitLevel = 0},
-    -- unknownHistoryThing = {type = "dword", offset = 24},
-    millisecondsToClose = {type = "dword", offset = 28},
-    millisecondsToCloseFadeTime = {type = "dword", offset = 32},
-    opacity = {type = "float", offset = 36}
-}
-
 ------------------------------------------------------------------------------
 -- LuaBlam globals
 ------------------------------------------------------------------------------
@@ -2395,29 +2365,29 @@ function blam.request(method, url, timeout, callback, retry, params)
     return false
 end
 
---- Find the path, index and id of a tag given partial name and tag type
----@param partialName string
+--- Find the path, index and id of a tag given partial tag path and tag type
+---@param partialTagPath string
 ---@param searchTagType string
 ---@return tag tag
-function blam.findTag(partialName, searchTagType)
+function blam.findTag(partialTagPath, searchTagType)
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
         local tag = blam.getTag(tagIndex)
-        if (tag and tag.path:find(partialName, 1, true) and tag.class == searchTagType) then
+        if (tag and tag.path:find(partialTagPath, 1, true) and tag.class == searchTagType) then
             return tag
         end
     end
     return nil
 end
 
---- Find the path, index and id of a list of tags given partial name and tag type
----@param partialName string
+--- Find the path, index and id of a list of tags given partial tag path and tag type
+---@param partialTagPath string
 ---@param searchTagType string
 ---@return tag[] tag
-function blam.findTagsList(partialName, searchTagType)
+function blam.findTagsList(partialTagPath, searchTagType)
     local tagsList
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
         local tag = blam.getTag(tagIndex)
-        if (tag and tag.path:find(partialName, 1, true) and tag.class == searchTagType) then
+        if (tag and tag.path:find(partialTagPath, 1, true) and tag.class == searchTagType) then
             if (not tagsList) then
                 tagsList = {}
             end
