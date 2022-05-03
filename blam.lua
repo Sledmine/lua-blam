@@ -362,15 +362,17 @@ if (api_version) then
         if (path) then
             local command = "dir " .. path .. " /B"
             local pipe = io.popen(command, "r")
-            local output = pipe:read("*a")
-            if (output) then
-                local items = split(output, "\n")
-                for index, item in pairs(items) do
-                    if (item and item == "") then
-                        items[index] = nil
+            if pipe then
+                local output = pipe:read("*a")
+                if (output) then
+                    local items = split(output, "\n")
+                    for index, item in pairs(items) do
+                        if (item and item == "") then
+                            items[index] = nil
+                        end
                     end
+                    return items
                 end
-                return items
             end
         end
         return nil
@@ -678,7 +680,7 @@ end
 
 --- Return the string of a unicode string given address
 ---@param address number
----@param rawRead boolean
+---@param rawRead? boolean
 ---@return string
 function blam.readUnicodeString(address, rawRead)
     local stringAddress
@@ -703,7 +705,7 @@ end
 --- Writes a unicode string in a given address
 ---@param address number
 ---@param newString string
----@param forced boolean
+---@param forced? boolean
 function blam.writeUnicodeString(address, newString, forced)
     local stringAddress
     if (forced) then
@@ -1158,9 +1160,6 @@ local tagDataHeaderStructure = {
 local tagHeaderStructure = {
     class = {type = "dword", offset = 0x0},
     index = {type = "word", offset = 0xC},
-    -- //TODO This needs some review
-    -- id = {type = "word", offset = 0xE},
-    -- fullId = {type = "dword", offset = 0xC},
     id = {type = "dword", offset = 0xC},
     path = {type = "dword", offset = 0x10},
     data = {type = "dword", offset = 0x14},
@@ -1302,7 +1301,7 @@ local bitmapStructure = {
 
 ---@class uiWidgetDefinitionEventHandler
 ---@field eventType number Type of the event
----@field gameFunction Game function of this event
+---@field gameFunction number Game function of this event
 ---@field widgetTag number uiWidgetDefinition tag id of the event
 ---@field script string Name of the script function assigned to this event
 
@@ -1759,7 +1758,7 @@ local projectileStructure = extendStructure(objectStructure, {
 ---@field team number Team color of this player, 0 when red, 1 when on blue team
 ---@field objectId number Return the objectId associated to this player
 ---@field color number Color of the player, only works on "Free for All" gametypes
----@field index number Local index of this player (0-15
+---@field index number Local index of this player 0-15
 ---@field speed number Current speed of this player
 ---@field ping number Ping amount from server of this player in milliseconds
 ---@field kills number Kills quantity done by this player
@@ -2006,7 +2005,7 @@ end
 
 --- Return a tag object given tagPath and tagClass or just tagId
 ---@param tagIdOrTagPath string | number
----@param tagClass string
+---@param tagClass? string
 ---@return tag
 function blam.getTag(tagIdOrTagPath, tagClass, ...)
     local tagId
