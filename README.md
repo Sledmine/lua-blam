@@ -1,8 +1,16 @@
-# blam-1.5.0
+<html>
+    <p align="center">
+        <img width="250px" src="img/blam-logo.png"/>
+    </p>
+    <h1 align="center">lua-blam 1.5.0</h1>
+    <p align="center">
+       Lua module to handle Halo Custom Edition game engine on runtime
+    </p>
+</html>
 
 ## What is lua-blam?
-Is a Lua library/module for scripting that allows you to handle Halo Custom Edition memory as
-objects (tables) in your script, it also includes some features as API extension and unification between
+Is a Lua module for scripting that allows you to handle Halo Custom Edition memory as objects
+(tables) in your script, it also includes some features as API extension and unification between
 Chimera and SAPP.
 
 ## What is intended for?
