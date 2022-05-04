@@ -755,7 +755,7 @@ local function readList(address, propertyData)
     local list = {}
     for currentElement = 1, elementCount do
         list[currentElement] = operation.read(addressList +
-                                                  (propertyData.jump * (currentElement - 1)))
+                                                  (propertyData.jump * (currentElement - 1)), propertyData)
     end
     return list
 end
@@ -833,6 +833,14 @@ local function writeTagReference(address, propertyData, propertyValue)
     write_dword(address + 0xC, propertyValue)
 end
 
+local function readPointer(address, propertyData)
+    return typesOperations[propertyData.subtyping].read(address, propertyData)
+end
+
+local function writePointer(address, propertyData, propertyValue)
+    return typesOperations[propertyData.pointerType].write(address, propertyData, propertyValue)
+end
+
 -- Data types operations references
 typesOperations = {
     bit = {read = readBit, write = writeBit},
@@ -849,7 +857,8 @@ typesOperations = {
     ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
     table = {read = readTable, write = writeTable},
-    tagref = {read = readTagReference, write = writeTagReference}
+    tagref = {read = readTagReference, write = writeTagReference},
+    pointer = {read = readPointer, write = writePointer}
 }
 
 -- Magic luablam metatable
@@ -1183,7 +1192,7 @@ local tagCollectionStructure = {
 -- UnicodeStringList structure
 local unicodeStringListStructure = {
     count = {type = "byte", offset = 0x0},
-    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14}
+    stringList = {type = "list", offset = 0x4, elementsType = "pointer", jump = 0x14, pointerType = "string"}
 }
 
 ---@class bitmapSequence
