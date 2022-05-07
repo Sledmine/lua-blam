@@ -2,42 +2,12 @@ clua_version = 2.056
 
 local blam = require "blam"
 local isNull = blam.isNull
+local findTag = blam.findTag
+local findTagsList = blam.findTagsList
 local tagClasses = blam.tagClasses
 local glue = require "glue"
 local split = glue.string.split
 local escape = glue.string.esc
-
---- Find the path, index and id of a tag given partial name and tag type
----@param partialName string
----@param searchTagType string
----@return tag tag
-local function findTag(partialName, searchTagType)
-    for tagIndex = 0, blam.tagDataHeader.count - 1 do
-        local tag = blam.getTag(tagIndex)
-        if (tag and tag.path:find(partialName, 1, true) and tag.class == searchTagType) then
-            return tag
-        end
-    end
-    return nil
-end
-
---- Find the path, index and id of a list of tags given partial name and tag type
----@param partialName string
----@param searchTagType string
----@return tag[] tag
-local function findTagsList(partialName, searchTagType)
-    local tagsList
-    for tagIndex = 0, blam.tagDataHeader.count - 1 do
-        local tag = blam.getTag(tagIndex)
-        if (tag and tag.path:find(partialName, 1, true) and tag.class == searchTagType) then
-            if (not tagsList) then
-                tagsList = {}
-            end
-            tagsList[#tagsList + 1] = tag
-        end
-    end
-    return tagsList
-end
 
 function OnCommand(command)
     command = escape(command)
@@ -85,7 +55,7 @@ function OnCommand(command)
                 return false
             end
         else
-            console_out("Usage: <tagClass> [<tagName>]")
+            console_out("Usage: <tagClass> [ <tagName> ]")
             return false
         end
         console_out("Error, no tags were found.")
