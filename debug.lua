@@ -91,7 +91,8 @@ function OnCommand(command)
         return false
     elseif (action == "plprop") then
         local key = args[2]
-        local value = tonumber(args[3]) or args[3]
+        local cleanValue = args[3]:gsub("%%", "")
+        local value = tonumber(cleanValue) or cleanValue
         local playerBiped = blam.biped(get_dynamic_player())
         if (key and value) then
             if (playerBiped) then
