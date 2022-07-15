@@ -314,17 +314,17 @@ if (api_version) then
     ---Write content to a text file given file path
     ---@param path string Path to the file to write
     ---@param content string Content to write into the file
-    ---@return boolean | nil, string result True if successful otherwise nil, error
+    ---@return boolean, string? result True if successful otherwise nil, error
     function write_file(path, content)
         local file, error = io.open(path, "w")
         if (not file) then
-            return nil, error
+            return false, error
         end
         local success, err = file:write(content)
         file:close()
         if (not success) then
             os.remove(path)
-            return nil, err
+            return false, err
         else
             return true
         end
@@ -332,15 +332,15 @@ if (api_version) then
 
     ---Read the contents from a file given file path
     ---@param path string Path to the file to read
-    ---@return string | nil, string content string if successful otherwise nil, error
+    ---@return boolean, string? content string if successful otherwise nil, error
     function read_file(path)
         local file, error = io.open(path, "r")
         if (not file) then
-            return nil, error
+            return false, error
         end
         local content, error = file:read("*a")
         if (content == nil) then
-            return nil, error
+            return false, error
         end
         file:close()
         return content
@@ -356,7 +356,7 @@ if (api_version) then
 
     ---List the contents from a directory given directory path
     ---@param path string
-    ---@return integer | table
+    ---@return nil | integer | table
     function list_directory(path)
         -- TODO This needs a way to separate folders from files
         if (path) then
@@ -398,7 +398,7 @@ if (api_version) then
 
     ---Return the address of the object memory given object id
     ---@param objectId number
-    ---@return number
+    ---@return number?
     function get_object(objectId)
         if (objectId) then
             local object_memory = get_object_memory(objectId)
@@ -755,7 +755,7 @@ local function readList(address, propertyData)
     local list = {}
     for currentElement = 1, elementCount do
         list[currentElement] = operation.read(addressList +
-                                                  (propertyData.jump * (currentElement - 1)), propertyData)
+                                                  (propertyData.jump * (currentElement - 1)))
     end
     return list
 end
@@ -833,14 +833,6 @@ local function writeTagReference(address, propertyData, propertyValue)
     write_dword(address + 0xC, propertyValue)
 end
 
-local function readPointer(address, propertyData)
-    return typesOperations[propertyData.subtyping].read(address, propertyData)
-end
-
-local function writePointer(address, propertyData, propertyValue)
-    return typesOperations[propertyData.pointerType].write(address, propertyData, propertyValue)
-end
-
 -- Data types operations references
 typesOperations = {
     bit = {read = readBit, write = writeBit},
@@ -857,8 +849,7 @@ typesOperations = {
     ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
     table = {read = readTable, write = writeTable},
-    tagref = {read = readTagReference, write = writeTagReference},
-    pointer = {read = readPointer, write = writePointer}
+    tagref = {read = readTagReference, write = writeTagReference}
 }
 
 -- Magic luablam metatable
@@ -949,6 +940,7 @@ end
 ---@field size number
 ---@field nextElementId number
 ---@field firstElementAddress number
+
 local dataTableStructure = {
     name = {type = "string", offset = 0},
     maxElements = {type = "word", offset = 0x20},
@@ -1192,7 +1184,7 @@ local tagCollectionStructure = {
 -- UnicodeStringList structure
 local unicodeStringListStructure = {
     count = {type = "byte", offset = 0x0},
-    stringList = {type = "list", offset = 0x4, elementsType = "pointer", jump = 0x14, pointerType = "string"}
+    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14}
 }
 
 ---@class bitmapSequence
@@ -1364,12 +1356,12 @@ local uiWidgetDefinitionStructure = {
     stringListIndex = {type = "short", offset = 0x12E},
     textHorizontalOffset = {type = "short", offset = 0x130},
     textVerticalOffset = {type = "short", offset = 0x132},
-    -- Deprecated
+    ---@deprecated
     eventType = {type = "byte", offset = 0x03F0},
-    -- Deprecated
+    ---@deprecated
     tagReference = {type = "word", offset = 0x400},
     childWidgetsCount = {type = "dword", offset = 0x03E0},
-    -- Deprecated
+    ---@deprecated
     childWidgetsList = {type = "list", offset = 0x03E4, elementsType = "dword", jump = 0x50},
     childWidgets = {
         type = "table",
@@ -1857,6 +1849,7 @@ local deviceMachineStructure = extendStructure(objectStructure, {
 ---@field iconColorG number
 ---@field iconColorB number
 ---@field textSpacing number
+
 local hudGlobalsStructure = {
     anchor = {type = "word", offset = 0x0},
     x = {type = "word", offset = 0x24},
