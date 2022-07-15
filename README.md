@@ -2,7 +2,7 @@
     <p align="center">
         <img width="250px" src="img/blam-logo.png"/>
     </p>
-    <h1 align="center">lua-blam 1.5.0</h1>
+    <h1 align="center">lua-blam 1.5.1</h1>
     <p align="center">
        Lua module to handle Halo Custom Edition game engine on runtime
     </p>
@@ -29,7 +29,7 @@ separately and helping scripters to write simpler and understandable code with g
 - Highly customizable
 - Cross-platform (Chimera, SAPP)
 - In code documentation
-- Auto completion (using [EmmyLua](https://github.com/EmmyLua))
+- Auto completion (using [EmmyLua](https://github.com/EmmyLua) via [Sumneko's Lua Language Server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua))
 
 ## Scripting with lua-blam:
 ```lua
@@ -55,8 +55,7 @@ if (playerAddress) then
 end
 ```
 
-## Visual Studio Code Integration using [VSCode-EmmyLua](https://github.com/EmmyLua/VSCode-EmmyLua):
-![lua-blamvscode](https://i.imgur.com/Ai2SuFH.gif)
+## Visual Studio Code Integration with [Sumneko's Lua Language Server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua):![lua-blamvscode](https://i.imgur.com/Ai2SuFH.gif)
 
 ## Installation
 Place a copy of the `blam.lua` file in the project folder of your script to enable automcompletion,
