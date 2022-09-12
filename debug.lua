@@ -122,6 +122,20 @@ function OnCommand(command)
         end
         console_out("Usage: plbiped <bipedTagName>")
         return false
+    elseif (action == "object_names") then
+        local objectName = args[2]
+        local objectNames = blam.scenario().objectNames
+        for _, object in pairs(objectNames) do
+            if objectName then
+                if (object:find(objectName)) then
+                    console_out(object)
+                    break
+                end
+            else
+                console_out(object)
+            end
+        end
+        return false
     end
 end
 
