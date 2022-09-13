@@ -1,10 +1,16 @@
 
-# Chimera - Lua API
+# Chimera - Lua
+Lua for Chimera is a feature that exposes different game functions to a scripting enviroment where
+different scripts can use Lua code to perform different actions in the game, such as creating a
+innovative gametype, adding new game features, functionality and create awesome mods with all we
+mentioned before.
 
+# Chimera - Lua API
 This is an alternative documentation for the Chimera Lua API for `chimera-581`, updated to the
-latest API available on `chimera-1.0.0-r899`, some parts are missing so if you don't find what you
+latest API available on `chimera-1.0.0-r912`, some parts are missing so if you don't find what you
 need here, take a look at the [original documentation](https://docs.google.com/document/d/1F3Q0blvHPgc7VfLJmhATIJrWZ0gMQ_KenkMsOQ7KKS0/edit) on Google Docs.
 
+- [Chimera - Lua](#chimera---lua)
 - [Chimera - Lua API](#chimera---lua-api)
 - [Global Variables](#global-variables)
 - [Game Functions](#game-functions)
@@ -26,9 +32,11 @@ need here, take a look at the [original documentation](https://docs.google.com/d
   - [`ticks`](#ticks)
   - [`load_ui_widget`](#load_ui_widget)
 - [I/O Memory Functions](#io-memory-functions)
-- [Isolated Functions](#isolated-functions)
+- [Data Functions](#data-functions)
   - [`create_directory`](#create_directory)
   - [`remove_directory`](#remove_directory)
+  - [`list_directory`](#list_directory)
+  - [`directory_exists`](#directory_exists)
 
 # Global Variables
 
@@ -312,7 +320,7 @@ segmentation fault. This will invariably result in an exception error.
 **// TODO**
 
 
-# Isolated Functions
+# Data Functions
 
 These functions perform operations that only can access and write data related to the current
 script, these functions will operate only on the "chimera/lua/data" in a folder with the same name
@@ -337,15 +345,15 @@ end
 ```
 
 ## `remove_directory`
-Attemp to remove a directory given path for it.
+Attemtp to remove a directory given path for it.
 
-**Takes:** `string` DirectoryName
+**Takes:** `string` path
 
-**Returns:** `boolean` Result
+**Returns:** `boolean` result
 
 Example:
 ```lua
-local result = remove_directory("logs")
+local removed = remove_directory("logs")
 if (result) then
     console_out("Logs folder has been removed.")
 else
@@ -353,7 +361,34 @@ else
 end
 ```
 
-table list_directory(directory)
+## `list_directory`
+Attempt to list files and folders given a directory path.
+
+**Takes:** `string` path
+
+**Returns:** `boolean` result
+
+Example:
+```lua
+local list = list_directory("configs")
+for index,v in pairs(list) do
+  console_out(v)
+end
+```
+
+## `directory_exists`
+Attempt to find if a directory exists.
+
+Takes: `string` path
+
+Returns: `boolean` result
+
+Example:
+```lua
+if directory_exists("my_folder") then
+   console_out("It exists")
+end
+```
 
 bool directory_exists(directory)
 
