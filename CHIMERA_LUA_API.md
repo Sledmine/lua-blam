@@ -1,42 +1,47 @@
 
 # Chimera - Lua
 Lua for Chimera is a feature that exposes different game functions to a scripting enviroment where
-different scripts can use Lua code to perform different actions in the game, such as creating a
-innovative gametype, adding new game features, functionality and create awesome mods with all we
+different scripts can use Lua code to perform different actions in the game, such as creating an
+innovative game type, adding new game features, functionality and create awesome mods with all we
 mentioned before.
 
 # Chimera - Lua API
 This is an alternative documentation for the Chimera Lua API for `chimera-581`, updated to the
 latest API available on `chimera-1.0.0-r912`, some parts are missing so if you don't find what you
-need here, take a look at the [original documentation](https://docs.google.com/document/d/1F3Q0blvHPgc7VfLJmhATIJrWZ0gMQ_KenkMsOQ7KKS0/edit) on Google Docs.
-
+need here, take a look at the [original documentation.](archive/CHIMERA_LUA_DOCS_2_X_X.pdf)
 - [Chimera - Lua](#chimera---lua)
 - [Chimera - Lua API](#chimera---lua-api)
 - [Global Variables](#global-variables)
-- [Game Functions](#game-functions)
+- [Game functions](#game-functions)
   - [`console_is_open`](#console_is_open)
   - [`console_out`](#console_out)
-  - [`delete_object`](#delete_object)
   - [`execute_script`](#execute_script)
-  - [`get_dynamic_player`](#get_dynamic_player)
   - [`get_global`](#get_global)
-  - [`get_object`](#get_object)
-  - [`get_tag`](#get_tag)
-  - [`hud_message`](#hud_message)
-  - [`set_callback`](#set_callback)
   - [`set_global`](#set_global)
+  - [`get_tag`](#get_tag)
+  - [`set_callback`](#set_callback)
   - [`set_timer`](#set_timer)
   - [`stop_timer`](#stop_timer)
-  - [`spawn_object`](#spawn_object)
   - [`tick_rate`](#tick_rate)
   - [`ticks`](#ticks)
+- [Object functions](#object-functions)
+  - [`spawn_object`](#spawn_object)
+  - [`delete_object`](#delete_object)
+  - [`get_object`](#get_object)
+  - [`get_dynamic_player`](#get_dynamic_player)
+- [Interface functions](#interface-functions)
+  - [`hud_message`](#hud_message)
   - [`load_ui_widget`](#load_ui_widget)
-- [I/O Memory Functions](#io-memory-functions)
-- [Data Functions](#data-functions)
+- [Memory functions](#memory-functions)
+- [Data functions](#data-functions)
   - [`create_directory`](#create_directory)
   - [`remove_directory`](#remove_directory)
-  - [`list_directory`](#list_directory)
   - [`directory_exists`](#directory_exists)
+  - [`list_directory`](#list_directory)
+  - [`write_file`](#write_file)
+  - [`read_file`](#read_file)
+  - [`delete_file`](#delete_file)
+  - [`file_exists`](#file_exists)
 
 # Global Variables
 
@@ -56,14 +61,14 @@ These are global variables that can be used by the script. Some of these variabl
 | script_type        | `string`         | This is the name of the script. If the script is a global script, it will be defined as the filename of the script. Otherwise, it will be the name of the map.                  |
 | server_type        | `string`         | This is the server type, possible values are, none, local, dedicated.                                                                                                           |
 
-# Game Functions
+# Game functions
 
-These functions can get or cause miscellaneous things to the game.
+These functions can get, set or perform different operations that interact with the game state.
 
 ## `console_is_open`
-Return true if the player has the console open.
+Return true if the player has the console open, always returns true on SAPP.
 
-**Returns:** `boolean` Open
+**Returns:** `boolean` IsOpen
 
 Example:
 ```lua
@@ -72,14 +77,14 @@ if (console_is_open()) then
 end
 ```
 ## `console_out`
-Output text to the console, optional text colors avoid sending console messages if console_is_open()
-is true to avoid annoying the player.
+Output text to the console, optional text colors in decimal format, avoid sending console messages
+if console_is_open() is true to avoid annoying the player.
 
-**Takes (a):** `string` Output
+**Takes (a):** `string` text
 
-**Takes (b):** `string` Output, `number` red, `number` green, `number` blue
+**Takes (b):** `string` text, `number` red, `number` green, `number` blue
 
-**Takes (c):** `string` Output, `number` alpha, `number` red, `number` green, `number` blue
+**Takes (c):** `string` text, `number` alpha, `number` red, `number` green, `number` blue
 
 Example:
 ```lua
@@ -88,41 +93,15 @@ console_out("Halo World, with RGB color!", 0.5, 1, 0.3)
 console_out("Halo World, with ARGB color!", 1, 0.5, 1, 0.3)
 ```
 
-## `delete_object`
-Despawn an object given ObjectID. An error will occur if the object does not exist.
-
-**Takes:** `number` ObjectID
-
-Example:
-```lua
-delete_object(31456126446)
-```
-
 ## `execute_script`
 Execute a custom Halo script. A script can be either a standalone Halo command or a Lisp-formatted
 Halo scripting block.
 
-**Takes:** `string` Script
+**Takes:** `string` script
 
 Example:
 ```lua
 execute_script("sv_players")
-```
-
-## `get_dynamic_player`
-Attempt to get the address to the player’s unit object, returning nil on failure. If no argument is
-given, the address to the local player’s unit object is returned, instead.
-
-
-**Takes:** optional `number` PlayerIndex
-
-**Returns:** optional `number` Address
-
-Example:
-```lua
-local current_player_object_address = get_dynamic_player()
-
-local player_4_object_address = get_dynamic_player(4)
 ```
 
 ## `get_global`
@@ -139,17 +118,14 @@ Example:
 local current_firefight_wave = get_global("wave")
 ```
 
-## `get_object`
-Get the address to an object, returning nil on failure.
+## `set_global`
+Set the value of a Halo scripting global. An error will occur if the global does not exist.
 
-**Takes:** `number` ObjectID
-**Returns (a):** nil
-**Returns (b):** optional `number` Address
+**Note:** For `boolean` globals, if Value is a nonzero number, then it will be treated as `true`.
 
-Example:
-```lua
-local object_address = get_object(3456789065)
-```
+**Takes (a):** `string` globalName, `number` value
+
+**Takes (b):** `string` globalName, `boolean` value
 
 ## `get_tag`
 Attempt to get the address to the entry of a specified tag in the tag array, returning nil on
@@ -164,18 +140,6 @@ failure.
 Example:
 ```lua
 local pistol_tag_address = get_tag("weapon","weapons\\pistol\\pistol")
-```
-
-## `hud_message`
-Output text to the HUD.
-
-**WARNING!!!!** We found this function can cause random crashes, at least on our chimera lua build.
-
-**Takes:** `string` Output
-
-Example:
-```lua
-hud_message("Halo World from HUD!")
 ```
 
 ## `set_callback`
@@ -204,15 +168,6 @@ function OnTick()
 end 
 set_callback("tick", "OnTick")
 ```
-
-## `set_global`
-Set the value of a Halo scripting global. An error will occur if the global does not exist.
-
-**Note:** For `boolean` globals, if Value is a nonzero number, then it will be treated as `true`.
-
-**Takes (a):** `string` GlobalName, `number` Value
-
-**Takes (b):** `string` GlobalName, `boolean` Value
 
 Example:
 ```lua
@@ -250,21 +205,6 @@ Example:
 stop_timer(5)
 ```
 
-## `spawn_object`
-Attempt to spawn an object. An error will occur if the tag does not exist. This function may be
-intercepted by the spawn event by a Lua script.
-
-**Takes (a):** `number` TagID, `number` X, `number` Y, `number` Z
-
-**Takes (b):** `string` TagClass, `string` TagPath, `number` X, `number` Y, `number` Z
-
-**Returns:** `number` ObjectID
-
-Example:
-```lua
-local object_id = spawn_object("weapon","weapons\\pistol\\pistol", 0, 10, -4.5)
-```
-
 ## `tick_rate`
 Get or set the tick rate. The tick rate cannot be set lower than 0.01.
 
@@ -292,6 +232,82 @@ Example:
 console_out("Ticks that have passed " .. tostring(ticks()))
 ```
 
+---
+
+# Object functions
+Functions that can alter the objects game state, spawn new objects in game, erase existing ones,
+etc.
+
+
+## `spawn_object`
+Attempt to spawn an object. An error will occur if the tag does not exist. This function may be
+intercepted by the spawn event by a Lua script.
+
+**Takes (a):** `number` tagId, `number` x, `number` y, `number` z
+
+**Takes (b):** `string` tagClass, `string` tagPath, `number` x, `number` y, `number` z
+
+**Returns:** `number` objectId
+
+Example:
+```lua
+local object_id = spawn_object("weapon","weapons\\pistol\\pistol", 0, 10, -4.5)
+```
+
+## `delete_object`
+Despawn an object given objectId. An error will occur if the object does not exist.
+
+**Takes:** `number` objectId
+
+Example:
+```lua
+delete_object(31456126446)
+```
+
+## `get_object`
+Get the address to an object, returning nil on failure.
+
+**Takes:** `number` objectId
+
+**Returns:** `number` address
+
+Example:
+```lua
+local object_address = get_object(3456789065)
+```
+
+## `get_dynamic_player`
+Attempt to get the address to the player’s unit object, returning nil on failure. If no argument is
+given, the address to the local player’s unit object is returned, instead.
+
+**Takes:** optional `number` PlayerIndex
+
+**Returns:** optional `number` Address
+
+Example:
+```lua
+local current_player_object_address = get_dynamic_player()
+
+local player_4_object_address = get_dynamic_player(4)
+```
+
+---
+
+# Interface functions
+Functions that allow you to give some kind of interaction with the game interface.
+
+## `hud_message`
+Output text to the HUD.
+
+**WARNING!!!!** We found this function can cause random crashes, at least on our chimera lua build.
+
+**Takes:** `string` Output
+
+Example:
+```lua
+hud_message("Halo World from HUD!")
+```
+
 ## `load_ui_widget`
 Attempt to load and open a ui widget in the game given tag path.
 
@@ -310,7 +326,7 @@ end
 
 ```
 
-# I/O Memory Functions
+# Memory functions
 These functions read/write Halo’s virtual memory. If the script is sandboxed, then write functions
 will only work for addresses between 0x40000000 and 0x41B00000.
 
@@ -320,7 +336,7 @@ segmentation fault. This will invariably result in an exception error.
 **// TODO**
 
 
-# Data Functions
+# Data functions
 
 These functions perform operations that only can access and write data related to the current
 script, these functions will operate only on the "chimera/lua/data" in a folder with the same name
@@ -354,10 +370,25 @@ Attemtp to remove a directory given path for it.
 Example:
 ```lua
 local removed = remove_directory("logs")
-if (result) then
+if result then
     console_out("Logs folder has been removed.")
 else
     console_out("A problem occurred at removing logs folder.")
+end
+```
+
+## `directory_exists`
+Attempt to find if a directory exists.
+
+Takes: `string` path
+
+Returns: `boolean` result
+
+Example:
+```lua
+local exists = directory_exists("my_folder")
+if exists then
+   console_out("It exists")
 end
 ```
 
@@ -371,32 +402,72 @@ Attempt to list files and folders given a directory path.
 Example:
 ```lua
 local list = list_directory("configs")
-for index,v in pairs(list) do
-  console_out(v)
+for index, element in pairs(list) do
+  console_out(element)
 end
 ```
 
-## `directory_exists`
-Attempt to find if a directory exists.
+## `write_file`
+Write content to a text file given file path.
 
-Takes: `string` path
+**Takes:** `string` path, `string` content, `boolean` append
 
-Returns: `boolean` result
+**Returns:** `boolean` result
 
 Example:
 ```lua
-if directory_exists("my_folder") then
-   console_out("It exists")
+local wrote = write_file("settings.txt", "some settings stuff")
+if wrote then
+  console_out("File was written successfully")
 end
 ```
 
-bool directory_exists(directory)
+## `read_file`
+Read the contents from a file given file path.
 
-bool write_file(file, content, append)
+Takes: `string` path
 
-string|nil read_file(file)
+Returns: `string` content | `nil`
 
-bool delete_file(file)
+Example:
+```lua
+local content = read_file("settings.txt")
+if content then
+   console_out(content)
+else
+    console_out("An error ocurred at reading settings.txt")
+end
+```
+## `delete_file`
+Delete a file given file path.
 
-bool file_exists(file)
+**Takes:** `string` path
 
+**Returns:** `boolean` result
+
+Example:
+```lua
+local deleted = delete_file("settings.txt")
+if deleted then
+   console_out("Successfully deleted settings.txt")
+else
+   console_out("An error ocurred at deleting settings.txt")
+end
+```
+
+## `file_exists`
+Return if a file exists given file path.
+
+**Takes:** `string` path
+
+**Returns:** `boolean` result
+
+Example:
+```lua
+local exists = file_exists("settings.txt")
+if exists then
+   console_out("File settings.txt exists!")
+else
+   console_out("settings.txt does not exists.")
+end
+```

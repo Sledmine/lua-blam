@@ -296,9 +296,16 @@ local backupFunctions = {}
 backupFunctions.spawn_object = _G.spawn_object
 backupFunctions.get_dynamic_player = _G.get_dynamic_player
 
+backupFunctions.create_directory = _G.create_directory
+backupFunctions.remove_directory = _G.remove_directory
+backupFunctions.directory_exists = _G.directory_exists
+backupFunctions.list_directory = _G.list_directory
+
 backupFunctions.write_file = _G.write_file
 backupFunctions.read_file = _G.read_file
-backupFunctions.directory_exists = _G.directory_exists
+backupFunctions.delete_file = _G.delete_file
+backupFunctions.file_exists = _G.file_exists
+
 backupFunctions.get_tag = _G.get_tag
 backupFunctions.get_object = _G.get_object
 backupFunctions.delete_object = _G.delete_object
@@ -360,7 +367,7 @@ function write_file(path, content)
     end
 end
 
----Read the contents from a file given file path
+---Read the contents from a file given file path.
 ---@param path string Path to the file to read
 ---@return boolean, string? content string if successful otherwise nil, error
 function read_file(path)
@@ -374,6 +381,32 @@ function read_file(path)
     end
     file:close()
     return content
+end
+
+---Attempt create a directory with the given path.
+---
+---An error will occur if the directory can not be created.
+---@param path string Path to the directory to create
+---@return boolean
+function create_directory(path)
+    local success, error = os.execute("mkdir " .. path)
+    if (not success) then
+        return false
+    end
+    return true
+end
+
+---Attempt to remove a directory with the given path.
+---
+---An error will occur if the directory can not be removed.
+---@param path string Path to the directory to remove
+---@return boolean
+function remove_directory(path)
+    local success, error = os.execute("rmdir -r " .. path)
+    if (not success) then
+        return false
+    end
+    return true
 end
 
 ---Verify if a directory exists given directory path
@@ -408,6 +441,25 @@ function list_directory(path)
     return nil
 end
 
+---Delete a file given file path
+---@param path string
+---@return boolean
+function delete_file(path)
+    return os.remove(path)
+end
+
+---Return if a file exists given file path.
+---@param path string
+---@return boolean
+function file_exists(path)
+    local file = io.open(path, "r")
+    if (file) then
+        file:close()
+        return true
+    end
+    return false
+end
+
 ---Return the memory address of a tag given tagId or tagClass and tagPath
 ---@param tagIdOrTagType string | number
 ---@param tagPath? string
@@ -420,7 +472,9 @@ function get_tag(tagIdOrTagType, tagPath)
     end
 end
 
----Execute a game command or script block
+---Execute a custom Halo script.
+---
+---A script can be either a standalone Halo command or a Lisp-formatted Halo scripting block.
 ---@param command string
 function execute_script(command)
     return execute_command(command)
@@ -439,13 +493,14 @@ function get_object(objectId)
     return nil
 end
 
---- Delete an object given object id
+---Despawn an object given objectId. An error will occur if the object does not exist.
 ---@param objectId number
 function delete_object(objectId)
     destroy_object(objectId)
 end
 
----Print text into console
+---Output text to the console, optional text colors in decimal format.<br>
+---Avoid sending console messages if console_is_open() is true to avoid annoying the player.
 ---@param message string
 ---@param red? number
 ---@param green? number
@@ -455,7 +510,7 @@ function console_out(message, red, green, blue)
     cprint(message)
 end
 
----Get if the game console is opened, always returns true on SAPP
+---Return true if the player has the console open, always returns true on SAPP.
 ---@return boolean
 function console_is_open()
     return true
@@ -490,7 +545,9 @@ if (api_version) then
 else
     write_file = backupFunctions.write_file
     read_file = backupFunctions.read_file
+    delete_file = backupFunctions.delete_file
     directory_exists = backupFunctions.directory_exists
+    list_directory = backupFunctions.list_directory
     get_tag = backupFunctions.get_tag
     get_object = backupFunctions.get_object
     delete_object = backupFunctions.delete_object
@@ -1040,7 +1097,7 @@ local deviceGroupsTableStructure = {
 ---@field rollVel number Current velocity of the object in roll
 ---@field locationId number Current id of the location in the map
 ---@field boundingRadius number Radius amount of the object in radians
----@field type number Object type
+---@field class objectClasses Object type
 ---@field team number Object multiplayer team
 ---@field nameIndex number Index of object name in the scenario tag
 ---@field playerId number Current player id if the object
@@ -1099,7 +1156,9 @@ local objectStructure = {
     rollVel = {type = "float", offset = 0x94},
     locationId = {type = "dword", offset = 0x98},
     boundingRadius = {type = "float", offset = 0xAC},
+    ---@deprecated
     type = {type = "word", offset = 0xB4},
+    class = {type = "word", offset = 0xB4},
     team = {type = "word", offset = 0xB8},
     nameIndex = {type = "word", offset = 0xBA},
     playerId = {type = "dword", offset = 0xC0},
