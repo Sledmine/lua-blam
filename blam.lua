@@ -293,28 +293,29 @@ local dPadValues = {
 
 local backupFunctions = {}
 
+backupFunctions.console_is_open = _G.console_is_open
+backupFunctions.console_out = _G.console_out
+backupFunctions.execute_script = _G.execute_script
+backupFunctions.get_global = _G.get_global
+-- backupFunctions.set_global = _G.set_global
+backupFunctions.get_tag = _G.get_tag
+backupFunctions.set_callback = _G.set_callback
+
 backupFunctions.spawn_object = _G.spawn_object
+backupFunctions.delete_object = _G.delete_object
+backupFunctions.get_object = _G.get_object
 backupFunctions.get_dynamic_player = _G.get_dynamic_player
+
+backupFunctions.hud_message = _G.hud_message
 
 backupFunctions.create_directory = _G.create_directory
 backupFunctions.remove_directory = _G.remove_directory
 backupFunctions.directory_exists = _G.directory_exists
 backupFunctions.list_directory = _G.list_directory
-
 backupFunctions.write_file = _G.write_file
 backupFunctions.read_file = _G.read_file
 backupFunctions.delete_file = _G.delete_file
 backupFunctions.file_exists = _G.file_exists
-
-backupFunctions.get_tag = _G.get_tag
-backupFunctions.get_object = _G.get_object
-backupFunctions.delete_object = _G.delete_object
-backupFunctions.console_out = _G.console_out
-backupFunctions.console_is_open = _G.console_is_open
-backupFunctions.get_global = _G.get_global
--- backupFunctions.set_global = _G.set_global
-backupFunctions.hud_message = _G.hud_message
-backupFunctions.set_callback = _G.set_callback
 
 ------------------------------------------------------------------------------
 -- Chimera API auto completion
@@ -543,19 +544,26 @@ if (api_version) then
     server_type = "sapp"
     print("Compatibility with Chimera Lua API has been loaded!")
 else
+    console_is_open = backupFunctions.console_is_open
+    console_out = backupFunctions.console_out
+    execute_script = backupFunctions.execute_script
+    get_global = backupFunctions.get_global
+    -- set_global = -- backupFunctions.set_global
+    get_tag = backupFunctions.get_tag
+    set_callback = backupFunctions.set_callback
+    spawn_object = backupFunctions.spawn_object
+    delete_object = backupFunctions.delete_object
+    get_object = backupFunctions.get_object
+    get_dynamic_player = backupFunctions.get_dynamic_player
+    hud_message = backupFunctions.hud_message
+    create_directory = backupFunctions.create_directory
+    remove_directory = backupFunctions.remove_directory
+    directory_exists = backupFunctions.directory_exists
+    list_directory = backupFunctions.list_directory
     write_file = backupFunctions.write_file
     read_file = backupFunctions.read_file
     delete_file = backupFunctions.delete_file
-    directory_exists = backupFunctions.directory_exists
-    list_directory = backupFunctions.list_directory
-    get_tag = backupFunctions.get_tag
-    get_object = backupFunctions.get_object
-    delete_object = backupFunctions.delete_object
-    console_out = backupFunctions.console_out
-    console_is_open = backupFunctions.console_is_open
-    get_global = backupFunctions.get_global
-    hud_message = backupFunctions.hud_message
-    set_callback = backupFunctions.set_callback
+    file_exists = backupFunctions.file_exists
 end
 
 ------------------------------------------------------------------------------
