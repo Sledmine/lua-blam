@@ -8,7 +8,7 @@ mentioned before.
 # Chimera - Lua API
 This is an alternative documentation for the Chimera Lua API for `chimera-581`, updated to the
 latest API available on `chimera-1.0.0-r912`, some parts are missing so if you don't find what you
-need here, take a look at the [original documentation.](archive/CHIMERA_LUA_DOCS_2_X_X.pdf)
+need here, take a look at the [original documentation.](../archive/CHIMERA_LUA_DOCS_2_X_X.pdf)
 - [Chimera - Lua](#chimera---lua)
 - [Chimera - Lua API](#chimera---lua-api)
 - [Global Variables](#global-variables)
