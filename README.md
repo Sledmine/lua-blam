@@ -73,7 +73,7 @@ Give a look to the examples folder in this repository for real use cases and exa
 There is a WIP documentation for Chimera Lua scripting on this repository, also a Changelog is
 hosted here:
 
-- [Chimera Lua API Documentation (Work In Progress)](CHIMERA_LUA_API.md)
+- [Chimera Lua API Documentation](docs/CHIMERA_LUA.md)
 - [Changelog](CHANGELOG.md)
 
 ## Support
