@@ -8,6 +8,22 @@ local tagClasses = blam.tagClasses
 local glue = require "glue"
 local split = glue.string.split
 local escape = glue.string.esc
+local inspect = require "inspect"
+
+local commands = {
+    spawn = "Usage: spawn <tagClass> <tagKeyword>",
+    list = "Usage: list <tagClass> [ <tagName> ]",
+    anim = "Usage: anim <animIndex>",
+    localhost = "Usage: localhost",
+    lan = "Usage: lan <map>",
+    speed = "Usage: speed <speed>",
+    plprop = "Usage: plprop <propName> <propValue>",
+    plbiped = "Usage: plbiped <tagKeyword>",
+    object_names = "Usage: object_names",
+    open_widget = "Usage: open_widget <tagKeyword>",
+    set_aspect_ratio = "Usage: set_aspect_ratio <widthRatio> <heightRatio>",
+    tagcount = "Usage: tagcount",
+}
 
 function OnCommand(command)
     command = escape(command)
@@ -26,7 +42,7 @@ function OnCommand(command)
                 local objectId = spawn_object(tag.id, objectX, objectY, objectZ)
                 if (objectId) then
                     local object = blam.object(get_object(objectId))
-                    if (not object.isOutSideMap) then
+                    if (object and not object.isOutSideMap) then
                         console_out("Object successfully spawned!", 0, 1, 0)
                         return false
                     else
@@ -38,7 +54,7 @@ function OnCommand(command)
                 end
             end
         else
-            console_out("Usage: spawn <tagClass> <tagKeyword>")
+            console_out(commands.spawn)
             return false
         end
         console_out("Error, specified object does not exist.", 1, 0, 0)
@@ -50,12 +66,15 @@ function OnCommand(command)
             local tags = findTagsList(tagName, tagClass)
             if (tags) then
                 for _, tag in pairs(tags) do
+                    -- print(tag.path, glue.string.tohex(read_dword(get_tag(tag.id) + 0x14)))
+                    -- print(tag.path, glue.string.tohex(tag.data))
                     console_out(tag.path)
+                    --print(tag.path, tag.index, tag.id, glue.string.tohex(tag.data))
                 end
                 return false
             end
         else
-            console_out("Usage: <tagClass> [ <tagName> ]")
+            console_out(commands.list)
             return false
         end
         console_out("Error, no tags were found.")
@@ -67,7 +86,7 @@ function OnCommand(command)
             playerBiped.animation = animationIndex
             playerBiped.animationFrame = 0
         end
-    elseif (action == "local") then
+    elseif (action == "localhost") then
         execute_script("connect 127.0.0.1:2302 x")
         return false
     elseif (action == "lan") then
@@ -136,7 +155,42 @@ function OnCommand(command)
             end
         end
         return false
+    elseif (action == "test") then
+        local pauseMenuWidget = blam.uiWidgetDefinition(findTag("1p_pause_game", tagClasses.uiWidgetDefinition).id)
+        if pauseMenuWidget then
+            local logoBitmapTag = findTag("insurrection_logo", tagClasses.bitmap).id
+            pauseMenuWidget.backgroundBitmap = logoBitmapTag.id
+        end
+        return false
+    elseif action == "open_widget" then
+        local widgetName = args[2]
+        local widgetTag = findTag(widgetName, tagClasses.uiWidgetDefinition)
+        if widgetTag then
+            load_ui_widget(widgetTag.path)
+        else
+            console_out("Error, widget tag could not be found.", table.unpack(blam.consoleColors.error))
+        end
+        return false
+    elseif action == "set_aspect_ratio" then
+        local widthRatio = args[2]
+        local heightRatio = args[3]
+        if widthRatio and heightRatio then
+            local harmony = require "mods.harmony"
+            harmony.menu.set_aspect_ratio(tonumber(widthRatio), tonumber(heightRatio))
+        else
+            console_out("Usage: set_aspect_ratio <widthRatio> <heightRatio>")
+        end
+        return false
+    elseif (action == "tagcount") then
+        console_out("Tag count: " .. blam.tagDataHeader.count)
+        return false
+    elseif (action == "debug") then
+        for k,v in pairs(commands) do
+            console_out(k .. " - " .. v)
+        end
+        return false
     end
 end
 
 set_callback("command", "OnCommand")
+-- 
