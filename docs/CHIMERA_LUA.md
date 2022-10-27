@@ -54,11 +54,11 @@ These are global variables that can be used by the script. Some of these variabl
 | full_build         | `number`         | If the build of Chimera being used is an alpha build, then this is what the next public release build number will be. Otherwise, this is the build of Chimera being used.       |
 | gametype           | `string` / `nil` | This is the current gametype that is running. If no gametype is running, this will be set to nil, possible values are: ctf, slayer, oddball, king, race.                        |
 | local_player_index | `number` / `nil` | This is the index of the local player. This is a value between 0 and 15, this value does not match with player index in the server and is not instantly assigned after joining. |
-| map                | `string`         | This is the name of the current map.                                                                                                                                            |
-| map_is_protected   | `boolean`        | Return if the map has protected tags data                                                                                                                                       |
+| map                | `string`         | This is the name of the current loaded map.                                                                                                                                     |
+| map_is_protected   | `boolean`        | Return if the map has protected tags data.                                                                                                                                      |
 | sandboxed          | `boolean`        | Return whether or not the script is sandboxed. See Sandoboxed Scripts for more information.                                                                                     |
 | script_name        | `string`         | This is the name of the script. If the script is a global script, it will be defined as the filename of the script. Otherwise, it will be the name of the map.                  |
-| script_type        | `string`         | This is the name of the script. If the script is a global script, it will be defined as the filename of the script. Otherwise, it will be the name of the map.                  |
+| script_type        | `string`         | This is the script type, possible values are global or map.                                                                                                                     |
 | server_type        | `string`         | This is the server type, possible values are, none, local, dedicated.                                                                                                           |
 
 # Game functions
