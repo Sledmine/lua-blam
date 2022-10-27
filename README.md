@@ -2,7 +2,7 @@
     <p align="center">
         <img width="250px" src="img/blam-logo.png"/>
     </p>
-    <h1 align="center">lua-blam 1.5.1</h1>
+    <h1 align="center">lua-blam 1.6.0</h1>
     <p align="center">
        Lua module to handle Halo Custom Edition game engine on runtime
     </p>
@@ -31,24 +31,26 @@ separately and helping scripters to write simpler and understandable code with g
 - In code documentation
 - Auto completion (using [EmmyLua](https://github.com/EmmyLua) via [Sumneko's Lua Language Server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua))
 
-## Scripting with lua-blam:
+## Scripting using lua-blam:
 ```lua
 -- Make current player invisible with flashlight key
 local player = blam.biped(get_dynamic_player())
-if (player and player.flaslightKey) then
-    player.invisible = true
+if player then
+    if player.flaslightKey then
+        player.invisible = true
+    end
 end
 ```
 
-## Scripting without lua-blam:
+## Scripting WITHOUT lua-blam:
 ```lua
 -- Make current player invisible with flashlight key
 local playerAddress = get_dynamic_player()
-if (playerAddress) then
+if playerAddress then
     local player = get_object(playerAddress)
-    if (player) then
+    if player then
         local playerFlashlightKey = read_bit(player + 0x208, 8)
-        if (playerFlashlightKey == 1) then
+        if playerFlashlightKey == 1 then
             write_bit(player + 0x204, 4, 1)
         end
     end
@@ -70,10 +72,12 @@ documentation needed can be found via automcompletion of the IDE.
 
 Give a look to the examples folder in this repository for real use cases and examples of how to use implement lua-blam.
 
-There is a WIP documentation for Chimera Lua scripting on this repository, also a Changelog is
+There is a documentation for Chimera Lua scripting on this repository, also a Changelog is
 hosted here:
 
 - [Chimera Lua API Documentation](docs/CHIMERA_LUA.md)
+- [ARCHIVED - SAPP Documentation](archive/SAPP_DOCS_2.5.pdf)
+- [ARCHIVED - Chimera Lua API Documentation](archive/CHIMERA_LUA_DOCS_2_X_X.pdf)
 - [Changelog](CHANGELOG.md)
 
 ## Support

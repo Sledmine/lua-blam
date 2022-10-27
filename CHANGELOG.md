@@ -1,5 +1,14 @@
 # Changelog
 
+# 1.6.0
+- Improved annotations (add better autocompletion, new variables, etc)
+- Added new SAPP bindings
+- Fixed some functions return
+- Added `isApparentlyDead` and `isSilentlyKilled` properties to `blamObject` structure
+
+# 1.5.1
+- Minor fixes
+
 # 1.5.0
 - Added `findTag` and `findTagsList` functions to search tags using a keyword or partial tag path
 
