@@ -3,7 +3,7 @@
 -- Sledmine, JerryBrick
 -- Easier memory handle and provides standard functions for scripting
 ------------------------------------------------------------------------------
-local blam = {_VERSION = "1.6.1"}
+local blam = {_VERSION = "1.6.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
