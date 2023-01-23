@@ -1,5 +1,8 @@
 # Changelog
 
+# 1.7.0
+- Added color properties for objects that allow changing from A -> D with lower and upper variants
+
 # 1.6.0
 - Improved annotations (add better autocompletion, new variables, etc)
 - Added new SAPP bindings
