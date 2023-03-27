@@ -2,6 +2,8 @@
 
 # 1.7.0
 - Added color properties for objects that allow changing from A -> D with lower and upper variants
+- Add requests implementation for client and server side
+- Add more SAPP bindings
 
 # 1.6.0
 - Improved annotations (add better autocompletion, new variables, etc)
