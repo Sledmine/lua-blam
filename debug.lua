@@ -9,6 +9,7 @@ local glue = require "glue"
 local split = glue.string.split
 local escape = glue.string.esc
 local inspect = require "inspect"
+local luna = require "luna"
 
 local commands = {
     spawn = "Usage: spawn <tagClass> <tagKeyword>",
@@ -23,6 +24,7 @@ local commands = {
     open_widget = "Usage: open_widget <tagKeyword>",
     set_aspect_ratio = "Usage: set_aspect_ratio <widthRatio> <heightRatio>",
     tagcount = "Usage: tagcount",
+    delete = "Usage: delete <tagClass> <tagKeyword>"
 }
 
 function OnCommand(command)
@@ -66,10 +68,7 @@ function OnCommand(command)
             local tags = findTagsList(tagName, tagClass)
             if (tags) then
                 for _, tag in pairs(tags) do
-                    -- print(tag.path, glue.string.tohex(read_dword(get_tag(tag.id) + 0x14)))
-                    -- print(tag.path, glue.string.tohex(tag.data))
                     console_out(tag.path)
-                    --print(tag.path, tag.index, tag.id, glue.string.tohex(tag.data))
                 end
                 return false
             end
@@ -110,16 +109,39 @@ function OnCommand(command)
         return false
     elseif (action == "plprop") then
         local key = args[2]
-        local cleanValue = args[3]:gsub("%%", "")
-        local value = tonumber(cleanValue) or cleanValue
+        local value = args[3]
+        if value then
+            value = tonumber(value) or value:gsub("%%", "")
+        end
         local playerBiped = blam.biped(get_dynamic_player())
-        if (key and value) then
-            if (playerBiped) then
+        if (playerBiped) then
+            if key and value then
                 playerBiped[key] = value
+            elseif key then
+                console_out(playerBiped[key])
+            else
+                console_out(commands.plprop)
             end
         else
-            console_out("Usage: property <key> <value>")
-            console_out(table.concat(glue.keys(blam.dumpObject(playerBiped)), ", "))
+            console_out("Error, player biped cannot be found.", 1, 0, 0)
+        end
+        return false
+    elseif action == "plprops" then
+        local filter = args[2]
+        local biped = blam.biped(get_dynamic_player())
+        if not biped then
+            console_out("Error, player biped cannot be found.", 1, 0, 0)
+            return false
+        end
+        local keys = table.keys(blam.dumpObject(biped)) --[=[@as string[]]=]
+        table.sort(keys)
+        if filter then
+            keys = table.filter(keys, function(key)
+                return key:find(filter, 1, true) ~= nil
+            end)
+        end
+        for _, key in pairs(keys) do
+            console_out(key)
         end
         return false
     elseif (action == "plbiped") then
@@ -155,20 +177,14 @@ function OnCommand(command)
             end
         end
         return false
-    elseif (action == "test") then
-        local pauseMenuWidget = blam.uiWidgetDefinition(findTag("1p_pause_game", tagClasses.uiWidgetDefinition).id)
-        if pauseMenuWidget then
-            local logoBitmapTag = findTag("insurrection_logo", tagClasses.bitmap).id
-            pauseMenuWidget.backgroundBitmap = logoBitmapTag.id
-        end
-        return false
     elseif action == "open_widget" then
         local widgetName = args[2]
         local widgetTag = findTag(widgetName, tagClasses.uiWidgetDefinition)
         if widgetTag then
             load_ui_widget(widgetTag.path)
         else
-            console_out("Error, widget tag could not be found.", table.unpack(blam.consoleColors.error))
+            console_out("Error, widget tag could not be found.",
+                        table.unpack(blam.consoleColors.error))
         end
         return false
     elseif action == "set_aspect_ratio" then
@@ -185,12 +201,29 @@ function OnCommand(command)
         console_out("Tag count: " .. blam.tagDataHeader.count)
         return false
     elseif (action == "debug") then
-        for k,v in pairs(commands) do
+        for k, v in pairs(commands) do
             console_out(k .. " - " .. v)
+        end
+        return false
+    elseif action == "delete" then
+        local tagClass = tagClasses[args[2]] or args[2]
+        local tagName = args[3] or ""
+        if tagClass and tagName then
+            for _, objectIndex in pairs(blam.getObjects()) do
+                local object = blam.object(get_object(objectIndex))
+                if object then
+                    local tag = blam.getTag(object.tagId)
+                    if tag and tag.class == tagClass and tag.path:find(tagName, 1, true) then
+                        console_out("Deleting object: " .. tag.path)
+                        delete_object(objectIndex)
+                    end
+                end
+            end
+        else
+            console_out("Usage: delete <tagClass> <tagKeyword>")
         end
         return false
     end
 end
 
 set_callback("command", "OnCommand")
--- 

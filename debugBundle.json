@@ -8,7 +8,8 @@
     "modules": [
         "glue",
         "blam",
-        "inspect"
+        "inspect",
+        "luna"
     ],
     "main": "debug",
     "output": "dist/debug.lua"
