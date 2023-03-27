@@ -1,12 +1,7 @@
-<html>
-    <p align="center">
-        <img width="250px" src="img/blam-logo.png"/>
-    </p>
-    <h1 align="center">lua-blam 1.6.0</h1>
-    <p align="center">
-       Lua module to handle Halo Custom Edition game engine on runtime
-    </p>
-</html>
+# lua-blam
+<img width="250px" height="250px" src="img/blam-logo.png" align="right"/>
+
+Lua module to handle Halo Custom Edition game engine on runtime
 
 ## What is lua-blam?
 Is a Lua module for scripting that allows you to handle Halo Custom Edition memory as objects
@@ -14,15 +9,15 @@ Is a Lua module for scripting that allows you to handle Halo Custom Edition memo
 Chimera and SAPP.
 
 ## What is intended for?
-LuaBlam aims to make easier and more understandable scripts providing simple syntax and accesible
+LuaBlam aims to make easier and more understandable scripts providing simple syntax and accessible
 API functions making a standard for game memory editing.
 
 ## Why should I use it?
 Scripting with raw low level functions to edit memory can lead to undesirable situations where you
-can introduce lot of harmful errors if you are not careful enough to mantain your code secure and
-continuously tested, also readeability for your code is key when it comes to open source scripts or
-colaborative work, lua-blam is perfect for both, keeping all the memory handling isolated and tested
-separately and helping scripters to write simpler and understandable code with good abstraction.
+can introduce lot of harmful errors if you are not careful enough to maintain your code secure and
+continuously tested, also readability for your code is key when it comes to open source scripts or
+collaborative work, lua-blam is perfect for both, keeping all the memory handling isolated and tested
+separately and helping developers to write simpler and understandable code with good abstraction.
 
 ## Highlights
 - Simple to implement and simple to learn
@@ -36,7 +31,7 @@ separately and helping scripters to write simpler and understandable code with g
 -- Make current player invisible with flashlight key
 local player = blam.biped(get_dynamic_player())
 if player then
-    if player.flaslightKey then
+    if player.flashlightKey then
         player.invisible = true
     end
 end
@@ -60,7 +55,7 @@ end
 ## Visual Studio Code Integration with [Sumneko's Lua Language Server](https://marketplace.visualstudio.com/items?itemName=sumneko.lua):![lua-blamvscode](https://i.imgur.com/Ai2SuFH.gif)
 
 ## Installation
-Place a copy of the `blam.lua` file in the project folder of your script to enable automcompletion,
+Place a copy of the `blam.lua` file in the project folder of your script to enable autocompletion,
 to use this module on Halo Custom Edition you need to place the `blam.lua` on the lua modules
 of your chimera folder `My Games\Halo CE\chimera\lua\modules`, however if you want to distribute your
 script with this module builtin you can take a look at bundling modular lua scripts using
@@ -68,7 +63,7 @@ script with this module builtin you can take a look at bundling modular lua scri
 
 ## Documentation
 As mentioned above lua-blam provides in code documentation, basically by using EmmyLua all the
-documentation needed can be found via automcompletion of the IDE.
+documentation needed can be found via autocompletion of the IDE.
 
 Give a look to the examples folder in this repository for real use cases and examples of how to use implement lua-blam.
 
