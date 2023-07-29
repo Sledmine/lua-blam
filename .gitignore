@@ -44,3 +44,5 @@ luac.out
 
 # Projects folder, release, etc
 dist/
+tags/*
+data/*
