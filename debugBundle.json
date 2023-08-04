@@ -6,7 +6,6 @@
         "modules/"
     ],
     "modules": [
-        "glue",
         "blam",
         "inspect",
         "luna"
