@@ -2,8 +2,22 @@
 
 # 1.7.0
 - Added color properties for objects that allow changing from A -> D with lower and upper variants
-- Add requests implementation for client and server side
-- Add more SAPP bindings
+- Added requests implementation for client and server side
+- Added more SAPP bindings
+- Added `getObjectIdBySyncedIndex` returns an object id for a network synced object given synced index
+- Fixed minor annotation issues
+- Added `scale` property to `object` structure, allows to change object scale
+- Added `maxHealth` property to `object` structure
+- Added `maxShield` property to `object` structure
+- Added `parentObjectId` property to `object` structure
+- Added `firstWeaponObjectId` property to `object` structure from 1st to 4th weapon index
+- Added `carrierObjectId` property to `weapon` structure
+- Added `isInInventory` property to `weapon` structure
+- Added `primaryTriggerState` property to `weapon` structure
+- Added `totalAmmo` property to `weapon` structure
+- Added `loadedAmmo` property to `weapon` structure
+- Fixed a typo in `positionGroupIndex` for `deviceMachine` structure
+- Added `blam.null` defintion, returns 0xFFFFFFFF
 
 # 1.6.0
 - Improved annotations (add better autocompletion, new variables, etc)
