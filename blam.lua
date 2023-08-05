@@ -2704,6 +2704,8 @@ end
 local rconEvents = {}
 local maxRconDataLength = 60
 
+blam.rcon = {}
+
 ---Define a request event callback
 ---@param eventName string
 ---@param callback fun(message?: string, playerIndex?: number): string?
