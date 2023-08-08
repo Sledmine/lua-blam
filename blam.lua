@@ -244,6 +244,15 @@ local unitTeamClasses = {
     unused9 = 9
 }
 
+-- Object network role classes
+---@enum objectNetworkRoleClasses
+local objectNetworkRoleClasses = {
+    master = 0,
+    puppet = 1,
+    locallyControlledPuppet = 2,
+    localOnly = 3
+}
+
 -- Standard console colors
 local consoleColors = {
     success = {1, 0.235, 0.82, 0},
@@ -1161,6 +1170,7 @@ local deviceGroupsTableStructure = {
 ---@class blamObject
 ---@field address number
 ---@field tagId number Object tag ID
+---@field networkRoleClass number Object network role class
 ---@field isGhost boolean Set object in some type of ghost mode
 ---@field isOnGround boolean Is the object touching ground
 ---@field ignoreGravity boolean Make object to ignore gravity
@@ -1243,6 +1253,7 @@ local deviceGroupsTableStructure = {
 -- blamObject structure
 local objectStructure = {
     tagId = {type = "dword", offset = 0x0},
+    networkRoleClass = {type = "dword", offset = 0x4},
     isGhost = {type = "bit", offset = 0x10, bitLevel = 0},
     isOnGround = {type = "bit", offset = 0x10, bitLevel = 1},
     ignoreGravity = {type = "bit", offset = 0x10, bitLevel = 2},
@@ -1742,6 +1753,18 @@ local weaponHudInterfaceStructure = {
 ---@field vX number
 ---@field vY number
 
+---@class scenarioScenery
+---@field typeIndex number
+---@field nameIndex string
+---@field notPlaced boolean
+---@field desiredPermutation number
+---@field x number
+---@field y number
+---@field z number
+---@field yaw number
+---@field pitch number
+---@field roll number
+
 ---@class scenario
 ---@field sceneryPaletteCount number Number of sceneries in the scenery palette
 ---@field sceneryPaletteList table Tag ID list of scenerys in the scenery palette
@@ -1755,6 +1778,8 @@ local weaponHudInterfaceStructure = {
 ---@field netgameFlagsList table List of netgame equipments
 ---@field objectNamesCount number Count of the object names in the scenario
 ---@field objectNames string[] List of all the object names in the scenario
+---@field sceneriesCount number Count of all the sceneries in the scenario
+---@field sceneries scenarioScenery[] List of all the sceneries in the scenario
 ---@field cutsceneFlagsCount number Count of all the cutscene flags in the scenario
 ---@field cutsceneFlags cutsceneFlag[] List of all the cutscene flags in the scenario
 
@@ -1834,6 +1859,24 @@ local scenarioStructure = {
         elementsType = "string",
         jump = 36,
         noOffset = true
+    },
+    sceneriesCount = {type = "dword", offset = 0x210},
+    sceneries = {
+        type = "table",
+        offset = 0x214,
+        jump = 0x48,
+        rows = {
+            typeIndex = {type = "word", offset = 0x0},
+            nameIndex = {type = "word", offset = 0x2},
+            notPlaced = {type = "bit", offset = 0x4, bitLevel = 0},
+            desiredPermutation = {type = "byte", offset = 0x6},
+            x = {type = "float", offset = 0x8},
+            y = {type = "float", offset = 0xC},
+            z = {type = "float", offset = 0x10},
+            yaw = {type = "float", offset = 0x14},
+            pitch = {type = "float", offset = 0x18},
+            roll = {type = "float", offset = 0x1C}
+        }
     },
     cutsceneFlagsCount = {type = "dword", offset = 0x4E4},
     cutsceneFlags = {
@@ -2170,6 +2213,7 @@ blam.netgameFlagClasses = netgameFlagClasses
 blam.gameTypeClasses = gameTypeClasses
 blam.multiplayerTeamClasses = multiplayerTeamClasses
 blam.unitTeamClasses = unitTeamClasses
+blam.objectNetworkRoleClasses = objectNetworkRoleClasses
 
 ---@class tagDataHeader
 ---@field array any
