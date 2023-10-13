@@ -1,5 +1,10 @@
 # Changelog
 
+# 1.8.0
+- Added `console_debug` function, allows to print debug messages to the console
+- Added experimental angle rotation functions
+- Added experimental properties for `player` structure
+
 # 1.7.0
 - Added color properties for objects that allow changing from A -> D with lower and upper variants
 - Added requests implementation for client and server side
