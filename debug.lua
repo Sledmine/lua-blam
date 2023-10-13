@@ -9,6 +9,10 @@ local objectClasses = blam.objectClasses
 local inspect = require "inspect"
 local luna = require "luna"
 
+-- State
+local debugCamera = false
+local camera
+
 local commands = {
     -- Game commands
     debug_spawn = "<tagClass> <tagKeyword> - Attempt to spawn any object in the map.",
@@ -23,10 +27,11 @@ local commands = {
     debug_network_objects = "",
     -- Player commands
     debug_player_animation = "<animIndex>",
-    debug_player_property = "<propName> <propValue>",
+    debug_object_property = "<objectIndex | objectId> <property> [ <value> ]",
     debug_player_properties = "[ <propName> ]",
     debug_player_biped = "<tagKeyword>",
-    debug_player_speed = "<speed>"
+    debug_player_speed = "<speed>",
+    debug_network_delay = "<delay>"
 }
 
 local function nulled(value)
@@ -69,7 +74,8 @@ function OnCommand(command)
         action = action:replace("debug_", "")
     end
     if action == "enter_vehicle" then
-        require "mods.balltze".unit_enter_vehicle(blam.player(get_player()).objectId, lastSpawnedObjectId, 0)
+        require"mods.balltze".unit_enter_vehicle(blam.player(get_player()).objectId,
+                                                 lastSpawnedObjectId, 0)
         return false
     elseif action == "debug" then
         local names = table.map(commands, function(v, k)
@@ -252,6 +258,8 @@ function OnCommand(command)
         local widgetTag = findTag(widgetName, tagClasses.uiWidgetDefinition)
         if widgetTag then
             load_ui_widget(widgetTag.path)
+            -- console_out(widgetTag.path .. " " .. widgetTag.id)
+            -- openWidget(widgetTag.id, true)
         else
             console_out("Error, widget tag could not be found.",
                         table.unpack(blam.consoleColors.error))
@@ -333,7 +341,74 @@ function OnCommand(command)
         end
         console_out("Network objects count: " .. count, table.unpack(countColorLevel))
         return false
+    elseif action == "network_delay" then
+        local delay = args[2]
+        if delay then
+            os.execute("ping 127.0.0.1 -n " .. delay .. " > NUL")
+        else
+            cmdinfo("debug_network_delay")
+        end
+        return false
+    elseif action == "test" then
+        local playerBiped = blam.biped(get_dynamic_player())
+        assert(playerBiped, "Error, player biped cannot be found.")
+        local biped = blam.bipedTag(playerBiped.tagId)
+        assert(biped, "Error, biped tag cannot be found.")
+        local model = blam.model(biped.model)
+        assert(model, "Error, biped model cannot be found.")
+        for i = 1, model.regionCount do
+            console_out("Model path: " .. model.regionList[i].name)
+            console_out("Model path: " .. model.regionList[i].permutationCount)
+        end
+        -- console_out("Model path: " .. model.regionList[1].permutationsList[1].name)
+    elseif action == "cam" then
+        if not debugCamera then
+            execute_script("debug_camera_save")
+            execute_script("debug_camera_load")
+            debugCamera = true
+            return false
+        end
+        execute_script("camera_control 1")
+        debugCamera = false
+        return false
+    end
+end
+
+function OnPreCamera(x, y, z, fov, vX, vY, vZ, v2X, v2Y, v2Z)
+    camera = {
+        x = x,
+        y = y,
+        z = z,
+        fov = fov,
+        vX = vX,
+        vY = vY,
+        vZ = vZ,
+        v2X = v2X,
+        v2Y = v2Y,
+        v2Z = v2Z
+    }
+    return x, y, z, fov, vX, vY, vZ, v2X, v2Y, v2Z
+end
+
+local bounds = {left = 0, top = 460, right = 640, bottom = 480}
+local textColor = {1, 1, 1, 1}
+function OnFrame()
+    if debugCamera then
+        local yaw, pitch, roll = blam.getRotationFromVectors({
+            x = camera.vX,
+            y = camera.vY,
+            z = camera.vZ
+        }, {x = camera.v2X, y = camera.v2Y, z = camera.v2Z})
+        local coordinates = "Camera: " .. "X: " .. camera.x .. " Y: " .. camera.y .. " Z: " ..
+                                camera.z
+        local angles = "Yaw: " .. yaw .. " Pitch: " .. pitch .. " Roll: " .. roll
+        draw_text(coordinates, bounds.left + 16, bounds.top, bounds.left + 400, bounds.bottom,
+                  "console", "left", table.unpack(textColor))
+        draw_text(angles, bounds.left + 16, bounds.top - 16, bounds.left + 400, bounds.bottom,
+                  "console", "left", table.unpack(textColor))
     end
 end
 
 set_callback("command", "OnCommand")
+set_callback("precamera", "OnPreCamera")
+set_callback("preframe", "OnFrame")
