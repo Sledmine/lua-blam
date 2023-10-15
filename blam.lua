@@ -51,6 +51,40 @@ local function split(s, sep)
     return array
 end
 
+--- Get if given value equals a null value in game engine terms
+---@param value any
+---@return boolean
+function blam.isNull(value)
+    if value == 0xFF or value == 0xFFFF or value == null or value == nil then
+        return true
+    end
+    return false
+end
+
+---Return if game instance is host
+---@return boolean
+function blam.isGameHost()
+    return server_type == "local"
+end
+
+---Return if game instance is single player
+---@return boolean
+function blam.isGameSinglePlayer()
+    return server_type == "none"
+end
+
+---Return if the game instance is running on a dedicated server or connected as a "network client"
+---@return boolean
+function blam.isGameDedicated()
+    return server_type == "dedicated"
+end
+
+---Return if the game instance is a SAPP server
+---@return boolean
+function blam.isGameSAPP()
+    return register_callback or server_type == "sapp"
+end
+
 ------------------------------------------------------------------------------
 -- Blam! engine data
 ------------------------------------------------------------------------------
@@ -71,7 +105,7 @@ local addressList = {
 }
 
 -- Server side addresses adjustment
-if (api_version or server_type == "sapp") then
+if blam.isGameSAPP() then
     addressList.deviceGroupsTable = 0x006E1C50
     addressList.objectTable = 0x4005062C
     addressList.syncedNetworkObjects = 0x00598020 -- not pointer cause cheat engine sucks
@@ -641,7 +675,7 @@ function stop_timer(timerId)
     error("SAPP does not support stopping timers")
 end
 
-if api_version then
+if register_callback then
     -- Provide global server type variable on SAPP
     server_type = "sapp"
     print("Compatibility with Chimera Lua API has been loaded!")
@@ -1003,7 +1037,8 @@ end
 
 local function readTable(address, propertyData)
     local table = {}
-    local elementsCount = read_byte(address - 0x4)
+    --local elementsCount = read_byte(address - 0x4)
+    local elementsCount = read_dword(address - 0x4)
     local firstElement = read_dword(address)
     for elementPosition = 1, elementsCount do
         local elementAddress = firstElement + ((elementPosition - 1) * propertyData.jump)
@@ -2005,10 +2040,13 @@ local weaponTagStructure = {model = {type = "dword", offset = 0x34}}
 -- @field y number
 -- @field z number
 
+---@class modelPermutation
+---@field name string
+
 ---@class modelRegion
 ---@field name string
 ---@field permutationCount number
--- @field markersList modelMarkers[]
+---@field permutationsList modelPermutation[]
 
 ---@class modelNode
 ---@field x number
@@ -2049,15 +2087,15 @@ local modelStructure = {
                 jump = 0x58,
                 rows = {
                     name = {type = "string", offset = 0x0},
-                    markersList = {
-                        type = "table",
-                        offset = 0x4C,
-                        jump = 0x0,
-                        rows = {
-                            name = {type = "string", offset = 0x0},
-                            nodeIndex = {type = "word", offset = 0x20}
-                        }
-                    }
+                    --markersList = {
+                    --    type = "table",
+                    --    offset = 0x4C,
+                    --    jump = 0x0,
+                    --    rows = {
+                    --        name = {type = "string", offset = 0x0},
+                    --        nodeIndex = {type = "word", offset = 0x20}
+                    --    }
+                    --}
                 }
             }
         }
@@ -2300,40 +2338,6 @@ blam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStruct
 blam.dumpObject = dumpObject
 blam.consoleOutput = consoleOutput
 blam.null = null
-
---- Get if given value equals a null value in game engine terms
----@param value any
----@return boolean
-function blam.isNull(value)
-    if value == 0xFF or value == 0xFFFF or value == null or value == nil then
-        return true
-    end
-    return false
-end
-
----Return if game instance is host
----@return boolean
-function blam.isGameHost()
-    return server_type == "local"
-end
-
----Return if game instance is single player
----@return boolean
-function blam.isGameSinglePlayer()
-    return server_type == "none"
-end
-
----Return if the game instance is running on a dedicated server or connected as a "network client"
----@return boolean
-function blam.isGameDedicated()
-    return server_type == "dedicated"
-end
-
----Return if the game instance is a SAPP server
----@return boolean
-function blam.isGameSAPP()
-    return server_type == "sapp" or api_version
-end
 
 ---Get the current game camera type
 ---@return number?
@@ -2773,7 +2777,7 @@ local syncedObjectsTable = {
 function blam.getObjectIdBySincedIndex(index)
     if index then
         local tableAddress
-        if server_type == "sapp" then
+        if blam.isGameSAPP() then
             tableAddress = addressList.syncedNetworkObjects
         else
             tableAddress = read_dword(addressList.syncedNetworkObjects)
