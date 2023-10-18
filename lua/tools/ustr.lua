@@ -1,12 +1,10 @@
 -- Create unicode string list tag, given a string list
 -- Sledmine
 -- Full string length and UTF-16 support
-local glue = require "glue"
-local append = glue.append
-package.path = package.path .. ";lua/scripts/modules/?.lua"
-require "lua.scripts.modules.compat53.init"
-local utf8string = require "lua.scripts.modules.utf8string"
-require "lua.scripts.modules.unicode"
+package.path = package.path .. ";lua/modules/?.lua"
+require "lua.modules.compat53.init"
+local utf8string = require "lua.modules.utf8string"
+require "lua.modules.unicode"
 -- local crc32 = require "lua.scripts.modules.crc32"
 
 local function padding(length)
