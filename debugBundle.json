@@ -3,13 +3,14 @@
     "target": "lua53",
     "include": [
         "./",
-        "modules/"
+        "lua/modules/",
+        "debug/"
     ],
     "modules": [
         "blam",
-        "inspect",
-        "luna"
+        "luna",
+        "commands"
     ],
-    "main": "debug",
+    "main": "debug/debug",
     "output": "dist/debug.lua"
 }
