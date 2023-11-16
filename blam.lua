@@ -1303,6 +1303,7 @@ local deviceGroupsTableStructure = {
 ---@field animation number Current animation index
 ---@field animationFrame number Current animation frame
 ---@field isNotDamageable boolean Make the object undamageable
+---@field shaderPermutationIndex number Current shader permutation index
 ---@field regionPermutation1 number
 ---@field regionPermutation2 number
 ---@field regionPermutation3 number
