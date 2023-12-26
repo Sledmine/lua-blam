@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.9.0"}
+local blam = {_VERSION = "1.9.1"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -1071,7 +1071,7 @@ local function readTable(address, propertyData)
 end
 
 local function writeTable(address, propertyData, propertyValue)
-    local elementCount = read_byte(address - 0x4)
+    local elementCount = read_dword(address - 0x4)
     local firstElement = read_dword(address)
     for currentElement = 1, elementCount do
         local elementAddress = firstElement + (currentElement - 1) * propertyData.jump
@@ -1094,13 +1094,16 @@ end
 
 local function readTagReference(address)
     -- local tagClass = read_dword(address)
-    -- local tagPathPointer = read_dword(address = 0x4)
+    -- local tagPathPointer = read_dword(address + 0x4)
+    -- local tagPath = read_string(tagPathPointer)
+    -- local unknown = read_dword(address + 0x8)
     local tagId = read_dword(address + 0xC)
     return tagId
 end
 
-local function writeTagReference(address, propertyData, propertyValue)
-    write_dword(address + 0xC, propertyValue)
+local function writeTagReference(address, propertyData, tagId)
+    -- TODO Attempt to validate tag classes and overwrite tag path pointer
+    write_dword(address + 0xC, tagId)
 end
 
 -- Data types operations references
@@ -2348,10 +2351,21 @@ local firstPersonStructure = {weaponObjectId = {type = "dword", offset = 0x10}}
 ---@class bipedTag
 ---@field model number Gbxmodel tag Id of this biped tag
 ---@field disableCollision boolean Disable collision of this biped tag
+---@field weaponCount number Number of weapons of this biped
+---@field weaponList {weaponTagId: number}[] List of weapons of this biped
 
 local bipedTagStructure = {
     model = {type = "dword", offset = 0x34},
-    disableCollision = {type = "bit", offset = 0x2F4, bitLevel = 5}
+    disableCollision = {type = "bit", offset = 0x2F4, bitLevel = 5},
+    weaponCount = {type = "byte", offset = 0x02D8},
+    weaponList = {
+        type = "table",
+        offset = 0x02D8 + 0x4,
+        jump = 0x24,
+        rows = {
+            weaponTagId = {type = "tagref", offset = 0x0}
+        }
+    }
 }
 
 ---@class deviceMachine : blamObject
