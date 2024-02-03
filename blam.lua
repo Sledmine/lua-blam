@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.10.1"}
+local blam = {_VERSION = "1.11.1"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -1950,6 +1950,8 @@ local weaponHudInterfaceStructure = {
 ---@field bipedPaletteList tagId[] List of all the bipeds in the biped palette
 ---@field cutsceneFlagsCount number Count of all the cutscene flags in the scenario
 ---@field cutsceneFlags cutsceneFlag[] List of all the cutscene flags in the scenario
+---@field actorPaletteCount number Count of all the actors in the actor palette
+---@field encounterPaletteCount number Count of all the encounters in the encounter palette
 
 -- Scenario structure
 local scenarioStructure = {
@@ -2079,7 +2081,9 @@ local scenarioStructure = {
             vX = {type = "float", offset = 0x30},
             vY = {type = "float", offset = 0x34}
         }
-    }
+    },
+    actorPaletteCount = {type = "dword", offset = 0x0420},
+    encounterPaletteCount = {type = "dword", offset = 0x042C}
 }
 
 ---@class scenery
