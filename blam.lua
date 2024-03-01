@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.11.1"}
+local blam = {_VERSION = "1.12.1"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -121,7 +121,8 @@ local addressList = {
     -- syncedNetworkObjects = 0x004F7FA2
     syncedNetworkObjects = 0x006226F0, -- pointer, from Vulpes
     screenResolution = 0x637CF0,
-    currentWidgetIdAddress = 0x6B401C
+    currentWidgetIdAddress = 0x6B401C,
+    cinematicGlobals = 0x0068c83c
 }
 
 -- Server side addresses adjustment
@@ -129,6 +130,7 @@ if blam.isGameSAPP() then
     addressList.deviceGroupsTable = 0x006E1C50
     addressList.objectTable = 0x4005062C
     addressList.syncedNetworkObjects = 0x00598020 -- not pointer cause cheat engine sucks
+    addressList.cinematicGlobals = 0x005f506c
 end
 
 -- Tag classes values
@@ -1159,11 +1161,11 @@ local dataBindingMetaTable = {
 -- Object functions
 ------------------------------------------------------------------------------
 
---- Create a blam object
+--- Create a bind table for a given address and structure
 ---@param address number
 ---@param struct table
 ---@return table
-local function createObject(address, struct)
+local function createBindTable(address, struct)
     -- Create object
     local object = {}
 
@@ -2410,12 +2412,7 @@ local bipedTagStructure = {
     model = {type = "dword", offset = 0x34},
     disableCollision = {type = "bit", offset = 0x2F4, bitLevel = 5},
     weaponCount = {type = "byte", offset = 0x02D8},
-    weaponList = {
-        type = "list",
-        offset = 0x02D8 + 0x4,
-        jump = 0x24,
-        elementsType = "dword"
-    }
+    weaponList = {type = "list", offset = 0x02D8 + 0x4, jump = 0x24, elementsType = "dword"}
 
 }
 
@@ -2468,6 +2465,15 @@ local hudGlobalsStructure = {
     textSpacing = {type = "float", offset = 0x90}
 }
 
+---@class cinematicGlobals
+---@field isInProgress boolean
+---@field isShowingLetterbox boolean
+
+local cinematicGlobalsStructure = {
+    isInProgress = {type = "bit", offset = 0x9, bitLevel = 0},
+    isShowingLetterbox = {type = "bit", offset = 0x8, bitLevel = 0}
+}
+
 ------------------------------------------------------------------------------
 -- LuaBlam globals
 ------------------------------------------------------------------------------
@@ -2492,7 +2498,7 @@ blam.objectNetworkRoleClasses = objectNetworkRoleClasses
 ---@field count number
 
 ---@type tagDataHeader
-blam.tagDataHeader = createObject(addressList.tagDataHeader, tagDataHeaderStructure)
+blam.tagDataHeader = createBindTable(addressList.tagDataHeader, tagDataHeaderStructure)
 
 ------------------------------------------------------------------------------
 -- LuaBlam API
@@ -2507,17 +2513,17 @@ blam.null = null
 ---@return number?
 function blam.getCameraType()
     local camera = read_word(addressList.cameraType)
-    if (camera) then
-        if (camera == 22192) then
+    if camera then
+        if camera == 22192 then
             return cameraTypes.scripted
-        elseif (camera == 30400) then
+        elseif camera == 30400 then
             return cameraTypes.firstPerson
-        elseif (camera == 30704) then
+        elseif camera == 30704 then
             return cameraTypes.devcam
             -- FIXME Validate this value, it seems to be wrong!
-        elseif (camera == 21952) then
+        elseif camera == 21952 then
             return cameraTypes.thirdPerson
-        elseif (camera == 23776) then
+        elseif camera == 23776 then
             return cameraTypes.deadCamera
         end
     end
@@ -2559,7 +2565,7 @@ end
 function blam.tag(address)
     if (address and address ~= 0) then
         -- Generate a new tag object from class
-        local tag = createObject(address, tagHeaderStructure)
+        local tag = createBindTable(address, tagHeaderStructure)
 
         -- Get all the tag info
         local tagInfo = dumpObject(tag)
@@ -2567,6 +2573,9 @@ function blam.tag(address)
         -- Set up values
         tagInfo.address = address
         tagInfo.path = read_string(tagInfo.path)
+        -- TODO Optimize this function
+        -- Also review class prop type as it seems we are transforming it to a string but it is 
+        -- a number in the binded structure
         tagInfo.class = tagClassFromInt(tagInfo.class --[[@as number]] )
 
         return tagInfo
@@ -2619,7 +2628,7 @@ end
 ---@return player?
 function blam.player(address)
     if address and isValid(address) then
-        return createObject(address, playerStructure)
+        return createBindTable(address, playerStructure)
     end
     return nil
 end
@@ -2629,7 +2638,7 @@ end
 ---@return blamObject?
 function blam.object(address)
     if address and isValid(address) then
-        return createObject(address, objectStructure)
+        return createBindTable(address, objectStructure)
     end
     return nil
 end
@@ -2639,7 +2648,7 @@ end
 ---@return projectile?
 function blam.projectile(address)
     if address and isValid(address) then
-        return createObject(address, projectileStructure)
+        return createBindTable(address, projectileStructure)
     end
     return nil
 end
@@ -2649,7 +2658,7 @@ end
 ---@return unit?
 function blam.unit(address)
     if address and isValid(address) then
-        return createObject(address, unitStructure)
+        return createBindTable(address, unitStructure)
     end
     return nil
 end
@@ -2659,7 +2668,7 @@ end
 ---@return biped?
 function blam.biped(address)
     if address and isValid(address) then
-        return createObject(address, bipedStructure)
+        return createBindTable(address, bipedStructure)
     end
     return nil
 end
@@ -2669,7 +2678,7 @@ end
 ---@return vehicle?
 function blam.vehicle(address)
     if address and isValid(address) then
-        return createObject(address, vehicleStructure)
+        return createBindTable(address, vehicleStructure)
     end
     return nil
 end
@@ -2678,10 +2687,10 @@ end
 ---@param tag string | number
 ---@return bipedTag?
 function blam.bipedTag(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local bipedTag = blam.getTag(tag, tagClasses.biped)
         if (bipedTag) then
-            return createObject(bipedTag.data, bipedTagStructure)
+            return createBindTable(bipedTag.data, bipedTagStructure)
         end
     end
     return nil
@@ -2691,10 +2700,10 @@ end
 ---@param tag string | number
 ---@return unicodeStringList?
 function blam.unicodeStringList(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local unicodeStringListTag = blam.getTag(tag, tagClasses.unicodeStringList)
         if (unicodeStringListTag) then
-            return createObject(unicodeStringListTag.data, unicodeStringListStructure)
+            return createBindTable(unicodeStringListTag.data, unicodeStringListStructure)
         end
     end
     return nil
@@ -2704,10 +2713,10 @@ end
 ---@param tag string | number
 ---@return bitmap?
 function blam.bitmap(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local bitmapTag = blam.getTag(tag, tagClasses.bitmap)
         if (bitmapTag) then
-            return createObject(bitmapTag.data, bitmapStructure)
+            return createBindTable(bitmapTag.data, bitmapStructure)
         end
     end
 end
@@ -2716,10 +2725,10 @@ end
 ---@param tag string | number
 ---@return uiWidgetDefinition?
 function blam.uiWidgetDefinition(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local uiWidgetDefinitionTag = blam.getTag(tag, tagClasses.uiWidgetDefinition)
         if (uiWidgetDefinitionTag) then
-            return createObject(uiWidgetDefinitionTag.data, uiWidgetDefinitionStructure)
+            return createBindTable(uiWidgetDefinitionTag.data, uiWidgetDefinitionStructure)
         end
     end
     return nil
@@ -2729,10 +2738,10 @@ end
 ---@param tag string | number
 ---@return uiWidgetCollection?
 function blam.uiWidgetCollection(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local uiWidgetCollectionTag = blam.getTag(tag, tagClasses.uiWidgetCollection)
         if (uiWidgetCollectionTag) then
-            return createObject(uiWidgetCollectionTag.data, uiWidgetCollectionStructure)
+            return createBindTable(uiWidgetCollectionTag.data, uiWidgetCollectionStructure)
         end
     end
     return nil
@@ -2742,10 +2751,10 @@ end
 ---@param tag string | number
 ---@return tagCollection?
 function blam.tagCollection(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local tagCollectionTag = blam.getTag(tag, tagClasses.tagCollection)
         if (tagCollectionTag) then
-            return createObject(tagCollectionTag.data, tagCollectionStructure)
+            return createBindTable(tagCollectionTag.data, tagCollectionStructure)
         end
     end
     return nil
@@ -2755,10 +2764,10 @@ end
 ---@param tag string | number
 ---@return weaponHudInterface?
 function blam.weaponHudInterface(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local weaponHudInterfaceTag = blam.getTag(tag, tagClasses.weaponHudInterface)
         if (weaponHudInterfaceTag) then
-            return createObject(weaponHudInterfaceTag.data, weaponHudInterfaceStructure)
+            return createBindTable(weaponHudInterfaceTag.data, weaponHudInterfaceStructure)
         end
     end
     return nil
@@ -2770,7 +2779,7 @@ end
 function blam.scenario(tag)
     local scenarioTag = blam.getTag(tag or 0, tagClasses.scenario)
     if (scenarioTag) then
-        return createObject(scenarioTag.data, scenarioStructure)
+        return createBindTable(scenarioTag.data, scenarioStructure)
     end
 end
 
@@ -2778,10 +2787,10 @@ end
 ---@param tag string | number
 ---@return scenery?
 function blam.scenery(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local sceneryTag = blam.getTag(tag, tagClasses.scenery)
         if (sceneryTag) then
-            return createObject(sceneryTag.data, sceneryStructure)
+            return createBindTable(sceneryTag.data, sceneryStructure)
         end
     end
     return nil
@@ -2791,10 +2800,10 @@ end
 ---@param tag string | number
 ---@return collisionGeometry?
 function blam.collisionGeometry(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local collisionGeometryTag = blam.getTag(tag, tagClasses.collisionGeometry)
         if (collisionGeometryTag) then
-            return createObject(collisionGeometryTag.data, collisionGeometryStructure)
+            return createBindTable(collisionGeometryTag.data, collisionGeometryStructure)
         end
     end
     return nil
@@ -2804,10 +2813,10 @@ end
 ---@param tag string | number
 ---@return modelAnimations?
 function blam.modelAnimations(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local modelAnimationsTag = blam.getTag(tag, tagClasses.modelAnimations)
         if (modelAnimationsTag) then
-            return createObject(modelAnimationsTag.data, modelAnimationsStructure)
+            return createBindTable(modelAnimationsTag.data, modelAnimationsStructure)
         end
     end
     return nil
@@ -2818,7 +2827,7 @@ end
 ---@return weapon?
 function blam.weapon(address)
     if address and isValid(address) then
-        return createObject(address, weaponStructure)
+        return createBindTable(address, weaponStructure)
     end
     return nil
 end
@@ -2827,10 +2836,10 @@ end
 ---@param tag string | number
 ---@return weaponTag?
 function blam.weaponTag(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local weaponTag = blam.getTag(tag, tagClasses.weapon)
         if (weaponTag) then
-            return createObject(weaponTag.data, weaponTagStructure)
+            return createBindTable(weaponTag.data, weaponTagStructure)
         end
     end
     return nil
@@ -2840,10 +2849,10 @@ end
 ---@param tag string | number
 ---@return gbxModel?
 function blam.model(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local modelTag = blam.getTag(tag, tagClasses.model)
         if (modelTag) then
-            return createObject(modelTag.data, modelStructure)
+            return createBindTable(modelTag.data, modelStructure)
         end
     end
     return nil
@@ -2856,10 +2865,10 @@ blam.gbxmodel = blam.model
 ---@return globalsTag?
 function blam.globalsTag(tag)
     local tag = tag or "globals\\globals"
-    if (isValid(tag)) then
+    if isValid(tag) then
         local globalsTag = blam.getTag(tag, tagClasses.globals)
         if (globalsTag) then
-            return createObject(globalsTag.data, globalsTagStructure)
+            return createBindTable(globalsTag.data, globalsTagStructure)
         end
     end
     return nil
@@ -2869,7 +2878,7 @@ end
 ---@param address? number
 ---@return firstPerson
 function blam.firstPerson(address)
-    return createObject(address or addressList.firstPerson, firstPersonStructure)
+    return createBindTable(address or addressList.firstPerson, firstPersonStructure)
 end
 
 --- Create a Device Machine object from a given address
@@ -2877,7 +2886,7 @@ end
 ---@return deviceMachine?
 function blam.deviceMachine(address)
     if address and isValid(address) then
-        return createObject(address, deviceMachineStructure)
+        return createBindTable(address, deviceMachineStructure)
     end
     return nil
 end
@@ -2886,10 +2895,10 @@ end
 ---@param tag string | number
 ---@return hudGlobals?
 function blam.hudGlobals(tag)
-    if (isValid(tag)) then
+    if isValid(tag) then
         local hudGlobals = blam.getTag(tag, tagClasses.hudGlobals)
         if (hudGlobals) then
-            return createObject(hudGlobals.data, hudGlobalsStructure)
+            return createBindTable(hudGlobals.data, hudGlobalsStructure)
         end
     end
     return nil
@@ -2910,7 +2919,7 @@ function blam.getObject(idOrIndex)
             local index = idOrIndex
 
             -- Get objects table
-            local table = createObject(addressList.objectTable, dataTableStructure)
+            local table = createBindTable(addressList.objectTable, dataTableStructure)
             if (index > table.capacity) then
                 return nil
             end
@@ -2938,8 +2947,8 @@ function blam.getDeviceGroup(index)
     -- Get object address
     if index then
         -- Get objects table
-        local table = createObject(read_dword(addressList.deviceGroupsTable),
-                                   deviceGroupsTableStructure)
+        local table = createBindTable(read_dword(addressList.deviceGroupsTable),
+                                      deviceGroupsTableStructure)
         -- Calculate object ID (this may be invalid, be careful)
         local itemOffset = table.elementSize * index
         local item = read_float(table.firstElementAddress + itemOffset + 0x4)
@@ -2967,7 +2976,7 @@ local function getSyncedObjectsTable()
         end
     end
 
-    return createObject(tableAddress, syncedObjectsTable)
+    return createBindTable(tableAddress, syncedObjectsTable)
 end
 
 --- Return the maximum allowed network objects count
@@ -3352,6 +3361,12 @@ function blam.getAbsoluteObjectCoordinates(object)
         end
     end
     return coordinates
+end
+
+--- Returns binded table to game cinematic globals
+---@return cinematicGlobals
+function blam.cinematicGlobals()
+    return createBindTable(read_dword(addressList.cinematicGlobals), cinematicGlobalsStructure)
 end
 
 return blam
