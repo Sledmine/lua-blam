@@ -1,8 +1,9 @@
 {
     "name": "Blam Tests",
-    "target": "lua5.3",
+    "target": "lua53",
     "include": [
-        "modules/",
+        "./",
+        "lua/modules/",
         "tests/"
     ],
     "modules": [
@@ -11,6 +12,6 @@
         "inspect",
         "luaunit"
     ],
-    "main": "blam-tests",
+    "main": "blam-test",
     "output": "dist/blam-tests.lua"
 }
