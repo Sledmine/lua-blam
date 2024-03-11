@@ -33,9 +33,9 @@ testFunctions = {}
 -- Tag Objects
 ------------------------------------------------------------------------------
 
-testTagObjects = {}
+testTagBindedTables = {}
 
-function testTagObjects:setUp()
+function testTagBindedTables:setUp()
     self.bipedTagPath = "characters\\cyborg_mp\\cyborg_mp"
     self.uiDefaultProfilesTagPath = "ui\\ui_default_profiles"
     self.assaultRifleWphiTagPath = "weapons\\assault rifle\\assault rifle"
@@ -47,7 +47,7 @@ function testTagObjects:setUp()
     self.firstPersonHands = 3905095503
 end
 
-function testTagObjects:testScenarioTag()
+function testTagBindedTables:testScenarioTag()
     local scenario = blam.scenario()
     lu.assertNotIsNil(scenario, "Scenario tag must not be nil")
     lu.assertEquals(scenario.objectNamesCount, 0)
@@ -56,7 +56,7 @@ function testTagObjects:testScenarioTag()
     lu.assertEquals(scenario.cutsceneFlags, {})
 end
 
-function testTagObjects:testTag()
+function testTagBindedTables:testTag()
     local cyborgMpTag = blam.getTag(self.bipedTagPath, blam.tagClasses.biped)
     lu.assertNotIsNil(cyborgMpTag, "Cyborg tag must not be nil")
     local bipedTagAddress = get_tag(blam.tagClasses.biped, self.bipedTagPath)
@@ -67,7 +67,7 @@ function testTagObjects:testTag()
     lu.assertEquals(cyborgMpTag.class, "bipd", "Cyborg tag class type must be bipd")
 end
 
-function testTagObjects:testTagCollection()
+function testTagBindedTables:testTagCollection()
     local uiDefaultProfiles = blam.tagCollection(self.uiDefaultProfilesTagPath)
     lu.assertNotIsNil(uiDefaultProfiles, "Tag collection must not be nil")
     lu.assertEquals(uiDefaultProfiles.count, 4, "Tag collection count must be 4")
@@ -75,12 +75,12 @@ function testTagObjects:testTagCollection()
                     "Tag collection list must match")
 end
 
-function testTagObjects:testModelAnimations()
+function testTagBindedTables:testModelAnimations()
     local assaultRifleAnimations = blam.modelAnimations(self.assaultRifleFpAnimsTagPath)
     lu.assertEquals(assaultRifleAnimations.fpAnimationList, self.assaultRifleFpAnimsValues)
 end
 
-function testTagObjects:testWeaponHudInterface()
+function testTagBindedTables:testWeaponHudInterface()
     local wphi = blam.weaponHudInterface(self.assaultRifleWphiTagPath)
     lu.assertEquals(wphi.childHud, 3800891673)
     lu.assertEquals(wphi.totalAmmoCutOff, 61)
@@ -103,7 +103,7 @@ function testTagObjects:testWeaponHudInterface()
     lu.assertEquals(wphi.crosshairs[1].overlays[1].sequenceIndex, 0)
 end
 
-function testTagObjects:testGlobalsTag()
+function testTagBindedTables:testGlobalsTag()
     local globals = blam.globalsTag()
     lu.assertNotIsNil(globals, "Globals should must not be nil")
     lu.assertIsTrue(#globals.multiplayerInformation > 0, "Globals must have multiplayer information")
@@ -112,7 +112,7 @@ function testTagObjects:testGlobalsTag()
     lu.assertEquals(globals.firstPersonInterface[1].firstPersonHands, self.firstPersonHands)
 end
 
-function testTagObjects:testHudGlobalsTag()
+function testTagBindedTables:testHudGlobalsTag()
     local hudGlobals = blam.hudGlobals([[ui\hud\default]])
     lu.assertNotIsNil(hudGlobals, "HUD Globals should must not be nil")
     lu.assertEquals(hudGlobals.anchor, 0)
@@ -131,6 +131,22 @@ function testTagObjects:testHudGlobalsTag()
     lu.assertAlmostEquals(hudGlobals.textColorG, 0.729412, 0.000001)
     lu.assertEquals(hudGlobals.textColorB, 1)
     lu.assertAlmostEquals(hudGlobals.textSpacing, 1.35, 0.000001)
+end
+
+function testTagBindedTables:testUnicodeStringsTag()
+    local unicodeStrings = blam.unicodeStringList([[ui\random_player_names]])
+    lu.assertNotIsNil(unicodeStrings, "Unicode strings should must not be nil")
+    lu.assertNotIsFalse(unicodeStrings.count > 0, "Unicode strings count must be greater than 0")
+    lu.assertEquals(unicodeStrings.strings[1], "Sleepy")
+    lu.assertEquals(unicodeStrings.strings[2], "Dopey")
+    lu.assertEquals(unicodeStrings.strings[3], "Grumpy")
+    local newStrings = {"Sloopy", "Loopy", "Boopy"}
+    unicodeStrings.strings = newStrings
+    lu.assertEquals(unicodeStrings.strings[1], "Sloopy")
+    lu.assertEquals(unicodeStrings.strings[2], "Loopy")
+    lu.assertEquals(unicodeStrings.strings[3], "Boopy")
+    newStrings = {"Sleepy", "Dopey", "Grumpy"}
+    unicodeStrings.strings = newStrings
 end
 
 ------------------------------------------------------------------------------

@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.12.1"}
+local blam = {_VERSION = "1.12.2"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -958,7 +958,7 @@ end
 ---@return string
 function blam.readUnicodeString(address, rawRead)
     local stringAddress
-    if (rawRead) then
+    if rawRead then
         stringAddress = address
     else
         stringAddress = read_dword(address)
@@ -968,7 +968,7 @@ function blam.readUnicodeString(address, rawRead)
     -- TODO Refactor this to support full unicode char size
     for i = 1, length do
         local char = read_string(stringAddress + (i - 1) * 0x2)
-        if (char == "") then
+        if char == "" then
             break
         end
         output = output .. char
@@ -979,10 +979,10 @@ end
 --- Writes a unicode string in a given address
 ---@param address number
 ---@param newString string
----@param forced? boolean
-function blam.writeUnicodeString(address, newString, forced)
+---@param rawWrite? boolean
+function blam.writeUnicodeString(address, newString, rawWrite)
     local stringAddress
-    if (forced) then
+    if rawWrite then
         stringAddress = address
     else
         stringAddress = read_dword(address)
@@ -994,7 +994,7 @@ function blam.writeUnicodeString(address, newString, forced)
     -- TODO Refactor this to support writing ASCII and Unicode strings
     for i = 1, #newString do
         write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
-        if (i == #newString) then
+        if i == #newString then
             write_byte(stringAddress + #newString * 0x2, 0x0)
         end
     end
@@ -1110,6 +1110,23 @@ local function writeTagReference(address, propertyData, tagId)
     write_dword(address + 0xC, tagId)
 end
 
+local function safeReadUnicodeString(address)
+    local size = read_dword(address)
+    if size == 0 then
+        return ""
+    end
+    return blam.readUnicodeString(address + 0xC)
+end
+
+local function safeWriteUnicodeString(address, propertyData, text)
+    local size = read_dword(address)
+    local text = text
+    if #text > size then
+        text = text:sub(1, size)
+    end
+    return blam.writeUnicodeString(address + 0xC, text)
+end
+
 -- Data types operations references
 typesOperations = {
     bit = {read = readBit, write = writeBit},
@@ -1126,7 +1143,8 @@ typesOperations = {
     ustring = {read = readUnicodeString, write = writeUnicodeString},
     list = {read = readList, write = writeList},
     table = {read = readTable, write = writeTable},
-    tagref = {read = readTagReference, write = writeTagReference}
+    tagref = {read = readTagReference, write = writeTagReference},
+    sustring = {read = safeReadUnicodeString, write = safeWriteUnicodeString}
 }
 
 -- Magic luablam metatable
@@ -1603,12 +1621,15 @@ local tagCollectionStructure = {
 
 ---@class unicodeStringList
 ---@field count number Number of unicode strings
----@field stringList table List of unicode strings
+---@field strings string[] List of unicode strings
 
 -- UnicodeStringList structure
 local unicodeStringListStructure = {
     count = {type = "byte", offset = 0x0},
-    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14}
+    ---@deprecated
+    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14},
+    -- Previous string list property works because of magic (well because of shit code haha)
+    strings = {type = "list", offset = 0x4, elementsType = "sustring", jump = 0x14, noOffset = true}
 }
 
 ---@class bitmapSequence
