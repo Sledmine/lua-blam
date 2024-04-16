@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.12.2"}
+local blam = {_VERSION = "1.12.3"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -1451,6 +1451,8 @@ local unitStructure = extendStructure(objectStructure, {
     isControllable = {type = "bit", offset = 0x204, bitLevel = 5},
     isPlayerNotAllowedToEntry = {type = "bit", offset = 0x204, bitLevel = 16},
     parentSeatIndex = {type = "word", offset = 0x2F0},
+    weaponAnimationTypeIndex = {type = "byte", offset = 0x2A1},
+    weaponSlot = {type = "byte", offset = 0x2F2},
     firstWeaponObjectId = {type = "dword", offset = 0x2F8},
     secondWeaponObjectId = {type = "dword", offset = 0x2FC},
     thirdWeaponObjectId = {type = "dword", offset = 0x300},
@@ -1463,6 +1465,8 @@ local unitStructure = extendStructure(objectStructure, {
 ---@field isControllable boolean Unit controllable state
 ---@field isPlayerNotAllowedToEntry boolean Unit player not allowed to entry
 ---@field parentSeatIndex number Unit parent seat index
+---@field weaponAnimationTypeIndex number Unit weapon animation type index
+---@field weaponSlot number Current unit weapon slot
 ---@field firstWeaponObjectId number First weapon object id
 ---@field secondWeaponObjectId number Second weapon object id
 ---@field thirdWeaponObjectId number Third weapon object id
@@ -1488,7 +1492,6 @@ local bipedStructure = extendStructure(unitStructure, {
     grenadeHold = {type = "bit", offset = 0x208, bitLevel = 13},
     crouch = {type = "byte", offset = 0x2A0},
     shooting = {type = "float", offset = 0x284},
-    weaponSlot = {type = "byte", offset = 0x2A1},
     zoomLevel = {type = "byte", offset = 0x320},
     ---@deprecated
     invisibleScale = {type = "float", offset = 0x37C},
