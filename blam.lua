@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.12.3"}
+local blam = {_VERSION = "1.12.4"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -991,6 +991,7 @@ function blam.writeUnicodeString(address, newString, rawWrite)
     if newString == false then
         return
     end
+    local newString = tostring(newString)
     -- TODO Refactor this to support writing ASCII and Unicode strings
     for i = 1, #newString do
         write_string(stringAddress + (i - 1) * 0x2, newString:sub(i, i))
