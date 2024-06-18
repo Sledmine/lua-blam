@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.12.4"}
+local blam = {_VERSION = "1.13.0"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -332,6 +332,13 @@ local joystickInputs = {
     startButton = 9,
     leftStick = 10,
     rightStick = 11,
+    rightStick2 = 12,
+    -- TODO Add joys axis
+    leftStickUp = 30,
+    leftStickDown = 32,
+    rightStickUp = 34,
+    rightStickDown = 36,
+    triggers = 38,
     -- Multiple values on the same offset, check dPadValues table
     dPad = 96,
     -- Non zero values
@@ -343,8 +350,6 @@ local joystickInputs = {
     dPadDownRight = 103,
     dPadUpLeft = 107,
     dPadDownLeft = 105
-    -- TODO Add joys axis
-    -- rightJoystick = 30,
 }
 
 -- Values for the possible dPad values from the joystick inputs
@@ -2564,7 +2569,7 @@ function blam.getJoystickInput(joystickOffset)
     joystickOffset = joystickOffset or 0
     -- Nothing is pressed by default
     ---@type boolean | number
-    local inputValue = false
+    local inputValue = 0
     -- Look for every input from every joystick available
     for controllerId = 0, 3 do
         local inputAddress = addressList.joystickInput + controllerId * 0xA0
@@ -2576,6 +2581,8 @@ function blam.getJoystickInput(joystickOffset)
             local tempValue = read_word(inputAddress + 96)
             if (tempValue == joystickOffset - 100) then
                 inputValue = true
+            else
+                inputValue = false
             end
         else
             inputValue = inputValue + read_byte(inputAddress + joystickOffset)
