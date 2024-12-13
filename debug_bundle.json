@@ -1,0 +1,11 @@
+{
+    "name": "Debug Modding Tools",
+    "target": "lua53",
+    "include": [
+        "lua",
+        "lua/modules"
+    ],
+    "modules": [],
+    "main": "lua/debug",
+    "output": "dist/debug.lua"
+}
