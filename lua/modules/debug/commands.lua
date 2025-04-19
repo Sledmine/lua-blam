@@ -65,7 +65,7 @@ local commands = {}
 
 local lastSpawnedObjectHandle = nil
 
-local function console_command_info(command)
+local function consoleCommandInfo(command)
     consolePrint(command .. ": " .. commands[command].description)
 end
 
@@ -102,7 +102,7 @@ local function spawn(tagClass, tagName, ...)
     tagName = table.concat({tagName, ...}, " ")
     tagName = tagName:trim()
     if not (tagClass and tagName) then
-        console_command_info("debug_spawn")
+        consoleCommandInfo("debug_spawn")
         return false
     end
     local tag = findTags(tagName, tagClass)[1]
@@ -160,17 +160,18 @@ local function list(tagClass, tagName)
     local tagName = tagName or ""
     if tagClass then
         local tags = findTags(tagName, tagClass)
-        if tags then
+        if tags and #tags > 0 then
             for _, tag in pairs(tags) do
                 consolePrint(("[Index: %s, Handle: %s] - %s"):format(tag.handle.index, tag.handle.value, tag.path))
             end
             return false
         end
+        consolePrint("Warning, no tags found.")
     else
-        console_command_info("debug_list")
+        consolePrint("Error, tag class cannot be found.")
+        consoleCommandInfo("debug_tags_list")
         return false
     end
-    consolePrint("Error, no tags were found.")
 end
 
 local function enterVehicle(objectIndex, vehicleIndex, seat)
@@ -259,7 +260,7 @@ local function objectProperty(objectIndex, key, value)
         elseif key then
             consolePrint(key .. ": " .. tostring(nulled(object[key])))
         else
-            console_command_info("debug_player_property")
+            consoleCommandInfo("debug_player_property")
         end
     else
         consolePrint("Error, object cannot be found.")
@@ -335,7 +336,7 @@ local function deleteObject(objectIndex)
             consolePrint("Error, specified object cannot be found.", 1, 0, 0)
         end
     else
-        console_command_info("debug_delete")
+        consoleCommandInfo("debug_delete")
     end
     return false
 end
@@ -355,9 +356,8 @@ local function playerProperty(key, value)
 end
 
 local function networkObjects(debugSyncedIndex)
-    local countColorLevel = blam.consoleColors.success
     local format = "[%s, %s] - %s"
-    consolePrint(consoleColors.warning, "[Synced Index, ObjectId] - Tag")
+    consolePrint("[Synced Index, ObjectHandle] - Tag")
     local networkObjects = {}
     local count = 0
     for syncedIndex = 0, 509 do
@@ -423,11 +423,11 @@ local function assignWeapon(objectIndex, weaponObjectIndex)
     if objectIndex and weaponObjectIndex then
         local object, objectId = blam.getObject(weaponObjectIndex)
         object = blam.biped(get_object(objectId))
-        local weaponObject, weaponObjectId = blam.getObject(weaponObjectIndex)
+        local weaponObject, weaponObjectHandle = blam.getObject(weaponObjectIndex)
         if object and weaponObject then
-            local weapon = blam.weapon(get_object(weaponObjectId))
+            local weapon = blam.weapon(get_object(weaponObjectHandle))
             if weapon then
-                object.firstWeaponObjectId = weaponObjectId
+                object.firstWeaponObjectId = weaponObjectHandle
                 -- weaponObject.parentObjectId = objectId
                 -- weaponObject.ownerId = objectId
                 weapon.isOutSideMap = false
@@ -450,7 +450,7 @@ commands = {
         maxArgs = 2,
         func = spawn
     },
-    debug_list = {
+    debug_tags_list = {
         description = "<tagClass> [ <tagName> ] - List all tags of the specified class, optionally filtered by name.",
         help = "<tagClass> [ <tagName> ]",
         minArgs = 1,
@@ -520,7 +520,7 @@ commands = {
         func = teleportToObject
     },
     debug_game_objects = {
-        description = "Debug all objects in the map.",
+        description = "Enable or disable the debug game objects information on the screen.",
         help = "<enable>",
         minArgs = 1,
         maxArgs = 1,
@@ -528,24 +528,25 @@ commands = {
             local enable = luna.bool(enable or false)
             IsDebuggingObjects = enable
             consolePrint(tostring(enable))
-        end
+        end,
+        save = true
     },
     debug_assign_weapon = {
-        description = "<objectIndex | objectId> <weaponObjectIndex | weaponObjectId> - Assign the specified weapon to the specified object.",
-        help = "<objectIndex | objectId> <weaponObjectIndex | weaponObjectId>",
+        description = "<objectIndex | objectId> <weaponObjectIndex | weaponObjectHandle> - Assign the specified weapon to the specified object.",
+        help = "<objectIndex | objectId> <weaponObjectIndex | weaponObjectHandle>",
         minArgs = 2,
         maxArgs = 2,
         func = assignWeapon
     },
     debug_enter_vehicle = {
-        description = "Enter the specified vehicle.",
+        description = "Make the specified object enter the specified vehicle.",
         help = "<objectIndex | objectId> <vehicleObjectIndex | vehicleObjectId>",
         minArgs = 2,
         maxArgs = 2,
         func = enterVehicle
     },
     debug_exit_vehicle = {
-        description = "Exit the vehicle.",
+        description = "Make specified object exit any vehicle it is in.",
         help = "<objectIndex | objectId>",
         minArgs = 1,
         maxArgs = 1,
@@ -585,6 +586,19 @@ commands = {
             engine.gameState.unitDeleteAllWeapons(player.objectHandle.value)
         end
     },
+    debug_object_attach_to_marker = {
+        description = "Attach the specified object to the specified marker.",
+        help = "<object-index> <marker> <attachment-index> <attachmentMarker>",
+        minArgs = 4,
+        maxArgs = 4,
+        func = function(objectIndex, marker, attachmentIndex, attachmentMarker)
+            local _, objectHandle = blam.getObject(tonumber(objectIndex) or -1)
+            assert(objectHandle, "Error, object cannot be found.")
+            local _, attachmentHandle = blam.getObject(tonumber(attachmentIndex) or -1)
+            assert(attachmentHandle, "Error, attachment object cannot be found.")
+            engine.gameState.objectAttachToMarker(objectHandle, marker, attachmentHandle, "")
+        end
+    },
     debug_advanced_camera = {
         description = "Enable advanced camera mode.",
         help = "<enable>",
@@ -603,7 +617,18 @@ commands = {
             consolePrint(tostring(enable))
             return false
         end
-    }
+    },
+    debug_game_data = {
+        description = "Print game data.",
+        help = "<enable>",
+        minArgs = 1,
+        maxArgs = 1,
+        func = function(enable)
+            local enable = luna.bool(enable or false)
+            IsDebugDataEnabled = enable
+            consolePrint(tostring(enable))
+        end
+    },
 }
 
 return commands
