@@ -269,16 +269,16 @@ local function objectProperty(objectIndex, key, value)
 end
 
 local function objectNames(keyword)
-    consolePrint(consoleColors.warning, "[Index, Id] - Tag -> Address")
+    consolePrint("[Index, Handle, Name Index] - Name")
     local objectNames = blam.scenario().objectNames
     for nameIndex, name in pairs(objectNames) do
         if keyword then
             if name:find(keyword, 1, true) then
-                for objectId, objectIndex in pairs(blam.getObjects()) do
-                    local object = blam.object(get_object(objectId))
+                for objectHandle, objectIndex in pairs(blam.getObjects()) do
+                    local object = blam.object(get_object(objectHandle))
                     if object and object.nameIndex == nameIndex - 1 then
                         local format = "[%s, %s] - %s -> %s"
-                        consolePrint(format:format(objectIndex, objectId, name, nameIndex - 1))
+                        consolePrint(format:format(objectIndex, objectHandle, name, nameIndex - 1))
                         break
                     end
                 end
@@ -406,7 +406,7 @@ local function teleportToObject(objectIndex)
             player.z = object.z + 0.5
         end
     else
-        consolePrint(consoleColors.error, "Error, object cannot be found.")
+        consolePrint("Error, object cannot be found.")
     end
     return false
 end
