@@ -133,6 +133,7 @@ if blam.isGameSAPP() then
     addressList.syncedNetworkObjects = 0x00598020 -- not pointer cause cheat engine sucks
     addressList.cinematicGlobals = 0x005f506c
     addressList.hscGlobalsPointer = 0x005bd890
+    addressList.hscGlobals = 0x6e144c
 end
 
 -- Tag classes values
@@ -650,14 +651,14 @@ end
 ---@param globalName string Name of the  global variable to get from hsc
 ---@return boolean | number
 function get_global(globalName)
-    local scriptingGlobalsAddress = read_dword(sig_scan("05????????8B0D????????8B513425FFFF0000"))
-    if scriptingGlobalsAddress then
-        local hsGlobals = read_dword(read_byte(scriptingGlobalsAddress + 7))
-        local firstGlobal = read_dword(read_dword(hsGlobals + 1))
+    if addressList.hscGlobals then
+        local hsGlobals = addressList.hscGlobals
+        --local firstGlobal = read_dword(addressList.hscGlobals + 1)
+        local firstGlobal = 0x00001ec
         local hsGlobalsTable = read_dword(hsGlobals)
         local hsTable = read_dword(hsGlobalsTable + 0x34)
 
-        local scenarioTag = get_tag(0)
+        local scenarioTag = blam.getTag(0).data
         local globalsCount = read_dword(scenarioTag + 0x4A8)
         local globalsAddress = read_dword(scenarioTag + 0x4A8 + 4)
 
