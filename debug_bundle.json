@@ -3,7 +3,8 @@
     "target": "lua53",
     "include": [
         "lua",
-        "lua/modules"
+        "lua/modules",
+        "./"
     ],
     "modules": [],
     "main": "lua/debug",

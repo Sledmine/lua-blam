@@ -16,7 +16,9 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.15.1"}
+local blam = {_VERSION = "2.0.0-dev"}
+
+blam.tag = {}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -393,8 +395,9 @@ script_name = script_name
 ---This is the script type, possible values are global or map.
 ---@type string
 script_type = script_type
----@type '"none"' | '"local"' | '"dedicated"' | '"sapp"'
-server_type = server_type
+---@type "none" | "local" | "dedicated" | "sapp"
+---@diagnostic disable-next-line: assign-type-mismatch
+server_type = server_type or "none"
 ---Return whether or not the script is sandboxed. See Sandoboxed Scripts for more information.
 ---@deprecated
 ---@type boolean
@@ -653,7 +656,7 @@ end
 function get_global(globalName)
     if addressList.hscGlobals then
         local hsGlobals = addressList.hscGlobals
-        --local firstGlobal = read_dword(addressList.hscGlobals + 1)
+        -- local firstGlobal = read_dword(addressList.hscGlobals + 1)
         local firstGlobal = 0x00001ec
         local hsGlobalsTable = read_dword(hsGlobals)
         local hsTable = read_dword(hsGlobalsTable + 0x34)
@@ -692,7 +695,7 @@ function hud_message(message)
 end
 
 ---Set the callback for an event game from the game events available on Chimera
----@param event '"command"' | '"frame"' | '"preframe"' | '"map load"' | '"precamera"' | '"rcon message"' | '"tick"' | '"pretick"' | '"unload"'
+---@param event "command" | "frame" | "preframe" | "map load" | "precamera" | "rcon message" | "tick" | "pretick" | "unload"
 ---@param callback string Global function name to call when the event is triggered
 function set_callback(event, callback)
     if event == "tick" then
@@ -743,6 +746,7 @@ function stop_timer(timerId)
     error("SAPP does not support stopping timers")
 end
 
+-- register_callback is a SAPP only function, we are running in SAPP then
 if register_callback then
     -- Provide global server type variable on SAPP
     server_type = "sapp"
@@ -824,24 +828,21 @@ end
 
 --- Convert tag class int to string
 ---@param tagClassInt number
----@return string?
-local function tagClassFromInt(tagClassInt)
-    if (tagClassInt) then
-        local tagClassHex = tohex(tagClassInt)
-        local tagClass = ""
-        if (tagClassHex) then
-            local byte = ""
-            for char in string.gmatch(tagClassHex, ".") do
-                byte = byte .. char
-                if (#byte % 2 == 0) then
-                    tagClass = tagClass .. string.char(tonumber(byte, 16))
-                    byte = ""
-                end
+---@return string
+local function convertIntToTagClass(tagClassInt)
+    local tagClassHex = tohex(tagClassInt)
+    local tagClass = ""
+    if tagClassHex then
+        local byte = ""
+        for char in string.gmatch(tagClassHex, ".") do
+            byte = byte .. char
+            if #byte % 2 == 0 then
+                tagClass = tagClass .. string.char(tonumber(byte, 16))
+                byte = ""
             end
         end
-        return tagClass
     end
-    return nil
+    return tagClass
 end
 
 --- Return a list of object indexes that are currently spawned, indexed by their object id.
@@ -903,21 +904,21 @@ local function consoleOutput(message, ...)
     end
 end
 
---- Convert booleans to bits and bits to booleans
----@param bitOrBool number
----@return boolean | number
-local function b2b(bitOrBool)
-    if (bitOrBool == 1) then
-        return true
-    elseif (bitOrBool == 0) then
-        return false
-    elseif (bitOrBool == true) then
-        return 1
-    elseif (bitOrBool == false) then
-        return 0
-    end
-    error("B2B error, expected boolean or bit value, got " .. tostring(bitOrBool) .. " " ..
-              type(bitOrBool))
+--- Return a boolean from `v` if it is a boolean like value.
+---@param v string | boolean | number
+---@return boolean
+local function bool(v)
+    assert(v ~= nil, "bool: v must not be nil")
+    return v == true or v == "true" or v == 1 or v == "1"
+end
+
+--- Return a bit (number as 0 or 1) from `v` if it is a boolean like value.
+---@param v string | boolean | number
+---@return integer
+---@nodiscard
+local function bit(v)
+    assert(v ~= nil, "bit: v must not be nil")
+    return bool(v) and 1 or 0
 end
 
 ------------------------------------------------------------------------------
@@ -927,11 +928,11 @@ end
 local typesOperations
 
 local function readBit(address, propertyData)
-    return b2b(read_bit(address, propertyData.bitLevel))
+    return bool(read_bit(address, propertyData.bitLevel))
 end
 
 local function writeBit(address, propertyData, propertyValue)
-    return write_bit(address, propertyData.bitLevel, b2b(propertyValue))
+    return write_bit(address, propertyData.bitLevel, bit(propertyValue))
 end
 
 local function readByte(address)
@@ -1014,7 +1015,7 @@ function blam.readUnicodeString(address, rawRead)
     -- TODO Refactor this to support reading ASCII and UTF16? strings
     while true do
         local char = read_string(stringAddress + i * 0x2)
-        --local _, char = pcall(string.char, read_byte(stringAddress + (i - 1) * 0x2))
+        -- local _, char = pcall(string.char, read_byte(stringAddress + (i - 1) * 0x2))
         if not char or char == "" then
             break
         end
@@ -1185,6 +1186,43 @@ local function safeWriteUnicodeString(address, propertyData, text)
     return blam.writeUnicodeString(address + 0xC, newText, false, false)
 end
 
+local ctypes = {
+    bit = {
+        read = function(addr, offset)
+            return bool(read_bit(addr, offset))
+        end,
+        write = function(addr, offset, value)
+            write_bit(addr, offset, bit(value))
+        end
+    },
+    bool = {
+        read = function(addr)
+            return bool(read_byte(addr))
+        end,
+        write = function(addr, value)
+            write_byte(addr, bit(value))
+        end
+    },
+    char = {read = read_byte, write = write_byte},
+    byte = {
+        read = function(addr)
+            read_byte(addr)
+        end,
+        write = function(addr, value)
+            write_byte(addr, value)
+        end
+    },
+    short = {read = read_short, write = write_short},
+    word = {read = read_word, write = write_word},
+    long = {read = read_long, write = write_long},
+    int = {read = read_int, write = write_int},
+    dword = {read = read_dword, write = write_dword},
+    float = {read = read_float, write = write_float},
+    double = {read = read_double, write = write_double},
+    string = {read = read_string, write = write_string},
+    ptr = {read = read_dword, write = write_dword}
+}
+
 -- Data types operations references
 typesOperations = {
     bit = {read = readBit, write = writeBit},
@@ -1243,25 +1281,67 @@ local structBinding = {
 }
 
 ------------------------------------------------------------------------------
--- Object functions
+-- Struct functions
 ------------------------------------------------------------------------------
 
---- Create a bind table for a given address and structure
----@param address number
+--- Create a table binded to a structure properties
 ---@param struct table
+---@param address integer
 ---@return table
 local function createBindStruct(address, struct)
-    -- Create object
-    local structuralObject = {}
+    -- print("Creating bind struct for address: " .. string.format("0x%x", address))
+    local tableStruct = {_address = address, _struct = struct}
+    setmetatable(tableStruct, {
+        __index = function(t, key)
+            local fieldMeta = table.find(struct, function(f)
+                return f.name == key
+            end)
+            if not fieldMeta then
+                return
+            end
+            local isPointer = fieldMeta.is == "ptr"
+            local address = isPointer and ctypes.ptr.read(address + fieldMeta.offset) or
+                                (address + fieldMeta.offset)
 
-    -- Set up legacy values
-    structuralObject.address = address
-    structuralObject.definition = struct
+            print("Accessing field: " .. fieldMeta.name .. ", Type: " .. fieldMeta.type ..
+                      ", Address: " .. string.format("0x%x", address))
+            if ctypes[fieldMeta.type] and ctypes[fieldMeta.type].read then
+                return ctypes[fieldMeta.type].read(address)
+            elseif fieldMeta.is == "struct" then
+                -- print("Creating nested struct for field: " .. fieldMeta.name)
+                return createBindStruct(address, fieldMeta.fields)
+            else
+                error("Unsupported type: " .. fieldMeta.type)
+            end
+        end,
+        __newindex = function(t, key, value)
+            local field = table.find(struct, function(f)
+                return f.name == key
+            end)
+            if not field then
+                return
+            end
+            local isPointer = field.is == "ptr"
+            local address = isPointer and ctypes.ptr.read(address + field.offset) or
+                                (address + field.offset)
+            if ctypes[field.type] and ctypes[field.type].write then
+                ctypes[field.type].write(address, value)
+            elseif field.is == "struct" then
+                -- If it's a struct, we can set fields directly as it will trigger the __index metamethod
+                if type(value) == "table" then
+                    for k, v in pairs(value) do
+                        t[k] = v
+                    end
+                else
+                    error("Expected a table for struct assignment")
+                end
+            else
+                error("Unsupported type: " .. field.type)
+            end
+        end
+    })
 
-    -- Set mechanisim to bind properties to memory
-    setmetatable(structuralObject, structBinding)
-
-    return structuralObject
+    return tableStruct
 end
 
 --- Return a dump of a given LuaBlam object
@@ -2315,14 +2395,6 @@ local weaponStructure = extendStructure(objectStructure, {
 -- Weapon structure
 local weaponTagStructure = {model = {type = "dword", offset = 0x34}}
 
--- @class modelMarkers
--- @field name string
--- @field nodeIndex number
--- TODO Add rotation fields, check Guerilla tag
--- @field x number
--- @field y number
--- @field z number
-
 ---@class modelPermutation
 ---@field name string
 
@@ -2698,7 +2770,7 @@ end
 ---@param address integer
 ---@return tag?
 function blam.tag(address)
-    if (address and address ~= 0) then
+    if address and address ~= 0 then
         -- Generate a new tag object from class
         local tag = createBindStruct(address, tagHeaderStructure)
 
@@ -2711,7 +2783,7 @@ function blam.tag(address)
         -- TODO Optimize this function
         -- Also review class prop type as it seems we are transforming it to a string but it is 
         -- a number in the binded structure
-        tagInfo.class = tagClassFromInt(tagInfo.class --[[@as number]] )
+        tagInfo.class = convertIntToTagClass(tagInfo.class --[[@as number]] )
 
         return tagInfo
     end
@@ -2857,13 +2929,14 @@ function blam.bitmap(tag)
 end
 
 --- Create a UI Widget Definition object from a tag path or id
----@param tag string | number
+---@param tagPathOrHandle string | number
 ---@return uiWidgetDefinition?
-function blam.uiWidgetDefinition(tag)
-    if isValid(tag) then
-        local uiWidgetDefinitionTag = blam.getTag(tag, tagClasses.uiWidgetDefinition)
-        if (uiWidgetDefinitionTag) then
-            return createBindStruct(uiWidgetDefinitionTag.data, uiWidgetDefinitionStructure)
+function blam.tag.uiWidgetDefinition(tagPathOrHandle)
+    if isValid(tagPathOrHandle) then
+        local uiWidgetDefinitionEntry = blam.getTag(tagPathOrHandle, tagClasses.uiWidgetDefinition)
+        if uiWidgetDefinitionEntry then
+            local struct = require("structures.uiWidgetDefinition")
+            return createBindStruct(uiWidgetDefinitionEntry.data, struct)
         end
     end
     return nil
@@ -2906,7 +2979,7 @@ function blam.weaponHudInterface(tag)
         end
     end
     return nil
-end
+end 
 
 --- Create a Scenario object from a tag path or id
 ---@param tag? string | number
@@ -2919,7 +2992,7 @@ function blam.scenario(tag)
 end
 
 --- Create a Scenery object from a tag path or id
----@param tag string | number
+---@param tag string | number 
 ---@return scenery?
 function blam.scenery(tag)
     if isValid(tag) then
@@ -3083,7 +3156,7 @@ function blam.getDeviceGroup(index)
     if index then
         -- Get objects table
         local table = createBindStruct(read_dword(addressList.deviceGroupsTable),
-                                      deviceGroupsTableStructure)
+                                       deviceGroupsTableStructure)
         -- Calculate object ID (this may be invalid, be careful)
         local itemOffset = table.elementSize * index
         local item = read_float(table.firstElementAddress + itemOffset + 0x4)
