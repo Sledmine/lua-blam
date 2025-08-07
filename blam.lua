@@ -138,9 +138,9 @@ if blam.isGameSAPP() then
     addressList.hscGlobals = 0x6e144c
 end
 
--- Tag classes values
----@enum tagClasses
-local tagClasses = {
+-- Tag groups values
+---@enum tagGroup
+local tagGroups = {
     actorVariant = "actv",
     actor = "actr",
     antenna = "ant!",
@@ -156,7 +156,8 @@ local tagClasses = {
     deviceControl = "ctrl",
     deviceLightFixture = "lifi",
     deviceMachine = "mach",
-    device = "devi",
+    device = "devi", -- ???
+    device = "devc",
     dialogue = "udlg",
     effect = "effe",
     equipment = "eqip",
@@ -451,7 +452,7 @@ function spawn_object(tagClass, tagPath, x, y, z)
         local x = tagPath --[[@as number]]
         local y = x
         local z = y
-        local tag = blam.getTag(tagClass)
+        local tag = blam.getTagEntry(tagClass)
         if tag then
             return backupFunctions.spawn_object(tag.class, tag.path, x, y, z)
         end
@@ -661,7 +662,7 @@ function get_global(globalName)
         local hsGlobalsTable = read_dword(hsGlobals)
         local hsTable = read_dword(hsGlobalsTable + 0x34)
 
-        local scenarioTag = blam.getTag(0).data
+        local scenarioTag = blam.getTagEntry(0).data
         local globalsCount = read_dword(scenarioTag + 0x4A8)
         local globalsAddress = read_dword(scenarioTag + 0x4A8 + 4)
 
@@ -826,14 +827,18 @@ end
 -- Utilities
 ------------------------------------------------------------------------------
 
---- Convert tag class int to string
+--- Convert a tag group integer into a tag group string.
 ---@param tagClassInt number
 ---@return string
-local function convertIntToTagClass(tagClassInt)
+local function integerToTagGroup(tagClassInt)
     local tagClassHex = tohex(tagClassInt)
-    local tagClass = ""
+    local tagClass
+    if isNull(tagClassInt) then
+        return nil
+    end
     if tagClassHex then
         local byte = ""
+        tagClass = ""
         for char in string.gmatch(tagClassHex, ".") do
             byte = byte .. char
             if #byte % 2 == 0 then
@@ -844,6 +849,8 @@ local function convertIntToTagClass(tagClassInt)
     end
     return tagClass
 end
+
+blam.integerToTagGroup = integerToTagGroup
 
 --- Return a list of object indexes that are currently spawned, indexed by their object id.
 ---@return number[]
@@ -925,80 +932,6 @@ end
 -- Data manipulation and binding
 ------------------------------------------------------------------------------
 
-local typesOperations
-
-local function readBit(address, propertyData)
-    return bool(read_bit(address, propertyData.bitLevel))
-end
-
-local function writeBit(address, propertyData, propertyValue)
-    return write_bit(address, propertyData.bitLevel, bit(propertyValue))
-end
-
-local function readByte(address)
-    return read_byte(address)
-end
-
-local function writeByte(address, propertyData, propertyValue)
-    return write_byte(address, propertyValue)
-end
-
-local function readShort(address)
-    return read_short(address)
-end
-
-local function writeShort(address, propertyData, propertyValue)
-    return write_short(address, propertyValue)
-end
-
-local function readWord(address)
-    return read_word(address)
-end
-
-local function writeWord(address, propertyData, propertyValue)
-    return write_word(address, propertyValue)
-end
-
-local function readInt(address)
-    return read_int(address)
-end
-
-local function writeInt(address, propertyData, propertyValue)
-    return write_int(address, propertyValue)
-end
-
-local function readDword(address)
-    return read_dword(address)
-end
-
-local function writeDword(address, propertyData, propertyValue)
-    return write_dword(address, propertyValue)
-end
-
-local function readFloat(address)
-    return read_float(address)
-end
-
-local function writeFloat(address, propertyData, propertyValue)
-    return write_float(address, propertyValue)
-end
-
-local function readChar(address)
-    return read_char(address)
-end
-
-local function writeChar(address, propertyData, propertyValue)
-    return write_char(address, propertyValue)
-end
-
-local function readString(address)
-    return read_string(address)
-end
-
-local function writeString(address, propertyData, propertyValue)
-    return write_string(address, propertyValue)
-end
-
 --- Return the string of a unicode string given address
 ---@param address number
 ---@param rawRead? boolean
@@ -1057,136 +990,7 @@ function blam.writeUnicodeString(address, newString, rawWrite, noNullTerminator)
     end
 end
 
-local function readPointerUnicodeString(address, propertyData)
-    return blam.readUnicodeString(address)
-end
-
-local function readUnicodeString(address, propertyData)
-    return blam.readUnicodeString(address, true)
-end
-
-local function writePointerUnicodeString(address, propertyData, propertyValue)
-    return blam.writeUnicodeString(address, propertyValue)
-end
-
-local function writeUnicodeString(address, propertyData, propertyValue)
-    return blam.writeUnicodeString(address, propertyValue, true)
-end
-
-local function readList(address, propertyData)
-    local operation = typesOperations[propertyData.elementsType]
-    local elementCount = read_word(address - 0x4)
-    local addressList = read_dword(address) + 0xC
-    if (propertyData.noOffset) then
-        addressList = read_dword(address)
-    end
-    local list = {}
-    for currentElement = 1, elementCount do
-        list[currentElement] = operation.read(addressList +
-                                                  (propertyData.jump * (currentElement - 1)))
-    end
-    return list
-end
-
-local function writeList(address, propertyData, propertyValue)
-    local operation = typesOperations[propertyData.elementsType]
-    local elementCount = read_word(address - 0x4)
-    local addressList
-    if (propertyData.noOffset) then
-        addressList = read_dword(address)
-    else
-        addressList = read_dword(address) + 0xC
-    end
-    for currentElement = 1, elementCount do
-        local elementValue = propertyValue[currentElement]
-        if (elementValue) then
-            -- Check if there are problems at sending property data here due to missing property data
-            operation.write(addressList + (propertyData.jump * (currentElement - 1)), propertyData,
-                            elementValue)
-        else
-            if (currentElement > #propertyValue) then
-                break
-            end
-        end
-    end
-end
-
-local function readTable(address, propertyData)
-    local table = {}
-    local elementsCount = read_dword(address - 0x4)
-    local firstElement = read_dword(address)
-    for elementPosition = 1, elementsCount do
-        local elementAddress = firstElement + ((elementPosition - 1) * propertyData.jump)
-        table[elementPosition] = {}
-        for subProperty, subPropertyData in pairs(propertyData.rows) do
-            local operation = typesOperations[subPropertyData.type]
-            table[elementPosition][subProperty] = operation.read(elementAddress +
-                                                                     subPropertyData.offset,
-                                                                 subPropertyData)
-        end
-    end
-    return table
-end
-
-local function writeTable(address, propertyData, propertyValue)
-    local elementCount = read_dword(address - 0x4)
-    local firstElement = read_dword(address)
-    for currentElement = 1, elementCount do
-        local elementAddress = firstElement + (currentElement - 1) * propertyData.jump
-        if (propertyValue[currentElement]) then
-            for subProperty, subPropertyValue in pairs(propertyValue[currentElement]) do
-                local subPropertyData = propertyData.rows[subProperty]
-                if (subPropertyData) then
-                    local operation = typesOperations[subPropertyData.type]
-                    operation.write(elementAddress + subPropertyData.offset, subPropertyData,
-                                    subPropertyValue)
-                end
-            end
-        else
-            if (currentElement > #propertyValue) then
-                break
-            end
-        end
-    end
-end
-
-local function readTagReference(address)
-    -- local tagClass = read_dword(address)
-    -- local tagPathPointer = read_dword(address + 0x4)
-    -- local tagPath = read_string(tagPathPointer)
-    -- local unknown = read_dword(address + 0x8)
-    local tagId = read_dword(address + 0xC)
-    return tagId
-end
-
-local function writeTagReference(address, propertyData, tagId)
-    -- TODO Attempt to validate tag classes and overwrite tag path pointer
-    write_dword(address + 0xC, tagId)
-end
-
-local function safeReadUnicodeString(address)
-    local size = read_dword(address)
-    if size == 0 then
-        return ""
-    end
-    return blam.readUnicodeString(address + 0xC)
-end
-
-local function safeWriteUnicodeString(address, propertyData, text)
-    local size = read_dword(address)
-    local newText = text
-    local maximumStringSize = size - 2
-    if #text * 2 >= maximumStringSize then
-        newText = newText:sub(1, maximumStringSize / 2)
-        -- String is too long, truncate it and write it without null terminator
-        return blam.writeUnicodeString(address + 0xC, newText, false, true)
-    end
-    -- String is short enough, write it with null terminator
-    -- This will ignore rest of the string if it was longer than new string size
-    return blam.writeUnicodeString(address + 0xC, newText, false, false)
-end
-
-local ctypes = {
+local cTypes = {
     bit = {
         read = function(addr, offset)
             return bool(read_bit(addr, offset))
@@ -1223,63 +1027,6 @@ local ctypes = {
     ptr = {read = read_dword, write = write_dword}
 }
 
--- Data types operations references
-typesOperations = {
-    bit = {read = readBit, write = writeBit},
-    byte = {read = readByte, write = writeByte},
-    char = {read = readChar, write = writeChar},
-    short = {read = readShort, write = writeShort},
-    word = {read = readWord, write = writeWord},
-    int = {read = readInt, write = writeInt},
-    dword = {read = readDword, write = writeDword},
-    float = {read = readFloat, write = writeFloat},
-    string = {read = readString, write = writeString},
-    -- TODO This is not ok, a pointer type with subtyping should be implemented
-    pustring = {read = readPointerUnicodeString, write = writePointerUnicodeString},
-    ustring = {read = readUnicodeString, write = writeUnicodeString},
-    list = {read = readList, write = writeList},
-    table = {read = readTable, write = writeTable},
-    tagref = {read = readTagReference, write = writeTagReference},
-    sustring = {read = safeReadUnicodeString, write = safeWriteUnicodeString},
-    ptr = {
-        read = function(address, propertyData)
-            return read_dword(address + propertyData.offset)
-        end,
-        write = function(address, propertyData, propertyValue)
-            write_dword(address + propertyData.offset, propertyValue)
-        end
-    }
-}
-
--- Magic luablam metatable
-local structBinding = {
-    -- Write property value to memory
-    __newindex = function(object, field, propertyValue)
-        -- Get all the data related to property field
-        local fieldData = object.definition[field]
-        if fieldData then
-            local operation = typesOperations[fieldData.type]
-            local propertyAddress = object.address + fieldData.offset
-            operation.write(propertyAddress, fieldData, propertyValue)
-        else
-            local errorMessage = "Unable to write an invalid property ('" .. field .. "')"
-            error(debug.traceback(errorMessage, 2))
-        end
-    end,
-    -- Read property value from memory
-    __index = function(object, field)
-        local fieldData = object.definition[field]
-        if fieldData then
-            local operation = typesOperations[fieldData.type]
-            local propertyAddress = object.address + fieldData.offset
-            return operation.read(propertyAddress, fieldData)
-        else
-            local errorMessage = "Unable to read an invalid property ('" .. field .. "')"
-            error(debug.traceback(errorMessage, 2))
-        end
-    end
-}
-
 ------------------------------------------------------------------------------
 -- Struct functions
 ------------------------------------------------------------------------------
@@ -1290,28 +1037,35 @@ local structBinding = {
 ---@return table
 local function createBindStruct(address, struct)
     -- print("Creating bind struct for address: " .. string.format("0x%x", address))
-    local tableStruct = {_address = address, _struct = struct}
+    local tableStruct = {_address = address, _struct = struct, _addr = string.format("0x%x", address)}
     setmetatable(tableStruct, {
         __index = function(t, key)
+            if #struct == 0 then
+                struct = table.map(table.keys(struct), function(k)
+                    return {name = k, type = struct[k].type, offset = struct[k].offset, is = struct[k].is, fields = struct[k].fields}
+                end)
+            end
             local fieldMeta = table.find(struct, function(f)
                 return f.name == key
             end)
             if not fieldMeta then
+                error("Field '" .. key .. "' not found in struct")
                 return
             end
             local isPointer = fieldMeta.is == "ptr"
-            local address = isPointer and ctypes.ptr.read(address + fieldMeta.offset) or
+            local address = isPointer and cTypes.ptr.read(address + fieldMeta.offset) or
                                 (address + fieldMeta.offset)
 
-            print("Accessing field: " .. fieldMeta.name .. ", Type: " .. fieldMeta.type ..
-                      ", Address: " .. string.format("0x%x", address))
-            if ctypes[fieldMeta.type] and ctypes[fieldMeta.type].read then
-                return ctypes[fieldMeta.type].read(address)
+            --print("Accessing field: " .. fieldMeta.name .. ", Type: " .. fieldMeta.type .. ", Address: " .. string.format("0x%x", address))
+            if cTypes[fieldMeta.type] and cTypes[fieldMeta.type].read then
+                return cTypes[fieldMeta.type].read(address)
             elseif fieldMeta.is == "struct" then
-                -- print("Creating nested struct for field: " .. fieldMeta.name)
                 return createBindStruct(address, fieldMeta.fields)
+            elseif fieldMeta.is == "array" then
+                -- TODO
             else
-                error("Unsupported type: " .. fieldMeta.type)
+                --error("Unsupported type: " .. fieldMeta.type)
+                print("Unsupported type: " .. fieldMeta.type .. " for field: " .. fieldMeta.name)
             end
         end,
         __newindex = function(t, key, value)
@@ -1322,10 +1076,10 @@ local function createBindStruct(address, struct)
                 return
             end
             local isPointer = field.is == "ptr"
-            local address = isPointer and ctypes.ptr.read(address + field.offset) or
+            local address = isPointer and cTypes.ptr.read(address + field.offset) or
                                 (address + field.offset)
-            if ctypes[field.type] and ctypes[field.type].write then
-                ctypes[field.type].write(address, value)
+            if cTypes[field.type] and cTypes[field.type].write then
+                cTypes[field.type].write(address, value)
             elseif field.is == "struct" then
                 -- If it's a struct, we can set fields directly as it will trigger the __index metamethod
                 if type(value) == "table" then
@@ -1344,14 +1098,17 @@ local function createBindStruct(address, struct)
     return tableStruct
 end
 
---- Return a dump of a given LuaBlam object
----@param object table
+--- Return a dump version of a binded structure table
+---@param t table
 ---@return table
-local function dumpObject(object)
+local function dumpTable(t)
     local dump = {}
-    for k, v in pairs(object.structure) do
-        dump[k] = object[k]
+    for k, v in pairs(t._struct) do
+        dump[k] = t[k]
     end
+    --dump._address = t._address
+    --dump._addr = t._addr
+    --dump._struct = t._struct
     return dump
 end
 
@@ -1394,345 +1151,6 @@ local dataTableStructure = {
     firstElementAddress = {type = "dword", offset = 0x34}
 }
 
-local deviceGroupsTableStructure = {
-    name = {type = "string", offset = 0},
-    maxElements = {type = "word", offset = 0x20},
-    elementSize = {type = "word", offset = 0x22},
-    firstElementAddress = {type = "dword", offset = 0x34}
-}
-
----@class blamObject
----@field address number
----@field tagId number Object tag ID
----@field networkRoleClass number Object network role class
----@field isGhost boolean Set object in some type of ghost mode
----@field isOnGround boolean Is the object touching ground
----@field isNotAffectedByGravity boolean Enable/disable object gravity
----@field isInWater boolean Is the object touching on water
----@field isStationary boolean Is the object stationary
----@field dynamicShading boolean Enable disable dynamic shading for lightmaps
----@field isNotCastingShadow boolean Enable/disable object shadow casting
----@field isFrozen boolean Freeze/unfreeze object existence
----@field isOutSideMap boolean Is object outside/inside bsp
----@field isCollideable boolean Enable/disable object collision, does not work with bipeds or vehicles
----@field isBeingPickedUp boolean Is the object being picked up
----@field hasNoCollision boolean Enable/disable object collision, causes animation problems
----@field model number Gbxmodel tag ID
----@field scale number Object scale factor
----@field health number Current health of the object
----@field maxHealth number Maximum health of the object
----@field shield number Current shield of the object
----@field maxShield number Maximum shield of the object
----@field colorAUpperRed number Red color channel for A modifier
----@field colorAUpperGreen number Green color channel for A modifier
----@field colorAUpperBlue number Blue color channel for A modifier
----@field colorBUpperRed number Red color channel for B modifier
----@field colorBUpperGreen number Green color channel for B modifier
----@field colorBUpperBlue number Blue color channel for B modifier
----@field colorCUpperRed number Red color channel for C modifier
----@field colorCUpperGreen number Green color channel for C modifier
----@field colorCUpperBlue number Blue color channel for C modifier
----@field colorDUpperRed number Red color channel for D modifier
----@field colorDUpperGreen number Green color channel for D modifier
----@field colorDUpperBlue number Blue color channel for D modifier
----@field colorALowerRed number Red color channel for A modifier
----@field colorALowerGreen number Green color channel for A modifier
----@field colorALowerBlue number Blue color channel for A modifier
----@field colorBLowerRed number Red color channel for B modifier
----@field colorBLowerGreen number Green color channel for B modifier
----@field colorBLowerBlue number Blue color channel for B modifier
----@field colorCLowerRed number Red color channel for C modifier
----@field colorCLowerGreen number Green color channel for C modifier
----@field colorCLowerBlue number Blue color channel for C modifier
----@field colorDLowerRed number Red color channel for D modifier
----@field colorDLowerGreen number Green color channel for D modifier
----@field colorDLowerBlue number Blue color channel for D modifier
----@field x number Current position of the object on X axis
----@field y number Current position of the object on Y axis
----@field z number Current position of the object on Z axis
----@field xVel number Current velocity of the object on X axis
----@field yVel number Current velocity of the object on Y axis
----@field zVel number Current velocity of the object on Z axis
----@field vX number Current x value in first rotation vector
----@field vY number Current y value in first rotation vector
----@field vZ number Current z value in first rotation vector
----@field v2X number Current x value in second rotation vector
----@field v2Y number Current y value in second rotation vector
----@field v2Z number Current z value in second rotation vector
----@field yawVel number Current velocity of the object in yaw
----@field pitchVel number Current velocity of the object in pitch
----@field rollVel number Current velocity of the object in roll
----@field locationId number Current id of the location in the map
----@field boundingRadius number Radius amount of the object in radians
----@field class objectClasses Object type
----@field team number Object multiplayer team
----@field nameIndex number Index of object name in the scenario tag
----@field playerId number Current player id if the object
----@field ownerId number Current owner id of the object any other object id
----@field isApparentlyDead boolean Is the object apparently dead
----@field isSilentlyKilled boolean Is the object really dead
----@field animationTagId number Current animation tag ID
----@field animation number Current animation index
----@field animationFrame number Current animation frame
----@field isNotDamageable boolean Make the object undamageable
----@field shaderPermutationIndex number Current shader permutation index
----@field regionPermutation1 number
----@field regionPermutation2 number
----@field regionPermutation3 number
----@field regionPermutation4 number
----@field regionPermutation5 number
----@field regionPermutation6 number
----@field regionPermutation7 number
----@field regionPermutation8 number
----@field parentObjectId number
-
--- blamObject structure
-local objectStructure = {
-    tagId = {type = "dword", offset = 0x0},
-    networkRoleClass = {type = "dword", offset = 0x4},
-    isNotMoving = {type = "bit", offset = 0x8, bitLevel = 0},
-    existanceTime = {type = "dword", offset = 0xC},
-    isGhost = {type = "bit", offset = 0x10, bitLevel = 0},
-    isOnGround = {type = "bit", offset = 0x10, bitLevel = 1},
-    ---@deprecated
-    ignoreGravity = {type = "bit", offset = 0x10, bitLevel = 2},
-    isNotAffectedByGravity = {type = "bit", offset = 0x10, bitLevel = 2},
-    isInWater = {type = "bit", offset = 0x10, bitLevel = 3},
-    isStationary = {type = "bit", offset = 0x10, bitLevel = 5},
-    hasNoCollision = {type = "bit", offset = 0x10, bitLevel = 7},
-    dynamicShading = {type = "bit", offset = 0x10, bitLevel = 14},
-    isNotCastingShadow = {type = "bit", offset = 0x10, bitLevel = 18},
-    isFrozen = {type = "bit", offset = 0x10, bitLevel = 20},
-    -- FIXME Deprecated property, should be erased at a major release later
-    frozen = {type = "bit", offset = 0x10, bitLevel = 20},
-    isCollideable = {type = "bit", offset = 0x10, bitLevel = 24},
-    isBeingPickedUp = {type = "bit", offset = 0x10, bitLevel = 26},
-    isOutSideMap = {type = "bit", offset = 0x12, bitLevel = 5},
-    model = {type = "dword", offset = 0x34},
-    scale = {type = "float", offset = 0xB0},
-    health = {type = "float", offset = 0xE0},
-    maxHealth = {type = "float", offset = 0xD8},
-    shield = {type = "float", offset = 0xE4},
-    maxShield = {type = "float", offset = 0xDC},
-    ---@deprecated
-    redA = {type = "float", offset = 0x1B8},
-    ---@deprecated
-    greenA = {type = "float", offset = 0x1BC},
-    ---@deprecated
-    blueA = {type = "float", offset = 0x1C0},
-    colorAUpperRed = {type = "float", offset = 0x188},
-    colorAUpperGreen = {type = "float", offset = 0x18C},
-    colorAUpperBlue = {type = "float", offset = 0x190},
-    colorBUpperRed = {type = "float", offset = 0x194},
-    colorBUpperGreen = {type = "float", offset = 0x198},
-    colorBUpperBlue = {type = "float", offset = 0x19C},
-    colorCUpperRed = {type = "float", offset = 0x1A0},
-    colorCUpperGreen = {type = "float", offset = 0x1A4},
-    colorCUpperBlue = {type = "float", offset = 0x1A8},
-    colorDUpperRed = {type = "float", offset = 0x1AC},
-    colorDUpperGreen = {type = "float", offset = 0x1B0},
-    colorDUpperBlue = {type = "float", offset = 0x1B4},
-    colorALowerRed = {type = "float", offset = 0x1B8},
-    colorALowerGreen = {type = "float", offset = 0x1BC},
-    colorALowerBlue = {type = "float", offset = 0x1C0},
-    colorBLowerRed = {type = "float", offset = 0x1C4},
-    colorBLowerGreen = {type = "float", offset = 0x1C8},
-    colorBLowerBlue = {type = "float", offset = 0x1CC},
-    colorCLowerRed = {type = "float", offset = 0x1D0},
-    colorCLowerGreen = {type = "float", offset = 0x1D4},
-    colorCLowerBlue = {type = "float", offset = 0x1D8},
-    colorDLowerRed = {type = "float", offset = 0x1DC},
-    colorDLowerGreen = {type = "float", offset = 0x1E0},
-    colorDLowerBlue = {type = "float", offset = 0x1E4},
-    x = {type = "float", offset = 0x5C},
-    y = {type = "float", offset = 0x60},
-    z = {type = "float", offset = 0x64},
-    xVel = {type = "float", offset = 0x68},
-    yVel = {type = "float", offset = 0x6C},
-    zVel = {type = "float", offset = 0x70},
-    vX = {type = "float", offset = 0x74},
-    vY = {type = "float", offset = 0x78},
-    vZ = {type = "float", offset = 0x7C},
-    v2X = {type = "float", offset = 0x80},
-    v2Y = {type = "float", offset = 0x84},
-    v2Z = {type = "float", offset = 0x88},
-    -- FIXME Some order from this values is probaby wrong, expected order is pitch, yaw, roll
-    yawVel = {type = "float", offset = 0x8C},
-    pitchVel = {type = "float", offset = 0x90},
-    rollVel = {type = "float", offset = 0x94},
-    locationId = {type = "dword", offset = 0x98},
-    boundingRadius = {type = "float", offset = 0xAC},
-    ---@deprecated
-    type = {type = "word", offset = 0xB4},
-    class = {type = "word", offset = 0xB4},
-    team = {type = "word", offset = 0xB8},
-    nameIndex = {type = "word", offset = 0xBA},
-    playerId = {type = "dword", offset = 0xC0},
-    ---@deprecated
-    parentId = {type = "dword", offset = 0xC4},
-    ownerId = {type = "dword", offset = 0xC4},
-    ---@deprecated
-    isHealthEmpty = {type = "bit", offset = 0x106, bitLevel = 2},
-    isApparentlyDead = {type = "bit", offset = 0x106, bitLevel = 2},
-    isSilentlyKilled = {type = "bit", offset = 0x106, bitLevel = 5},
-    animationTagId = {type = "dword", offset = 0xCC},
-    animation = {type = "word", offset = 0xD0},
-    animationFrame = {type = "word", offset = 0xD2},
-    isNotDamageable = {type = "bit", offset = 0x106, bitLevel = 11},
-    shaderPermutationIndex = {type = "word", offset = 0x176},
-    regionPermutation1 = {type = "byte", offset = 0x180},
-    regionPermutation2 = {type = "byte", offset = 0x181},
-    regionPermutation3 = {type = "byte", offset = 0x182},
-    regionPermutation4 = {type = "byte", offset = 0x183},
-    regionPermutation5 = {type = "byte", offset = 0x184},
-    regionPermutation6 = {type = "byte", offset = 0x185},
-    regionPermutation7 = {type = "byte", offset = 0x186},
-    regionPermutation8 = {type = "byte", offset = 0x187},
-    parentObjectId = {type = "dword", offset = 0x11C}
-}
-
-local unitStructure = extendStructure(objectStructure, {
-    ---@deprecated
-    invisible = {type = "bit", offset = 0x204, bitLevel = 4},
-    isCamoActive = {type = "bit", offset = 0x204, bitLevel = 4},
-    isControllable = {type = "bit", offset = 0x204, bitLevel = 5},
-    isPlayerNotAllowedToEntry = {type = "bit", offset = 0x204, bitLevel = 16},
-    parentSeatIndex = {type = "word", offset = 0x2F0},
-    weaponAnimationTypeIndex = {type = "byte", offset = 0x2A1},
-    weaponSlot = {type = "byte", offset = 0x2F2},
-    firstWeaponObjectId = {type = "dword", offset = 0x2F8},
-    secondWeaponObjectId = {type = "dword", offset = 0x2FC},
-    thirdWeaponObjectId = {type = "dword", offset = 0x300},
-    fourthWeaponObjectId = {type = "dword", offset = 0x304},
-    camoScale = {type = "float", offset = 0x37C}
-})
-
----@class unit : blamObject
----@field isCamoActive boolean Unit camo state
----@field isControllable boolean Unit controllable state
----@field isPlayerNotAllowedToEntry boolean Unit player not allowed to entry
----@field parentSeatIndex number Unit parent seat index
----@field weaponAnimationTypeIndex number Unit weapon animation type index
----@field weaponSlot number Current unit weapon slot
----@field firstWeaponObjectId number First weapon object id
----@field secondWeaponObjectId number Second weapon object id
----@field thirdWeaponObjectId number Third weapon object id
----@field fourthWeaponObjectId number Fourth weapon object id
----@field camoScale number Unit camo scale
-
--- Biped structure (extends object structure)
-local bipedStructure = extendStructure(unitStructure, {
-    noDropItems = {type = "bit", offset = 0x204, bitLevel = 20},
-    flashlight = {type = "bit", offset = 0x204, bitLevel = 19},
-    cameraX = {type = "float", offset = 0x230},
-    cameraY = {type = "float", offset = 0x234},
-    cameraZ = {type = "float", offset = 0x238},
-    crouchHold = {type = "bit", offset = 0x208, bitLevel = 0},
-    jumpHold = {type = "bit", offset = 0x208, bitLevel = 1},
-    actionKeyHold = {type = "bit", offset = 0x208, bitLevel = 14},
-    actionKey = {type = "bit", offset = 0x208, bitLevel = 6},
-    meleeKey = {type = "bit", offset = 0x208, bitLevel = 7},
-    reloadKey = {type = "bit", offset = 0x208, bitLevel = 10},
-    weaponPTH = {type = "bit", offset = 0x208, bitLevel = 11},
-    weaponSTH = {type = "bit", offset = 0x208, bitLevel = 12},
-    flashlightKey = {type = "bit", offset = 0x208, bitLevel = 4},
-    grenadeHold = {type = "bit", offset = 0x208, bitLevel = 13},
-    crouch = {type = "byte", offset = 0x2A0},
-    shooting = {type = "float", offset = 0x284},
-    zoomLevel = {type = "byte", offset = 0x320},
-    ---@deprecated
-    invisibleScale = {type = "float", offset = 0x37C},
-    primaryNades = {type = "byte", offset = 0x31E},
-    secondaryNades = {type = "byte", offset = 0x31F},
-    isNotAffectedByGravity = {type = "bit", offset = 0x4CC, bitLevel = 2},
-    ignoreCollision = {type = "bit", offset = 0x4CC, bitLevel = 3},
-    landing = {type = "byte", offset = 0x508},
-    bumpedObjectId = {type = "dword", offset = 0x4FC},
-    vehicleObjectId = {type = "dword", offset = 0x11C},
-    vehicleSeatIndex = {type = "word", offset = 0x2F0},
-    walkingState = {type = "char", offset = 0x503},
-    motionState = {type = "byte", offset = 0x4D2},
-    mostRecentDamagerPlayer = {type = "dword", offset = 0x43C}
-})
-
----@class biped : unit
----@field invisible boolean Biped invisible state
----@field noDropItems boolean Biped ability to drop items at dead
----@field ignoreCollision boolean Biped ignores collisiion
----@field flashlight boolean Biped has flaslight enabled
----@field cameraX number Current position of the biped  X axis
----@field cameraY number Current position of the biped  Y axis
----@field cameraZ number Current position of the biped  Z axis
----@field crouchHold boolean Biped is holding crouch action
----@field jumpHold boolean Biped is holding jump action
----@field actionKeyHold boolean Biped is holding action key
----@field actionKey boolean Biped pressed action key
----@field meleeKey boolean Biped pressed melee key
----@field reloadKey boolean Biped pressed reload key
----@field weaponPTH boolean Biped is holding primary weapon trigger
----@field weaponSTH boolean Biped is holding secondary weapon trigger
----@field flashlightKey boolean Biped pressed flashlight key
----@field grenadeHold boolean Biped is holding grenade action
----@field crouch number Is biped crouch
----@field shooting number Is biped shooting, 0 when not, 1 when shooting
----@field weaponSlot number Current biped weapon slot
----@field zoomLevel number Current biped weapon zoom level, 0xFF when no zoom, up to 255 when zoomed
----@field invisibleScale number Opacity amount of biped invisiblity
----@field primaryNades number Primary grenades count
----@field secondaryNades number Secondary grenades count
----@field isNotAffectedByGravity boolean Enable/disable biped gravity
----@field landing number Biped landing state, 0 when landing, stays on 0 when landing hard, null otherwise
----@field bumpedObjectId number Object ID that the biped is bumping, vehicles, bipeds, etc, keeps the previous value if not bumping a new object
----@field vehicleSeatIndex number Current vehicle seat index of this biped
----@field vehicleObjectId number Current vehicle objectId of this object
----@field walkingState number Biped walking state, 0 = not walking, 1 = walking, 2 = stoping walking, 3 = stationary
----@field motionState number Biped motion state, 0 = standing , 1 = walking , 2 = jumping/falling
----@field mostRecentDamagerPlayer number Id of the player that caused the most recent damage to this biped
-
-local vehicleStructure = extendStructure(unitStructure, {
-    isTireBlur = {type = "bit", offset = 0x4CC, bitLevel = 0},
-    isHovering = {type = "bit", offset = 0x4CC, bitLevel = 1},
-    isCrouched = {type = "bit", offset = 0x4CC, bitLevel = 2},
-    isJumping = {type = "bit", offset = 0x4CC, bitLevel = 3},
-    speed = {type = "float", offset = 0x4D4},
-    slide = {type = "float", offset = 0x4D8},
-    turn = {type = "float", offset = 0x4DC},
-    tirePosition = {type = "float", offset = 0x4E0},
-    threadPositionLeft = {type = "float", offset = 0x4E4},
-    threadPositionRight = {type = "float", offset = 0x4E8},
-    hover = {type = "float", offset = 0x4EC},
-    thrust = {type = "float", offset = 0x4F0},
-    hoverX = {type = "float", offset = 0x4FC},
-    hoverY = {type = "float", offset = 0x500},
-    hoverZ = {type = "float", offset = 0x504},
-    respawnTimer = {type = "dword", offset = 0x5AC},
-    respawnTime = {type = "word", offset = 0x5B0},
-    respawnX = {type = "float", offset = 0x5B4},
-    respawnY = {type = "float", offset = 0x5B8},
-    respawnZ = {type = "float", offset = 0x5BC}
-})
-
----@class vehicle : unit
----@field isTireBlur boolean Vehicle tire blur state
----@field isHovering boolean Vehicle hovering state
----@field isCrouched boolean Vehicle crouch state
----@field isJumping boolean Vehicle jumping state
----@field speed number Vehicle speed
----@field slide number Vehicle slide
----@field turn number Vehicle turn
----@field tirePosition number Vehicle tire position
----@field threadPositionLeft number Vehicle thread position left
----@field threadPositionRight number Vehicle thread position right
----@field hover number Vehicle hover
----@field thrust number Vehicle thrust
----@field hoverX number Vehicle hover X axis
----@field hoverY number Vehicle hover Y axis
----@field hoverZ number Vehicle hover Z axis
----@field respawnTimer number Vehicle respawn timer
----@field respawnTime number Vehicle respawn time
----@field respawnX number Vehicle respawn X axis
----@field respawnY number Vehicle respawn Y axis
----@field respawnZ number Vehicle respawn Z axis
 
 -- Tag data header structure
 local tagDataHeaderStructure = {
@@ -1741,933 +1159,26 @@ local tagDataHeaderStructure = {
     count = {type = "word", offset = 0xC}
 }
 
----@class tag
----@field class number Type of the tag
----@field index number Tag Index
----@field id number Tag ID
+---@class tagEntry
+---@field primaryGroup string Primary group of the tag
+---@field secondaryGroup string Secondary group of the tag
+---@field tertiaryGroup string Tertiary group of the tag
+---@field handle number Tag handle, used for tag references
 ---@field path string Path of the tag
 ---@field data number Address of the tag data
 ---@field indexed boolean Is tag indexed on an external map file
 
 -- Tag structure
-local tagHeaderStructure = {
-    class = {type = "dword", offset = 0x0},
-    index = {type = "word", offset = 0xC},
-    id = {type = "dword", offset = 0xC},
-    path = {type = "dword", offset = 0x10},
+local tagEntryStructure = {
+    primaryGroup = {type = "dword", offset = 0x0},
+    secondaryGroup = {type = "dword", offset = 0x4},
+    tertiaryGroup = {type = "dword", offset = 0x8},
+    index = {type = "word", offset = 0xC}, -- Deprecated, use handle instead
+    id = {type = "dword", offset = 0xC}, -- Deprecated, use handle instead
+    handle = {type = "dword", offset = 0xC},
+    path = {type = "string", offset = 0x10, is = "ptr"},
     data = {type = "dword", offset = 0x14},
     indexed = {type = "dword", offset = 0x18}
-}
-
----@class tagCollection
----@field count number Number of tags in the collection
----@field tagList table List of tags
-
--- tagCollection structure
-local tagCollectionStructure = {
-    count = {type = "byte", offset = 0x0},
-    tagList = {type = "list", offset = 0x4, elementsType = "dword", jump = 0x10}
-}
-
----@class unicodeStringList
----@field count number Number of unicode strings
----@field strings string[] List of unicode strings
-
--- UnicodeStringList structure
-local unicodeStringListStructure = {
-    count = {type = "byte", offset = 0x0},
-    ---@deprecated
-    stringList = {type = "list", offset = 0x4, elementsType = "pustring", jump = 0x14},
-    -- Previous string list property works because of magic (well because of shit code haha)
-    strings = {type = "list", offset = 0x4, elementsType = "sustring", jump = 0x14, noOffset = true}
-}
-
----@class bitmapSequence
----@field name string
----@field firtBitmapIndex number
----@field bitmapCount number
-
----@class bitmap
----@field type number
----@field format number
----@field usage number
----@field usageFlags number
----@field detailFadeFactor number
----@field sharpenAmount number
----@field bumpHeight number
----@field spriteBudgetSize number
----@field spriteBudgetCount number
----@field colorPlateWidth number
----@field colorPlateHeight number 
----@field compressedColorPlate string
----@field processedPixelData string
----@field blurFilterSize number
----@field alphaBias number
----@field mipmapCount number
----@field spriteUsage number
----@field spriteSpacing number
----@field sequencesCount number
----@field sequences bitmapSequence[]
----@field bitmapsCount number
----@field bitmaps table
-
--- Bitmap structure
-local bitmapStructure = {
-    type = {type = "word", offset = 0x0},
-    format = {type = "word", offset = 0x2},
-    usage = {type = "word", offset = 0x4},
-    usageFlags = {type = "word", offset = 0x6},
-    detailFadeFactor = {type = "dword", offset = 0x8},
-    sharpenAmount = {type = "dword", offset = 0xC},
-    bumpHeight = {type = "dword", offset = 0x10},
-    spriteBudgetSize = {type = "word", offset = 0x14},
-    spriteBudgetCount = {type = "word", offset = 0x16},
-    colorPlateWidth = {type = "word", offset = 0x18},
-    colorPlateHeight = {type = "word", offset = 0x1A},
-    -- compressedColorPlate = {offset = 0x1C},
-    -- processedPixelData = {offset = 0x30},
-    blurFilterSize = {type = "float", offset = 0x44},
-    alphaBias = {type = "float", offset = 0x48},
-    mipmapCount = {type = "word", offset = 0x4C},
-    spriteUsage = {type = "word", offset = 0x4E},
-    spriteSpacing = {type = "word", offset = 0x50},
-    -- padding1 = {size = 0x2, offset = 0x52},
-    sequencesCount = {type = "byte", offset = 0x54},
-    sequences = {
-        type = "table",
-        offset = 0x58,
-        jump = 0x40,
-        rows = {
-            name = {type = "string", offset = 0x0},
-            firstBitmapIndex = {type = "word", offset = 0x20},
-            bitmapCount = {type = "word", offset = 0x22}
-            -- padding = {size = 0x10, offset = 0x24},
-            --[[
-            sprites = {
-                type = "table",
-                offset = 0x34,
-                jump = 0x20,
-                rows = {
-                    bitmapIndex = {type = "word", offset = 0x0},
-                    --padding1 = {size = 0x2, offset = 0x2},
-                    --padding2 = {size = 0x4, offset = 0x4},
-                    left = {type = "float", offset = 0x8},
-                    right = {type = "float", offset = 0xC},
-                    top = {type = "float", offset = 0x10},
-                    bottom = {type = "float", offset = 0x14},
-                    registrationX = {type = "float", offset = 0x18},
-                    registrationY = {type = "float", offset = 0x1C}
-                }
-            }
-            ]]
-        }
-    },
-    bitmapsCount = {type = "byte", offset = 0x60},
-    bitmaps = {
-        type = "table",
-        offset = 0x64,
-        jump = 0x30,
-        rows = {
-            class = {type = "dword", offset = 0x0},
-            width = {type = "word", offset = 0x4},
-            height = {type = "word", offset = 0x6},
-            depth = {type = "word", offset = 0x8},
-            type = {type = "word", offset = 0xA},
-            format = {type = "word", offset = 0xC},
-            flags = {type = "word", offset = 0xE},
-            x = {type = "word", offset = 0x10},
-            y = {type = "word", offset = 0x12},
-            mipmapCount = {type = "word", offset = 0x14},
-            -- padding1 = {size = 0x2, offset = 0x16},
-            pixelOffset = {type = "dword", offset = 0x18}
-            -- padding2 = {size = 0x4, offset = 0x1C},
-            -- padding3 = {size = 0x4, offset = 0x20},
-            -- padding4 = {size = 0x4, offset= 0x24},
-            -- padding5 = {size = 0x8, offset= 0x28}
-        }
-    }
-}
-
----@class uiWidgetDefinitionChild
----@field widgetTag number Child uiWidgetDefinition reference
----@field name number Child widget name
----@field customControllerIndex number Custom controller index for this child widget
----@field verticalOffset number Offset in Y axis of this child, relative to the parent
----@field horizontalOffset number Offset in X axis of this child, relative to the parent
-
----@class uiWidgetDefinitionEventHandler
----@field eventType number Type of the event
----@field gameFunction number Game function of this event
----@field widgetTag number uiWidgetDefinition tag id of the event
----@field script string Name of the script function assigned to this event
-
----@class uiWidgetDefinition
----@field type number Type of widget
----@field controllerIndex number Index of the player controller
----@field name string Name of the widget
----@field top number Top bound of the widget
----@field left number Left bound of the widget
----@field bottom number Bottom bound of the widget
----@field right number Right bound of the widget
----@field boundsY number Top bound of the widget
----@field boundsX number Left bound of the widget
----@field height number Bottom bound of the widget
----@field width number Right bound of the widget
----@field passUnhandleEventsToFocusedChild boolean Pass unhandled events to focused child
----@field pauseGameTime boolean Pause game time
----@field flashBackgroundBitmap boolean Flash background bitmap
----@field dpadUpDownTabsThruChildren boolean Dpad up down tabs thru children
----@field dpadLeftRightTabsThruChildren boolean Dpad left right tabs thru children
----@field dpadUpDownTabsThruListItems boolean Dpad up down tabs thru list items
----@field dpadLeftRightTabsThruListItems boolean Dpad left right tabs thru list items
----@field dontFocusSpecificChildWidget boolean Don't focus specific child widget
----@field passUnhandledEventsToAllChildren boolean Pass unhandled events to all children
----@field renderRegardlessOfControllerIndex boolean Render regardless of controller index
----@field passHandledEventsToAllChildren boolean Pass handled events to all children
----@field returnToMainMenuIfNoHistory boolean Return to main menu if no history
----@field alwaysUseTagControllerIndex boolean Always use tag controller index
----@field alwaysUseNiftyRenderFx boolean Always use nifty render fx
----@field dontPushHistory boolean Don't push history
----@field forceHandleMouse boolean Force handle mouse
----@field backgroundBitmap number Tag ID of the background bitmap
----@field eventHandlers uiWidgetDefinitionEventHandler[] tag ID list of the child widgets
----@field unicodeStringListTag number Tag ID of the unicodeStringList from this widget
----@field fontTag number Tag ID of the font from this widget
----@field justification number Text justification of the text from this widget
----@field stringListIndex number Text index from the unicodeStringList tag from this widget
----@field textHorizontalOffset number Text offset in X axis from this widget
----@field textVerticalOffset number Text offset in Y axis from this widget
----@field childWidgetsCount number Number of child widgets
----@field childWidgets uiWidgetDefinitionChild[] List of the child widgets
-
-local uiWidgetDefinitionStructure = {
-    type = {type = "word", offset = 0x0},
-    controllerIndex = {type = "word", offset = 0x2},
-    name = {type = "string", offset = 0x4},
-    top = {type = "short", offset = 0x24},
-    left = {type = "short", offset = 0x26},
-    bottom = {type = "short", offset = 0x28},
-    right = {type = "short", offset = 0x2A},
-    boundsY = {type = "short", offset = 0x24},
-    boundsX = {type = "short", offset = 0x26},
-    height = {type = "short", offset = 0x28},
-    width = {type = "short", offset = 0x2A},
-    passUnhandleEventsToFocusedChild = {type = "bit", offset = 0x2C, bitLevel = 0},
-    pauseGameTime = {type = "bit", offset = 0x2C, bitLevel = 1},
-    flashBackgroundBitmap = {type = "bit", offset = 0x2C, bitLevel = 2},
-    dpadUpDownTabsThruChildren = {type = "bit", offset = 0x2C, bitLevel = 3},
-    dpadLeftRightTabsThruChildren = {type = "bit", offset = 0x2C, bitLevel = 4},
-    dpadUpDownTabsThruListItems = {type = "bit", offset = 0x2C, bitLevel = 5},
-    dpadLeftRightTabsThruListItems = {type = "bit", offset = 0x2C, bitLevel = 6},
-    dontFocusSpecificChildWidget = {type = "bit", offset = 0x2C, bitLevel = 7},
-    passUnhandledEventsToAllChildren = {type = "bit", offset = 0x2C, bitLevel = 8},
-    renderRegardlessOfControllerIndex = {type = "bit", offset = 0x2C, bitLevel = 9},
-    passHandledEventsToAllChildren = {type = "bit", offset = 0x2C, bitLevel = 10},
-    returnToMainMenuIfNoHistory = {type = "bit", offset = 0x2C, bitLevel = 11},
-    alwaysUseTagControllerIndex = {type = "bit", offset = 0x2C, bitLevel = 12},
-    alwaysUseNiftyRenderFx = {type = "bit", offset = 0x2C, bitLevel = 13},
-    dontPushHistory = {type = "bit", offset = 0x2C, bitLevel = 14},
-    forceHandleMouse = {type = "bit", offset = 0x2C, bitLevel = 15},
-    backgroundBitmap = {type = "word", offset = 0x44},
-    eventHandlers = {
-        type = "table",
-        offset = 0x54,
-        jump = 0x48,
-        rows = {
-            -- TODO Add real flags support, or a subtyping of table instead
-            -- flags = {type = "number", offset = 0x0},
-            eventType = {type = "word", offset = 0x4},
-            gameFunction = {type = "word", offset = 0x6},
-            widgetTag = {type = "tagref", offset = 0x8},
-            soundEffectTag = {type = "tagref", offset = 0x18},
-            script = {type = "string", offset = 0x28}
-        }
-    },
-    unicodeStringListTag = {type = "tagref", offset = 0xEC},
-    fontTag = {type = "tagref", offset = 0xFC},
-    -- TODO Add color support for hex and rgb values
-    -- textColor = {type = "realargbcolor", offset = 0x10C},
-    justification = {type = "word", offset = 0x11C},
-    stringListIndex = {type = "short", offset = 0x12E},
-    textHorizontalOffset = {type = "short", offset = 0x130},
-    textVerticalOffset = {type = "short", offset = 0x132},
-    ---@deprecated
-    eventType = {type = "byte", offset = 0x03F0},
-    ---@deprecated
-    tagReference = {type = "word", offset = 0x400},
-    childWidgetsCount = {type = "dword", offset = 0x03E0},
-    ---@deprecated
-    childWidgetsList = {type = "list", offset = 0x03E4, elementsType = "dword", jump = 0x50},
-    childWidgets = {
-        type = "table",
-        offset = 0x03E4,
-        jump = 0x50,
-        rows = {
-            widgetTag = {type = "tagref", offset = 0x0},
-            name = {type = "string", offset = 0x10},
-            -- flags = {type = "integer", offset = 0x30},
-            customControllerIndex = {type = "short", offset = 0x34},
-            verticalOffset = {type = "short", offset = 0x36},
-            horizontalOffset = {type = "short", offset = 0x38}
-        }
-    }
-}
-
----@class uiWidgetCollection
----@field count number Number of widgets in the collection
----@field tagList table Tag ID list of the widgets
-
--- uiWidgetCollection structure
-local uiWidgetCollectionStructure = {
-    count = {type = "byte", offset = 0x0},
-    tagList = {type = "list", offset = 0x4, elementsType = "dword", jump = 0x10}
-}
-
----@class crosshairOverlay
----@field x number
----@field y number
----@field widthScale number
----@field heightScale number
----@field defaultColorA number
----@field defaultColorR number
----@field defaultColorG number
----@field defaultColorB number
----@field sequenceIndex number
-
----@class crosshair
----@field type number
----@field mapType number
----@field bitmap number
----@field overlays crosshairOverlay[]
-
----@class weaponHudInterface
----@field childHud number
----@field totalAmmoCutOff number
----@field loadedAmmoCutOff number
----@field heatCutOff number
----@field ageCutOff number
----@field crosshairs crosshair[]
-
--- Weapon HUD Interface structure
-local weaponHudInterfaceStructure = {
-    childHud = {type = "dword", offset = 0xC},
-    -- //TODO Check if this property should be moved to a nested property type
-    usingParentHudFlashingParameters = {type = "bit", offset = "word", bitLevel = 1},
-    -- padding1 = {type = "word", offset = 0x12},
-    totalAmmoCutOff = {type = "word", offset = 0x14},
-    loadedAmmoCutOff = {type = "word", offset = 0x16},
-    heatCutOff = {type = "word", offset = 0x18},
-    ageCutOff = {type = "word", offset = 0x1A},
-    -- padding2 = {size = 0x20, offset = 0x1C},
-    -- screenAlignment = {type = "word", },
-    -- padding3 = {size = 0x2, offset = 0x3E},
-    -- padding4 = {size = 0x20, offset = 0x40},
-    crosshairs = {
-        type = "table",
-        offset = 0x88,
-        jump = 0x68,
-        rows = {
-            type = {type = "word", offset = 0x0},
-            mapType = {type = "word", offset = 0x2},
-            -- padding1 = {size = 0x2, offset = 0x4},
-            -- padding2 = {size = 0x1C, offset = 0x6},
-            bitmap = {type = "dword", offset = 0x30},
-            overlays = {
-                type = "table",
-                offset = 0x38,
-                jump = 0x6C,
-                rows = {
-                    x = {type = "word", offset = 0x0},
-                    y = {type = "word", offset = 0x2},
-                    widthScale = {type = "float", offset = 0x4},
-                    heightScale = {type = "float", offset = 0x8},
-                    defaultColorB = {type = "byte", offset = 0x24},
-                    defaultColorG = {type = "byte", offset = 0x25},
-                    defaultColorR = {type = "byte", offset = 0x26},
-                    defaultColorA = {type = "byte", offset = 0x27},
-                    sequenceIndex = {type = "byte", offset = 0x46}
-                }
-            }
-        }
-    }
-}
-
----@class spawnLocation
----@field x number
----@field y number
----@field z number
----@field rotation number
----@field type number
----@field teamIndex number
-
----@class vehicleLocation
----@field type number
----@field nameIndex string
----@field x number
----@field y number
----@field z number
----@field yaw number
----@field pitch number
----@field roll number
-
----@class cutsceneFlag
----@field name string
----@field x number
----@field y number
----@field z number
----@field vX number
----@field vY number
-
----@class scenarioScenery
----@field typeIndex number
----@field nameIndex string
----@field notPlaced boolean
----@field desiredPermutation number
----@field x number
----@field y number
----@field z number
----@field yaw number
----@field pitch number
----@field roll number
-
----@class scenarioBiped
----@field typeIndex number
----@field nameIndex string
----@field notPlaced boolean
----@field desiredPermutation number
----@field x number
----@field y number
----@field z number
----@field yaw number
----@field pitch number
----@field roll number
-
----@class scenario
----@field sceneryPaletteCount number Number of sceneries in the scenery palette
----@field sceneryPaletteList tagId[] Tag ID list of scenerys in the scenery palette
----@field spawnLocationCount number Number of spawns in the scenario
----@field spawnLocationList spawnLocation[] List of spawns in the scenario
----@field vehicleLocationCount number Number of vehicles locations in the scenario
----@field vehicleLocationList vehicleLocation[] List of vehicles locations in the scenario
----@field netgameEquipmentCount number Number of netgame equipments
----@field netgameEquipmentList table List of netgame equipments
----@field netgameFlagsCount number Number of netgame equipments
----@field netgameFlagsList table List of netgame equipments
----@field objectNamesCount number Count of the object names in the scenario
----@field objectNames string[] List of all the object names in the scenario
----@field sceneriesCount number Count of all the sceneries in the scenario
----@field sceneries scenarioScenery[] List of all the sceneries in the scenario
----@field bipedsCount number Count of all the bipeds in the scenario
----@field bipeds scenarioBiped[] List of all the bipeds in the scenario
----@field bipedPaletteCount number Count of all the bipeds in the biped palette
----@field bipedPaletteList tagId[] List of all the bipeds in the biped palette
----@field cutsceneFlagsCount number Count of all the cutscene flags in the scenario
----@field cutsceneFlags cutsceneFlag[] List of all the cutscene flags in the scenario
----@field actorPaletteCount number Count of all the actors in the actor palette
----@field encounterPaletteCount number Count of all the encounters in the encounter palette
-
--- Scenario structure
-local scenarioStructure = {
-    sceneryPaletteCount = {type = "byte", offset = 0x021C},
-    sceneryPaletteList = {type = "list", offset = 0x0220, elementsType = "dword", jump = 0x30},
-    spawnLocationCount = {type = "byte", offset = 0x354},
-    spawnLocationList = {
-        type = "table",
-        offset = 0x358,
-        jump = 0x34,
-        rows = {
-            x = {type = "float", offset = 0x0},
-            y = {type = "float", offset = 0x4},
-            z = {type = "float", offset = 0x8},
-            rotation = {type = "float", offset = 0xC},
-            teamIndex = {type = "byte", offset = 0x10},
-            bspIndex = {type = "short", offset = 0x12},
-            type = {type = "byte", offset = 0x14}
-        }
-    },
-    vehicleLocationCount = {type = "byte", offset = 0x240},
-    vehicleLocationList = {
-        type = "table",
-        offset = 0x244,
-        jump = 0x78,
-        rows = {
-            type = {type = "word", offset = 0x0},
-            nameIndex = {type = "word", offset = 0x2},
-            x = {type = "float", offset = 0x8},
-            y = {type = "float", offset = 0xC},
-            z = {type = "float", offset = 0x10},
-            yaw = {type = "float", offset = 0x14},
-            pitch = {type = "float", offset = 0x18},
-            roll = {type = "float", offset = 0x1C}
-        }
-    },
-    netgameFlagsCount = {type = "byte", offset = 0x378},
-    netgameFlagsList = {
-        type = "table",
-        offset = 0x37C,
-        jump = 0x94,
-        rows = {
-            x = {type = "float", offset = 0x0},
-            y = {type = "float", offset = 0x4},
-            z = {type = "float", offset = 0x8},
-            rotation = {type = "float", offset = 0xC},
-            type = {type = "byte", offset = 0x10},
-            teamIndex = {type = "word", offset = 0x12}
-        }
-    },
-    netgameEquipmentCount = {type = "byte", offset = 0x384},
-    netgameEquipmentList = {
-        type = "table",
-        offset = 0x388,
-        jump = 0x90,
-        rows = {
-            levitate = {type = "bit", offset = 0x0, bitLevel = 0},
-            type1 = {type = "word", offset = 0x4},
-            type2 = {type = "word", offset = 0x6},
-            type3 = {type = "word", offset = 0x8},
-            type4 = {type = "word", offset = 0xA},
-            teamIndex = {type = "byte", offset = 0xC},
-            spawnTime = {type = "word", offset = 0xE},
-            x = {type = "float", offset = 0x40},
-            y = {type = "float", offset = 0x44},
-            z = {type = "float", offset = 0x48},
-            facing = {type = "float", offset = 0x4C},
-            itemCollection = {type = "dword", offset = 0x5C}
-        }
-    },
-    objectNamesCount = {type = "dword", offset = 0x204},
-    objectNames = {
-        type = "list",
-        offset = 0x208,
-        elementsType = "string",
-        jump = 36,
-        noOffset = true
-    },
-    sceneriesCount = {type = "dword", offset = 0x210},
-    sceneries = {
-        type = "table",
-        offset = 0x214,
-        jump = 0x48,
-        rows = {
-            typeIndex = {type = "word", offset = 0x0},
-            nameIndex = {type = "word", offset = 0x2},
-            notPlaced = {type = "bit", offset = 0x4, bitLevel = 0},
-            desiredPermutation = {type = "byte", offset = 0x6},
-            x = {type = "float", offset = 0x8},
-            y = {type = "float", offset = 0xC},
-            z = {type = "float", offset = 0x10},
-            yaw = {type = "float", offset = 0x14},
-            pitch = {type = "float", offset = 0x18},
-            roll = {type = "float", offset = 0x1C}
-        }
-    },
-    bipedsCount = {type = "dword", offset = 0x228},
-    bipeds = {
-        type = "table",
-        offset = 0x0228 + 0x4,
-        jump = 0x78,
-        rows = {
-            typeIndex = {type = "word", offset = 0x0},
-            nameIndex = {type = "word", offset = 0x2},
-            notPlaced = {type = "bit", offset = 0x4, bitLevel = 0},
-            desiredPermutation = {type = "byte", offset = 0x6},
-            x = {type = "float", offset = 0x8},
-            y = {type = "float", offset = 0xC},
-            z = {type = "float", offset = 0x10},
-            yaw = {type = "float", offset = 0x14},
-            pitch = {type = "float", offset = 0x18},
-            roll = {type = "float", offset = 0x1C}
-        }
-    },
-    bipedPaletteCount = {type = "byte", offset = 0x0234},
-    bipedPaletteList = {type = "list", offset = 0x0238, elementsType = "dword", jump = 0x30},
-    cutsceneFlagsCount = {type = "dword", offset = 0x4E4},
-    cutsceneFlags = {
-        type = "table",
-        offset = 0x4E8,
-        jump = 92,
-        rows = {
-            name = {type = "string", offset = 0x4},
-            x = {type = "float", offset = 0x24},
-            y = {type = "float", offset = 0x28},
-            z = {type = "float", offset = 0x2C},
-            vX = {type = "float", offset = 0x30},
-            vY = {type = "float", offset = 0x34}
-        }
-    },
-    actorPaletteCount = {type = "dword", offset = 0x0420},
-    encounterPaletteCount = {type = "dword", offset = 0x042C}
-}
-
----@class scenery
----@field model number
----@field modifierShader number
-
--- Scenery structure
-local sceneryStructure = {
-    model = {type = "word", offset = 0x28 + 0xC},
-    modifierShader = {type = "word", offset = 0x90 + 0xC}
-}
-
----@class collisionGeometry
----@field vertexCount number Number of vertex in the collision geometry
----@field vertexList table List of vertex in the collision geometry
-
--- Collision Model structure
-local collisionGeometryStructure = {
-    vertexCount = {type = "byte", offset = 0x408},
-    vertexList = {
-        type = "table",
-        offset = 0x40C,
-        jump = 0x10,
-        rows = {
-            x = {type = "float", offset = 0x0},
-            y = {type = "float", offset = 0x4},
-            z = {type = "float", offset = 0x8}
-        }
-    }
-}
-
----@class animationClass
----@field name string Name of the animation
----@field type number Type of the animation
----@field frameCount number Frame count of the animation
----@field nextAnimation number Next animation id of the animation
----@field sound number Sound id of the animation
-
----@class modelAnimations
----@field fpAnimationCount number Number of first-person animations
----@field fpAnimationList number[] List of first-person animations
----@field animationCount number Number of animations of the model
----@field animationList animationClass[] List of animations of the model
-
--- Model Animation structure
-local modelAnimationsStructure = {
-    fpAnimationCount = {type = "byte", offset = 0x90},
-    fpAnimationList = {
-        type = "list",
-        offset = 0x94,
-        noOffset = true,
-        elementsType = "byte",
-        jump = 0x2
-    },
-    animationCount = {type = "byte", offset = 0x74},
-    animationList = {
-        type = "table",
-        offset = 0x78,
-        jump = 0xB4,
-        rows = {
-            name = {type = "string", offset = 0x0},
-            type = {type = "word", offset = 0x20},
-            frameCount = {type = "byte", offset = 0x22},
-            nextAnimation = {type = "byte", offset = 0x38},
-            sound = {type = "byte", offset = 0x3C}
-        }
-    }
-}
-
----@class weapon : blamObject
----@field pressedReloadKey boolean Is weapon trying to reload
----@field isWeaponPunching boolean Is weapon playing melee or grenade animation
----@field ownerObjectId number Object ID of the weapon owner
----@field carrierObjectId number Object ID of the weapon owner
----@field isInInventory boolean Is weapon in inventory
----@field primaryTriggerState number Primary trigger state of the weapon
----@field totalAmmo number Total ammo of the weapon
----@field loadedAmmo number Loaded ammo of the weapon   
----@field reloadTicksRemainingFirstMagazine number Remaining ticks for weapon to finish reload (1st magazine)
-
-local weaponStructure = extendStructure(objectStructure, {
-    pressedReloadKey = {type = "bit", offset = 0x230, bitLevel = 3},
-    isWeaponPunching = {type = "bit", offset = 0x230, bitLevel = 4},
-    ownerObjectId = {type = "dword", offset = 0x11C}, -- deprecated
-    carrierObjectId = {type = "dword", offset = 0x11C},
-    isInInventory = {type = "bit", offset = 0x1F4, bitLevel = 0},
-    primaryTriggerState = {type = "byte", offset = 0x261},
-    totalAmmo = {type = "word", offset = 0x2B6},
-    loadedAmmo = {type = "word", offset = 0x2B8},
-    reloadTicksRemainingFirstMagazine = {type = "word", offset = 0x23A}
-})
-
----@class weaponTag
----@field model number Tag ID of the weapon model
-
--- Weapon structure
-local weaponTagStructure = {model = {type = "dword", offset = 0x34}}
-
----@class modelPermutation
----@field name string
-
----@class modelRegion
----@field name string
----@field permutationCount number
----@field permutationsList modelPermutation[]
-
----@class modelNode
----@field x number
----@field y number
----@field z number
-
----@class gbxModel
----@field nodeCount number Number of nodes
----@field nodeList modelNode[] List of the model nodes
----@field regionCount number Number of regions
----@field regionList modelRegion[] List of regions
-
--- Model structure
-local modelStructure = {
-    nodeCount = {type = "dword", offset = 0xB8},
-    nodeList = {
-        type = "table",
-        offset = 0xBC,
-        jump = 0x9C,
-        rows = {
-            x = {type = "float", offset = 0x28},
-            y = {type = "float", offset = 0x2C},
-            z = {type = "float", offset = 0x30}
-        }
-    },
-    regionCount = {type = "dword", offset = 0xC4},
-    regionList = {
-        type = "table",
-        offset = 0xC8,
-        -- jump = 0x50,
-        jump = 0x4C,
-        rows = {
-            name = {type = "string", offset = 0x0},
-            permutationCount = {type = "dword", offset = 0x40},
-            permutationsList = {
-                type = "table",
-                offset = 0x44,
-                jump = 0x58,
-                rows = {
-                    name = {type = "string", offset = 0x0}
-                    -- markersList = {
-                    --    type = "table",
-                    --    offset = 0x4C,
-                    --    jump = 0x0,
-                    --    rows = {
-                    --        name = {type = "string", offset = 0x0},
-                    --        nodeIndex = {type = "word", offset = 0x20}
-                    --    }
-                    -- }
-                }
-            }
-        }
-    }
-}
-
----@class projectile : blamObject
----@field action number Enumeration of denotation action
----@field attachedToObjectId number Id of the attached object
----@field armingTimer number PENDING
----@field xVel number Velocity in x direction
----@field yVel number Velocity in y direction
----@field zVel number Velocity in z direction
----@field yaw number Rotation in yaw direction
----@field pitch number Rotation in pitch direction
----@field roll number Rotation in roll direction
-
--- Projectile structure
-local projectileStructure = extendStructure(objectStructure, {
-    action = {type = "word", offset = 0x230},
-    attachedToObjectId = {type = "dword", offset = 0x11C},
-    armingTimer = {type = "float", offset = 0x248},
-    --[[xVel = {type = "float", offset = 0x254},
-    yVel = {type = "float", offset = 0x258},
-    zVel = {type = "float", offset = 0x25C},]]
-    pitch = {type = "float", offset = 0x264},
-    yaw = {type = "float", offset = 0x268},
-    roll = {type = "float", offset = 0x26C}
-})
-
----@class player
----@field id number Get playerId of this player
----@field host number Check if player is host, 0 when host, null when not
----@field name string Name of this player
----@field team number Team color of this player, 0 when red, 1 when on blue team
----@field interactionObjectId number Object ID of the object this player is interacting with
----@field interactonObjectType number Type of the object this player is interacting with
----@field interactionObjectSeat number Seat of the object this player is interacting with
----@field respawnTime number Time in ticks until this player respawns
----@field respawnGrowthTime number Time in ticks until this player respawns
----@field objectId number Return the objectId associated to this player
----@field lastObjectId number Return the last objectId associated to this player
----@field lastFireTime number Return the last fire time associated to this player
----@field name2 string Name of this player
----@field color number Color of the player, only works on "Free for All" gametypes
----@field machineIndex number Machine index of this player
----@field controllerIndex number Controller index of this player
----@field team2 number Team color of this player, 0 when red, 1 when on blue team
----@field index number Local index of this player 0-15
----@field invisibilityTime number Time in ticks until this player is invisible
----@field speed number Current speed of this player
----@field teleporterFlagId number Unknown
----@field objectiveMode number Unknown
----@field objectivePlayerId number Unknown
----@field targetPlayerId number Player id the player is looking at
----@field targetTime number Some timer for fading in the name of the player being looked at
----@field lastDeathTime number Time in ticks since this player last died
----@field slayerTargetPlayerId number Unknown
----@field oddManOut number Is player odd man out
----@field killStreak number Current kill streak of this player
----@field multiKill number Current multi kill of this player
----@field lastKillTime number Time in ticks since this player last killed
----@field kills number Kills quantity done by this player
----@field ping number Ping amount from server of this player in milliseconds
----@field assists number Assists count of this player
----@field betraysAndSuicides number Betrays plus suicides count of this player
----@field deaths number Deaths count of this player
----@field suicides number Suicides count of this player
-
-local playerStructure = {
-    id = {type = "word", offset = 0x0},
-    host = {type = "word", offset = 0x2},
-    name = {type = "ustring", forced = true, offset = 0x4},
-    unknown = {type = "byte", offset = 0x1C},
-    team = {type = "byte", offset = 0x20},
-    unknown2 = {type = "byte", offset = 0x21},
-    unknown3 = {type = "byte", offset = 0x22},
-    unknown4 = {type = "byte", offset = 0x23},
-    interactionObjectId = {type = "dword", offset = 0x24},
-    interactionObjectType = {type = "word", offset = 0x28},
-    interactionObjectSeat = {type = "word", offset = 0x2A},
-    respawnTime = {type = "dword", offset = 0x2C},
-    respawnGrowthTime = {type = "dword", offset = 0x30},
-    objectId = {type = "dword", offset = 0x34},
-    lastObjectId = {type = "dword", offset = 0x38},
-    unknown5 = {type = "dword", offset = 0x3C},
-    unknown6 = {type = "dword", offset = 0x40},
-    lastFireTime = {type = "dword", offset = 0x44},
-    name2 = {type = "ustring", forced = true, offset = 0x48},
-    color = {type = "word", offset = 0x60},
-    unknown7 = {type = "word", offset = 0x62},
-    machineIndex = {type = "byte", offset = 0x64},
-    controllerIndex = {type = "byte", offset = 0x65},
-    team2 = {type = "byte", offset = 0x66},
-    index = {type = "byte", offset = 0x67},
-    invisibilityTime = {type = "word", offset = 0x68},
-    unknown8 = {type = "word", offset = 0x6A},
-    speed = {type = "float", offset = 0x6C},
-    teleporterFlagId = {type = "dword", offset = 0x70}, -- Unknown
-    objectiveMode = {type = "dword", offset = 0x74}, -- Unknown
-    objectivePlayerId = {type = "dword", offset = 0x78}, -- Unknown
-    targetPlayerId = {type = "dword", offset = 0x7C}, -- Player id the player is looking at?
-    targetTime = {type = "dword", offset = 0x80}, -- Some timer for fading in the name of the player being looked at?
-    lastDeathTime = {type = "dword", offset = 0x84},
-    slayerTargetPlayerId = {type = "dword", offset = 0x88},
-    oddManOut = {type = "dword", offset = 0x8C}, -- Player is odd man out
-    unknown9 = {type = "dword", offset = 0x90},
-    unknown10 = {type = "word", offset = 0x94},
-    killStreak = {type = "word", offset = 0x96},
-    multiKill = {type = "word", offset = 0x98},
-    lastKillTime = {type = "word", offset = 0x9A},
-    kills = {type = "word", offset = 0x9C},
-    ping = {type = "dword", offset = 0xDC},
-    assists = {type = "word", offset = 0XA4},
-    betraysAndSuicides = {type = "word", offset = 0xAC},
-    deaths = {type = "word", offset = 0xAE},
-    suicides = {type = "word", offset = 0XB0},
-    --[[
-        Appears to be some kind of tick or packet counter, when defined to specific value it will
-        cause the player to desync and show the "connection problems icon"
-        Counts up to 31 and then resets to 0
-    ]]
-    unknownTimer1 = {type = "dword", offset = 0xE8}
-}
-
----@class firstPersonInterface
----@field firstPersonHands number
-
----@class multiplayerInformation
----@field flag number Tag ID of the flag object used for multiplayer games
----@field unit number Tag ID of the unit object used for multiplayer games
-
----@class globalsTag
----@field multiplayerInformation multiplayerInformation[]
----@field firstPersonInterface firstPersonInterface[]
-
-local globalsTagStructure = {
-    multiplayerInformation = {
-        type = "table",
-        jump = 0x0,
-        offset = 0x168,
-        rows = {flag = {type = "dword", offset = 0xC}, unit = {type = "dword", offset = 0x1C}}
-    },
-    firstPersonInterface = {
-        type = "table",
-        jump = 0x0,
-        offset = 0x180,
-        rows = {firstPersonHands = {type = "dword", offset = 0xC}}
-    }
-}
-
----@class firstPerson
----@field weaponObjectId number Weapon Id from the first person view
-
-local firstPersonStructure = {weaponObjectId = {type = "dword", offset = 0x10}}
-
----@class bipedTag
----@field model number Gbxmodel tag Id of this biped tag
----@field disableCollision boolean Disable collision of this biped tag
----@field weaponCount number Number of weapons of this biped
----@field weaponList tagId[] List of weapons of this biped
-
-local bipedTagStructure = {
-    model = {type = "dword", offset = 0x34},
-    disableCollision = {type = "bit", offset = 0x2F4, bitLevel = 5},
-    weaponCount = {type = "byte", offset = 0x02D8},
-    weaponList = {type = "list", offset = 0x02D8 + 0x4, jump = 0x24, elementsType = "dword"}
-
-}
-
----@class deviceMachine : blamObject
----@field powerGroupIndex number Power index from the device groups table
----@field power number Position amount of this device machine
----@field powerChange number Power change of this device machine
----@field positionGroupIndex number Power index from the device groups table
----@field position number Position amount of this device machine
----@field positionChange number Position change of this device machine
-local deviceMachineStructure = extendStructure(objectStructure, {
-    powerGroupIndex = {type = "word", offset = 0x1F8},
-    power = {type = "float", offset = 0x1FC},
-    powerChange = {type = "float", offset = 0x200},
-    positionGroupIndex = {type = "word", offset = 0x204},
-    position = {type = "float", offset = 0x208},
-    positionChange = {type = "float", offset = 0x20C}
-})
-
----@class hudGlobals
----@field anchor number
----@field x number
----@field y number
----@field width number
----@field height number
----@field upTime number
----@field fadeTime number
----@field iconColorA number
----@field iconColorR number
----@field iconColorG number
----@field iconColorB number
----@field textSpacing number
-
-local hudGlobalsStructure = {
-    anchor = {type = "word", offset = 0x0},
-    x = {type = "word", offset = 0x24},
-    y = {type = "word", offset = 0x26},
-    width = {type = "float", offset = 0x28},
-    height = {type = "float", offset = 0x2C},
-    upTime = {type = "float", offset = 0x68},
-    fadeTime = {type = "float", offset = 0x6C},
-    iconColorA = {type = "float", offset = 0x70},
-    iconColorR = {type = "float", offset = 0x74},
-    iconColorG = {type = "float", offset = 0x78},
-    iconColorB = {type = "float", offset = 0x7C},
-    textColorA = {type = "float", offset = 0x80},
-    textColorR = {type = "float", offset = 0x84},
-    textColorG = {type = "float", offset = 0x88},
-    textColorB = {type = "float", offset = 0x8C},
-    textSpacing = {type = "float", offset = 0x90}
 }
 
 ---@class cinematicGlobals
@@ -2685,7 +1196,7 @@ local cinematicGlobalsStructure = {
 
 -- Provide with public blam! data tables
 blam.addressList = addressList
-blam.tagClasses = tagClasses
+blam.tag.groups = tagGroups
 blam.objectClasses = objectClasses
 blam.joystickInputs = joystickInputs
 blam.dPadValues = dPadValues
@@ -2710,7 +1221,7 @@ blam.tagDataHeader = createBindStruct(addressList.tagDataHeader, tagDataHeaderSt
 ------------------------------------------------------------------------------
 
 -- Add utilities to library
-blam.dumpObject = dumpObject
+blam.dumpTable = dumpTable
 blam.consoleOutput = consoleOutput
 blam.null = null
 
@@ -2769,23 +1280,38 @@ end
 --- Create a tag object from a given address, this object can't write data to game memory
 ---@param address integer
 ---@return tag?
-function blam.tag(address)
+local function createTag(address)
     if address and address ~= 0 then
         -- Generate a new tag object from class
-        local tag = createBindStruct(address, tagHeaderStructure)
+        local tag = createBindStruct(address, tagEntryStructure)
+        -- Convert binding into a raw table
+        tag = dumpTable(tag)
 
-        -- Get all the tag info
-        local tagInfo = dumpObject(tag)
+        tag.primaryGroup = integerToTagGroup(tag.primaryGroup)
+        tag.secondaryGroup = integerToTagGroup(tag.secondaryGroup)
+        tag.tertiaryGroup = integerToTagGroup(tag.tertiaryGroup)
 
-        -- Set up values
-        tagInfo.address = address
-        tagInfo.path = read_string(tagInfo.path)
-        -- TODO Optimize this function
-        -- Also review class prop type as it seems we are transforming it to a string but it is 
-        -- a number in the binded structure
-        tagInfo.class = convertIntToTagClass(tagInfo.class --[[@as number]] )
+        local tagStructureModuleName
+        for name, tagGroup in pairs(tagGroups) do
+            if tag.primaryGroup == tagGroup then
+                tagStructureModuleName = name
+                break
+            end
+        end
 
-        return tagInfo
+        if not tagStructureModuleName then
+            error("Tag group not found for tag: " .. tag.primaryGroup)
+        end
+
+        --print("tag.primaryGroup", tag.primaryGroup)
+        --print("tagStructureModuleName", tagStructureModuleName)
+
+        local _, struct = pcall(require, "structures." .. tagStructureModuleName)
+        if struct then
+            tag.data = createBindStruct(tag.data, struct)
+        end
+
+        return tag
     end
     return nil
 end
@@ -2794,16 +1320,16 @@ end
 ---@param tagIdOrTagPath string | number
 ---@param tagClass? string
 ---@return tag?
-function blam.getTag(tagIdOrTagPath, tagClass, ...)
+function blam.getTagEntry(tagIdOrTagPath, tagClass, ...)
     local tagId
     local tagPath
 
     -- Get arguments from table
-    if (isNumber(tagIdOrTagPath)) then
+    if isNumber(tagIdOrTagPath) then
         tagId = tagIdOrTagPath
-    elseif (isString(tagIdOrTagPath)) then
+    elseif isString(tagIdOrTagPath) then
         tagPath = tagIdOrTagPath
-    elseif (not tagIdOrTagPath) then
+    elseif not tagIdOrTagPath then
         return nil
     end
 
@@ -2815,271 +1341,19 @@ function blam.getTag(tagIdOrTagPath, tagClass, ...)
     local tagAddress
 
     -- Get tag address
-    if (tagId) then
-        if (tagId < 0xFFFF) then
+    if tagId then
+        if tagId < 0xFFFF then
             -- Calculate tag id
             tagId = read_dword(blam.tagDataHeader.array + (tagId * 0x20 + 0xC))
         end
         tagAddress = get_tag(tagId)
-    elseif (tagClass and tagPath) then
+    elseif tagClass and tagPath then
         tagAddress = get_tag(tagClass, tagPath --[[@as string]] )
     end
 
     if tagAddress then
-        return blam.tag(tagAddress)
+        return createTag(tagAddress)
     end
-end
-
---- Create a player object given player entry table address
----@param address? number
----@return player?
-function blam.player(address)
-    if address and isValid(address) then
-        return createBindStruct(address, playerStructure)
-    end
-    return nil
-end
-
---- Create a blamObject given address
----@param address? number
----@return blamObject?
-function blam.object(address)
-    if address and isValid(address) then
-        return createBindStruct(address, objectStructure)
-    end
-    return nil
-end
-
---- Create a Projectile object given address
----@param address? number
----@return projectile?
-function blam.projectile(address)
-    if address and isValid(address) then
-        return createBindStruct(address, projectileStructure)
-    end
-    return nil
-end
-
---- Create a Unit object from a given address
----@param address? number
----@return unit?
-function blam.unit(address)
-    if address and isValid(address) then
-        return createBindStruct(address, unitStructure)
-    end
-    return nil
-end
-
---- Create a Biped object from a given address
----@param address? number
----@return biped?
-function blam.biped(address)
-    if address and isValid(address) then
-        return createBindStruct(address, bipedStructure)
-    end
-    return nil
-end
-
---- Create a Vehicle object from a given address
----@param address? number
----@return vehicle?
-function blam.vehicle(address)
-    if address and isValid(address) then
-        return createBindStruct(address, vehicleStructure)
-    end
-    return nil
-end
-
---- Create a biped tag from a tag path or id
----@param tag string | number
----@return bipedTag?
-function blam.bipedTag(tag)
-    if isValid(tag) then
-        local bipedTag = blam.getTag(tag, tagClasses.biped)
-        if (bipedTag) then
-            return createBindStruct(bipedTag.data, bipedTagStructure)
-        end
-    end
-    return nil
-end
-
---- Create a Unicode String List object from a tag path or id
----@param tag string | number
----@return unicodeStringList?
-function blam.unicodeStringList(tag)
-    if isValid(tag) then
-        local unicodeStringListTag = blam.getTag(tag, tagClasses.unicodeStringList)
-        if (unicodeStringListTag) then
-            return createBindStruct(unicodeStringListTag.data, unicodeStringListStructure)
-        end
-    end
-    return nil
-end
-
---- Create a bitmap object from a tag path or id
----@param tag string | number
----@return bitmap?
-function blam.bitmap(tag)
-    if isValid(tag) then
-        local bitmapTag = blam.getTag(tag, tagClasses.bitmap)
-        if (bitmapTag) then
-            return createBindStruct(bitmapTag.data, bitmapStructure)
-        end
-    end
-end
-
---- Create a UI Widget Definition object from a tag path or id
----@param tagPathOrHandle string | number
----@return uiWidgetDefinition?
-function blam.tag.uiWidgetDefinition(tagPathOrHandle)
-    if isValid(tagPathOrHandle) then
-        local uiWidgetDefinitionEntry = blam.getTag(tagPathOrHandle, tagClasses.uiWidgetDefinition)
-        if uiWidgetDefinitionEntry then
-            local struct = require("structures.uiWidgetDefinition")
-            return createBindStruct(uiWidgetDefinitionEntry.data, struct)
-        end
-    end
-    return nil
-end
-
---- Create a UI Widget Collection object from a tag path or id
----@param tag string | number
----@return uiWidgetCollection?
-function blam.uiWidgetCollection(tag)
-    if isValid(tag) then
-        local uiWidgetCollectionTag = blam.getTag(tag, tagClasses.uiWidgetCollection)
-        if (uiWidgetCollectionTag) then
-            return createBindStruct(uiWidgetCollectionTag.data, uiWidgetCollectionStructure)
-        end
-    end
-    return nil
-end
-
---- Create a Tag Collection object from a tag path or id
----@param tag string | number
----@return tagCollection?
-function blam.tagCollection(tag)
-    if isValid(tag) then
-        local tagCollectionTag = blam.getTag(tag, tagClasses.tagCollection)
-        if (tagCollectionTag) then
-            return createBindStruct(tagCollectionTag.data, tagCollectionStructure)
-        end
-    end
-    return nil
-end
-
---- Create a Weapon HUD Interface object from a tag path or id
----@param tag string | number
----@return weaponHudInterface?
-function blam.weaponHudInterface(tag)
-    if isValid(tag) then
-        local weaponHudInterfaceTag = blam.getTag(tag, tagClasses.weaponHudInterface)
-        if (weaponHudInterfaceTag) then
-            return createBindStruct(weaponHudInterfaceTag.data, weaponHudInterfaceStructure)
-        end
-    end
-    return nil
-end 
-
---- Create a Scenario object from a tag path or id
----@param tag? string | number
----@return scenario?
-function blam.scenario(tag)
-    local scenarioTag = blam.getTag(tag or 0, tagClasses.scenario)
-    if (scenarioTag) then
-        return createBindStruct(scenarioTag.data, scenarioStructure)
-    end
-end
-
---- Create a Scenery object from a tag path or id
----@param tag string | number 
----@return scenery?
-function blam.scenery(tag)
-    if isValid(tag) then
-        local sceneryTag = blam.getTag(tag, tagClasses.scenery)
-        if (sceneryTag) then
-            return createBindStruct(sceneryTag.data, sceneryStructure)
-        end
-    end
-    return nil
-end
-
---- Create a Collision Geometry object from a tag path or id
----@param tag string | number
----@return collisionGeometry?
-function blam.collisionGeometry(tag)
-    if isValid(tag) then
-        local collisionGeometryTag = blam.getTag(tag, tagClasses.collisionGeometry)
-        if (collisionGeometryTag) then
-            return createBindStruct(collisionGeometryTag.data, collisionGeometryStructure)
-        end
-    end
-    return nil
-end
-
---- Create a Model Animations object from a tag path or id
----@param tag string | number
----@return modelAnimations?
-function blam.modelAnimations(tag)
-    if isValid(tag) then
-        local modelAnimationsTag = blam.getTag(tag, tagClasses.modelAnimations)
-        if (modelAnimationsTag) then
-            return createBindStruct(modelAnimationsTag.data, modelAnimationsStructure)
-        end
-    end
-    return nil
-end
-
---- Create a Weapon object from the given object address
----@param address? number
----@return weapon?
-function blam.weapon(address)
-    if address and isValid(address) then
-        return createBindStruct(address, weaponStructure)
-    end
-    return nil
-end
-
---- Create a Weapon tag object from a tag path or id
----@param tag string | number
----@return weaponTag?
-function blam.weaponTag(tag)
-    if isValid(tag) then
-        local weaponTag = blam.getTag(tag, tagClasses.weapon)
-        if (weaponTag) then
-            return createBindStruct(weaponTag.data, weaponTagStructure)
-        end
-    end
-    return nil
-end
-
---- Create a model (gbxmodel) object from a tag path or id
----@param tag string | number
----@return gbxModel?
-function blam.model(tag)
-    if isValid(tag) then
-        local modelTag = blam.getTag(tag, tagClasses.model)
-        if (modelTag) then
-            return createBindStruct(modelTag.data, modelStructure)
-        end
-    end
-    return nil
-end
--- Alias
-blam.gbxmodel = blam.model
-
---- Create a Globals tag object from a tag path or id, default globals path by default
----@param tag? string | number
----@return globalsTag?
-function blam.globalsTag(tag)
-    local tag = tag or "globals\\globals"
-    if isValid(tag) then
-        local globalsTag = blam.getTag(tag, tagClasses.globals)
-        if (globalsTag) then
-            return createBindStruct(globalsTag.data, globalsTagStructure)
-        end
-    end
-    return nil
 end
 
 --- Create a First person object from a given address, game known address by default
@@ -3087,29 +1361,6 @@ end
 ---@return firstPerson
 function blam.firstPerson(address)
     return createBindStruct(address or addressList.firstPerson, firstPersonStructure)
-end
-
---- Create a Device Machine object from a given address
----@param address? number
----@return deviceMachine?
-function blam.deviceMachine(address)
-    if address and isValid(address) then
-        return createBindStruct(address, deviceMachineStructure)
-    end
-    return nil
-end
-
---- Create a HUD Globals tag object from a given address
----@param tag string | number
----@return hudGlobals?
-function blam.hudGlobals(tag)
-    if isValid(tag) then
-        local hudGlobals = blam.getTag(tag, tagClasses.hudGlobals)
-        if (hudGlobals) then
-            return createBindStruct(hudGlobals.data, hudGlobalsStructure)
-        end
-    end
-    return nil
 end
 
 --- Return a blam object given object index or id.
@@ -3367,43 +1618,44 @@ function blam.rcon.unpatch()
     end
 end
 
---- Find the path, index and id of a tag given partial tag path and tag type
----@param partialTagPath string
----@param searchTagType string
+--- Find a tag entry by keyword and tag group
+--- This function will return the first tag that matches the keyword and tag group.
+--- If no tag is found, it will return nil.
+---@param keyword string
+---@param tagGroup tagGroup
 ---@return tag? tag
-function blam.findTag(partialTagPath, searchTagType)
+function blam.tag.findTag(keyword, tagGroup)
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
-        local tag = blam.getTag(tagIndex)
-        if (tag and tag.path:find(partialTagPath, 1, true) and tag.class == searchTagType) then
+        local tag = blam.getTagEntry(tagIndex)
+        if tag and tag.path:find(keyword, 1, true) and tag.primaryGroup == tagGroup then
             return tag
         end
     end
     return nil
 end
 
---- Find the path, index and id of a list of tags given partial tag path and tag type
----@param partialTagPath string
----@param searchTagType string
----@return tag[] tag
-function blam.findTagsList(partialTagPath, searchTagType)
-    local tagsList
+--- Find a list of tag entries by keyword and tag group
+--- This function will return a list of tags that match the keyword and tag group.
+--- If no tags are found, it will return an empty table.
+---@param keyword string
+---@param tagGroup tagGroup
+---@return tagEntry[] tag
+function blam.tag.findTags(keyword, tagGroup)
+    local tagsList = {}
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
-        local tag = blam.getTag(tagIndex)
-        if (tag and tag.path:find(partialTagPath, 1, true) and tag.class == searchTagType) then
-            if not tagsList then
-                tagsList = {}
-            end
+        local tag = blam.getTagEntry(tagIndex)
+        if tag and tag.path:find(keyword, 1, true) and tag.primaryGroup == tagGroup then
             tagsList[#tagsList + 1] = tag
         end
     end
     return tagsList
 end
 
---- Return the index of an id number
----@param id number
-function blam.getIndexById(id)
-    if id then
-        return fmod(id, 0x10000)
+--- Return the index of a resource handle
+---@param handle integer
+function blam.getIndexFromHandle(handle)
+    if handle then
+        return fmod(handle, 0x10000)
     end
     return nil
 end
