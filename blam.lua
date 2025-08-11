@@ -1007,7 +1007,17 @@ local cTypes = {
             write_byte(addr, bit(value))
         end
     },
-    char = {read = read_byte, write = write_byte},
+    char = {read = function (addr)
+            local v = read_byte(addr)
+            if v == 0 then
+                return nil
+            end
+            return string.char(v)
+        end,
+        write = function(addr, value)
+            write_byte(addr, string.byte(value))
+        end
+    },
     byte = {
         read = function(addr)
             read_byte(addr)
@@ -1033,13 +1043,14 @@ local cTypes = {
 
 --- Create a table binded to a structure properties
 ---@param struct table
----@param address integer
+---@param baseAddress integer
 ---@return table
-local function createBindStruct(address, struct)
+local function createBindStruct(baseAddress, struct)
     -- print("Creating bind struct for address: " .. string.format("0x%x", address))
-    local tableStruct = {_address = address, _struct = struct, _addr = string.format("0x%x", address)}
+    local tableStruct = {_address = baseAddress, _struct = struct, _addr = string.format("0x%x", baseAddress)}
     setmetatable(tableStruct, {
         __index = function(t, key)
+            -- Support non list like structures
             if #struct == 0 then
                 struct = table.map(table.keys(struct), function(k)
                     return {name = k, type = struct[k].type, offset = struct[k].offset, is = struct[k].is, fields = struct[k].fields}
@@ -1053,16 +1064,39 @@ local function createBindStruct(address, struct)
                 return
             end
             local isPointer = fieldMeta.is == "ptr"
-            local address = isPointer and cTypes.ptr.read(address + fieldMeta.offset) or
-                                (address + fieldMeta.offset)
+            local address = isPointer and cTypes.ptr.read(baseAddress + fieldMeta.offset) or
+                                (baseAddress + fieldMeta.offset)
 
-            --print("Accessing field: " .. fieldMeta.name .. ", Type: " .. fieldMeta.type .. ", Address: " .. string.format("0x%x", address))
+            if isPointer then
+                fieldMeta.type = fieldMeta.elementType or fieldMeta.type
+                -- If the pointer is a char pointer, we can return it as a string
+                if fieldMeta.elementType == "char" and fieldMeta.elementSize == 1 then
+                    fieldMeta.type = "string"
+                end
+            end
+
             if cTypes[fieldMeta.type] and cTypes[fieldMeta.type].read then
                 return cTypes[fieldMeta.type].read(address)
             elseif fieldMeta.is == "struct" then
                 return createBindStruct(address, fieldMeta.fields)
-            elseif fieldMeta.is == "array" then
-                -- TODO
+            elseif fieldMeta.is == "array" and fieldMeta.count then
+                local array = {}
+                for i = 0, fieldMeta.count - 1 do
+                    local elementAddress = address + i * fieldMeta.elementSize
+                    if cTypes[fieldMeta.elementType] and cTypes[fieldMeta.elementType].read then
+                        array[i + 1] = cTypes[fieldMeta.elementType].read(elementAddress)
+                    elseif fieldMeta.is == "struct" then
+                        array[i + 1] = createBindStruct(elementAddress, fieldMeta.fields)
+                    else
+                        error("Unsupported type: " .. fieldMeta.type .. " for field: " .. fieldMeta.name)
+                    end
+                end
+                if fieldMeta.elementType == "char" then
+                    -- If the array is a char array, we can return it as a string
+                    -- TODO Define if we will handle the concept of "NULL" as a whole
+                    return #array > 0 and table.concat(array) or nil
+                end
+                return array
             else
                 --error("Unsupported type: " .. fieldMeta.type)
                 print("Unsupported type: " .. fieldMeta.type .. " for field: " .. fieldMeta.name)
@@ -1076,8 +1110,8 @@ local function createBindStruct(address, struct)
                 return
             end
             local isPointer = field.is == "ptr"
-            local address = isPointer and cTypes.ptr.read(address + field.offset) or
-                                (address + field.offset)
+            local address = isPointer and cTypes.ptr.read(baseAddress + field.offset) or
+                                (baseAddress + field.offset)
             if cTypes[field.type] and cTypes[field.type].write then
                 cTypes[field.type].write(address, value)
             elseif field.is == "struct" then

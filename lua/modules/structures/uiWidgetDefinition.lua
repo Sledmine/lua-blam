@@ -22,6 +22,9 @@ return {
         fields = {
             {
                 address = "0x0",
+                count = 32,
+                elementSize = 1,
+                elementType = "char",
                 is = "array",
                 name = "string",
                 offset = 0,
@@ -34,7 +37,7 @@ return {
         name = "name",
         offset = 4,
         size = 32,
-        type = "String32",
+        type = "struct",
         what = "field"
     },
     {
@@ -81,7 +84,7 @@ return {
         name = "bounds",
         offset = 36,
         size = 8,
-        type = "Rectangle2D",
+        type = "struct",
         what = "field"
     },
     {
@@ -252,7 +255,7 @@ return {
         name = "flags",
         offset = 44,
         size = 4,
-        type = "UIWidgetDefinitionFlags",
+        type = "struct",
         what = "field"
     },
     {
@@ -287,11 +290,14 @@ return {
             },
             {
                 address = "0x4",
+                count = 4,
+                elementSize = 1,
+                elementType = "char",
                 is = "ptr",
                 name = "path",
                 offset = 4,
                 size = 4,
-                type = "string",
+                type = "ptr",
                 what = "field"
             },
             {
@@ -310,7 +316,7 @@ return {
                 name = "tagHandle",
                 offset = 12,
                 size = 4,
-                type = "TableResourceHandle",
+                type = "union",
                 what = "field"
             }
         },
@@ -318,7 +324,7 @@ return {
         name = "backgroundBitmap",
         offset = 56,
         size = 16,
-        type = "TagReference",
+        type = "struct",
         what = "field"
     },
     {
@@ -336,6 +342,8 @@ return {
             },
             {
                 address = "0x4",
+                count = 0,
+                elementSize = 36,
                 is = "ptr",
                 name = "elements",
                 offset = 4,
@@ -345,6 +353,8 @@ return {
             },
             {
                 address = "0x8",
+                count = 0,
+                elementSize = 20,
                 is = "ptr",
                 name = "definition",
                 offset = 8,
@@ -375,6 +385,8 @@ return {
             },
             {
                 address = "0x4",
+                count = 0,
+                elementSize = 72,
                 is = "ptr",
                 name = "elements",
                 offset = 4,
@@ -384,6 +396,8 @@ return {
             },
             {
                 address = "0x8",
+                count = 0,
+                elementSize = 20,
                 is = "ptr",
                 name = "definition",
                 offset = 8,
@@ -414,6 +428,8 @@ return {
             },
             {
                 address = "0x4",
+                count = 0,
+                elementSize = 34,
                 is = "ptr",
                 name = "elements",
                 offset = 4,
@@ -423,6 +439,8 @@ return {
             },
             {
                 address = "0x8",
+                count = 0,
+                elementSize = 20,
                 is = "ptr",
                 name = "definition",
                 offset = 8,
@@ -440,6 +458,9 @@ return {
     },
     {
         address = "0x6c",
+        count = 128,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad24420",
         offset = 108,
@@ -461,6 +482,9 @@ return {
             },
             {
                 address = "0x4",
+                count = 4,
+                elementSize = 1,
+                elementType = "char",
                 is = "ptr",
                 name = "path",
                 offset = 4,
@@ -484,7 +508,7 @@ return {
                 name = "tagHandle",
                 offset = 12,
                 size = 4,
-                type = "TableResourceHandle",
+                type = "union",
                 what = "field"
             }
         },
@@ -492,7 +516,7 @@ return {
         name = "textLabelUnicodeStringsList",
         offset = 236,
         size = 16,
-        type = "TagReference",
+        type = "struct",
         what = "field"
     },
     {
@@ -509,6 +533,9 @@ return {
             },
             {
                 address = "0x4",
+                count = 4,
+                elementSize = 1,
+                elementType = "char",
                 is = "ptr",
                 name = "path",
                 offset = 4,
@@ -532,7 +559,7 @@ return {
                 name = "tagHandle",
                 offset = 12,
                 size = 4,
-                type = "TableResourceHandle",
+                type = "union",
                 what = "field"
             }
         },
@@ -540,7 +567,7 @@ return {
         name = "textFont",
         offset = 252,
         size = 16,
-        type = "TagReference",
+        type = "struct",
         what = "field"
     },
     {
@@ -587,7 +614,7 @@ return {
         name = "textColor",
         offset = 268,
         size = 16,
-        type = "ColorARGB",
+        type = "struct",
         what = "field"
     },
     {
@@ -647,11 +674,14 @@ return {
         name = "flags1",
         offset = 288,
         size = 4,
-        type = "UIWidgetDefinitionFlags1",
+        type = "struct",
         what = "field"
     },
     {
         address = "0x124",
+        count = 12,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad24622",
         offset = 292,
@@ -689,6 +719,9 @@ return {
     },
     {
         address = "0x136",
+        count = 26,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad24729",
         offset = 310,
@@ -698,6 +731,9 @@ return {
     },
     {
         address = "0x150",
+        count = 2,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad24753",
         offset = 336,
@@ -753,7 +789,7 @@ return {
         name = "flags2",
         offset = 340,
         size = 4,
-        type = "UIWidgetDefinitionFlags2",
+        type = "struct",
         what = "field"
     },
     {
@@ -770,6 +806,9 @@ return {
             },
             {
                 address = "0x4",
+                count = 4,
+                elementSize = 1,
+                elementType = "char",
                 is = "ptr",
                 name = "path",
                 offset = 4,
@@ -793,7 +832,7 @@ return {
                 name = "tagHandle",
                 offset = 12,
                 size = 4,
-                type = "TableResourceHandle",
+                type = "union",
                 what = "field"
             }
         },
@@ -801,7 +840,7 @@ return {
         name = "listHeaderBitmap",
         offset = 344,
         size = 16,
-        type = "TagReference",
+        type = "struct",
         what = "field"
     },
     {
@@ -818,6 +857,9 @@ return {
             },
             {
                 address = "0x4",
+                count = 4,
+                elementSize = 1,
+                elementType = "char",
                 is = "ptr",
                 name = "path",
                 offset = 4,
@@ -841,7 +883,7 @@ return {
                 name = "tagHandle",
                 offset = 12,
                 size = 4,
-                type = "TableResourceHandle",
+                type = "union",
                 what = "field"
             }
         },
@@ -849,7 +891,7 @@ return {
         name = "listFooterBitmap",
         offset = 360,
         size = 16,
-        type = "TagReference",
+        type = "struct",
         what = "field"
     },
     {
@@ -896,7 +938,7 @@ return {
         name = "headerBounds",
         offset = 376,
         size = 8,
-        type = "Rectangle2D",
+        type = "struct",
         what = "field"
     },
     {
@@ -943,11 +985,14 @@ return {
         name = "footerBounds",
         offset = 384,
         size = 8,
-        type = "Rectangle2D",
+        type = "struct",
         what = "field"
     },
     {
         address = "0x188",
+        count = 32,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad24950",
         offset = 392,
@@ -969,6 +1014,9 @@ return {
             },
             {
                 address = "0x4",
+                count = 4,
+                elementSize = 1,
+                elementType = "char",
                 is = "ptr",
                 name = "path",
                 offset = 4,
@@ -992,7 +1040,7 @@ return {
                 name = "tagHandle",
                 offset = 12,
                 size = 4,
-                type = "TableResourceHandle",
+                type = "union",
                 what = "field"
             }
         },
@@ -1000,11 +1048,14 @@ return {
         name = "extendedDescriptionWidget",
         offset = 424,
         size = 16,
-        type = "TagReference",
+        type = "struct",
         what = "field"
     },
     {
         address = "0x1b8",
+        count = 32,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad25020",
         offset = 440,
@@ -1014,6 +1065,9 @@ return {
     },
     {
         address = "0x1d8",
+        count = 256,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad25044",
         offset = 472,
@@ -1036,6 +1090,8 @@ return {
             },
             {
                 address = "0x4",
+                count = 0,
+                elementSize = 80,
                 is = "ptr",
                 name = "elements",
                 offset = 4,
@@ -1045,6 +1101,8 @@ return {
             },
             {
                 address = "0x8",
+                count = 0,
+                elementSize = 20,
                 is = "ptr",
                 name = "definition",
                 offset = 8,
@@ -1062,6 +1120,9 @@ return {
     },
     {
         address = "0x2e4",
+        count = 128,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad25198",
         offset = 740,
@@ -1071,6 +1132,9 @@ return {
     },
     {
         address = "0x364",
+        count = 128,
+        elementSize = 1,
+        elementType = "char",
         is = "array",
         name = "pad25223",
         offset = 868,
@@ -1093,6 +1157,8 @@ return {
             },
             {
                 address = "0x4",
+                count = 0,
+                elementSize = 80,
                 is = "ptr",
                 name = "elements",
                 offset = 4,
@@ -1102,6 +1168,8 @@ return {
             },
             {
                 address = "0x8",
+                count = 0,
+                elementSize = 20,
                 is = "ptr",
                 name = "definition",
                 offset = 8,
