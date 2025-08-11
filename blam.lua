@@ -156,7 +156,6 @@ local tagGroups = {
     deviceControl = "ctrl",
     deviceLightFixture = "lifi",
     deviceMachine = "mach",
-    device = "devi", -- ???
     device = "devc",
     dialogue = "udlg",
     effect = "effe",
@@ -440,24 +439,26 @@ backupFunctions.file_exists = _G.file_exists
 
 ---Attempt to spawn an object given tag class, tag path and coordinates.
 ---Given a tag id is also accepted.
----@overload fun(tagId: number, x: number, y: number, z: number):number
----@param tagClass tagClasses Type of the tag to spawn
+---@overload fun(tagHandle: number, x: number, y: number, z: number):number
+---@param tagGroup tagGroup Type of the tag to spawn
 ---@param tagPath string Path of object to spawn
 ---@param x number
 ---@param y number
 ---@param z number
 ---@return number? objectId
-function spawn_object(tagClass, tagPath, x, y, z)
-    if type(tagClass) == "number" then
+function spawn_object(tagGroup, tagPath, x, y, z)
+    -- If tagPath is a number, it is a tag handle
+    if type(tagGroup) == "number" then
+        local tagHandle = tagGroup --[[@as number]]
         local x = tagPath --[[@as number]]
         local y = x
         local z = y
-        local tag = blam.getTagEntry(tagClass)
+        local tag = blam.getTagEntry(tagHandle)
         if tag then
-            return backupFunctions.spawn_object(tag.class, tag.path, x, y, z)
+            return backupFunctions.spawn_object(tag.primaryGroup, tag.path, x, y, z)
         end
     end
-    return backupFunctions.spawn_object(tagClass, tagPath, x, y, z)
+    return backupFunctions.spawn_object(tagGroup --[[@as string]] , tagPath, x, y, z)
 end
 
 ---Attempt to get the address of a player unit object given player index, returning nil on failure.<br>
@@ -626,10 +627,8 @@ end
 
 ---Output text to the console, optional text colors in decimal format.<br>
 ---Avoid sending console messages if console_is_open() is true to avoid annoying the player.
----@param message string | number
----@param red? number
----@param green? number
----@param blue? number
+---@overload fun(message: string | number)
+---@overload fun(message: string | number, red: number, green: number, blue: number)
 function console_out(...)
     cprint(...)
 end
@@ -828,13 +827,13 @@ end
 ------------------------------------------------------------------------------
 
 --- Convert a tag group integer into a tag group string.
----@param tagClassInt number
----@return string
+---@param tagClassInt number | string
+---@return string?
 local function integerToTagGroup(tagClassInt)
     local tagClassHex = tohex(tagClassInt)
     local tagClass
     if isNull(tagClassInt) then
-        return nil
+        return
     end
     if tagClassHex then
         local byte = ""
@@ -993,10 +992,10 @@ end
 local cTypes = {
     bit = {
         read = function(addr, offset)
-            return bool(read_bit(addr, offset))
+            return bool(read_bit(addr, offset or 0))
         end,
-        write = function(addr, offset, value)
-            write_bit(addr, offset, bit(value))
+        write = function(addr, value, offset)
+            write_bit(addr, offset or 0, bit(value))
         end
     },
     bool = {
@@ -1007,7 +1006,8 @@ local cTypes = {
             write_byte(addr, bit(value))
         end
     },
-    char = {read = function (addr)
+    char = {
+        read = function(addr)
             local v = read_byte(addr)
             if v == 0 then
                 return nil
@@ -1026,20 +1026,77 @@ local cTypes = {
             write_byte(addr, value)
         end
     },
-    short = {read = read_short, write = write_short},
-    word = {read = read_word, write = write_word},
-    long = {read = read_long, write = write_long},
-    int = {read = read_int, write = write_int},
-    dword = {read = read_dword, write = write_dword},
-    float = {read = read_float, write = write_float},
-    double = {read = read_double, write = write_double},
-    string = {read = read_string, write = write_string},
-    ptr = {read = read_dword, write = write_dword}
+    short = {
+        read = function(addr) return read_short(addr) end,
+        write = function(addr, value) write_short(addr, value) end
+    },
+    word = {
+        read = function(addr) return read_word(addr) end,
+        write = function(addr, value) write_word(addr, value) end
+    },
+    long = {
+        read = function(addr) return read_long(addr) end,
+        write = function(addr, value) write_long(addr, value) end
+    },
+    int = {
+        read = function(addr) return read_int(addr) end,
+        write = function(addr, value) write_int(addr, value) end
+    },
+    dword = {
+        read = function(addr) return read_dword(addr) end,
+        write = function(addr, value) write_dword(addr, value) end
+    },
+    float = {
+        read = function(addr) return read_float(addr) end,
+        write = function(addr, value) write_float(addr, value) end
+    },
+    double = {
+        read = function(addr) return read_double(addr) end,
+        write = function(addr, value) write_double(addr, value) end
+    },
+    string = {
+        read = function(addr) return read_string(addr) end,
+        write = function(addr, value) write_string(addr, value) end
+    },
+    ptr = {
+        read = function(addr) return read_dword(addr) end,
+        write = function(addr, value) write_dword(addr, value) end
+    }
 }
 
 ------------------------------------------------------------------------------
 -- Struct functions
 ------------------------------------------------------------------------------
+
+local function getFieldMetadata(struct, key, baseAddress)
+    local fieldMeta = table.find(struct, function(f)
+        return f.name == key
+    end)
+    if not fieldMeta then
+        error("Field '" .. key .. "' not found in struct")
+        return
+    end
+    local isPointer = fieldMeta.is == "ptr"
+    local isBitfield = fieldMeta.what == "bitfield"
+    local offset = fieldMeta.offset or 0
+    if isBitfield then
+        offset = 0
+    end
+    local address = isPointer and cTypes.ptr.read(baseAddress + offset) or (baseAddress + offset)
+
+    if isPointer then
+        fieldMeta.type = fieldMeta.elementType or fieldMeta.type
+        -- If the pointer is a char pointer, we can return it as a string
+        if fieldMeta.elementType == "char" and fieldMeta.elementSize == 1 then
+            fieldMeta.type = "string"
+        end
+    end
+    if isBitfield then
+        fieldMeta.type = "bit"
+    end
+
+    return fieldMeta, address
+end
 
 --- Create a table binded to a structure properties
 ---@param struct table
@@ -1047,36 +1104,32 @@ local cTypes = {
 ---@return table
 local function createBindStruct(baseAddress, struct)
     -- print("Creating bind struct for address: " .. string.format("0x%x", address))
-    local tableStruct = {_address = baseAddress, _struct = struct, _addr = string.format("0x%x", baseAddress)}
+    local tableStruct = {
+        _address = baseAddress,
+        _struct = struct,
+        _addr = string.format("0x%x", baseAddress)
+    }
+
+    -- Support non list like structures
+    if #struct == 0 then
+        struct = table.map(table.keys(struct), function(k)
+            return {
+                name = k,
+                type = struct[k].type,
+                offset = struct[k].offset,
+                is = struct[k].is,
+                fields = struct[k].fields
+            }
+        end)
+    end
+
     setmetatable(tableStruct, {
         __index = function(t, key)
-            -- Support non list like structures
-            if #struct == 0 then
-                struct = table.map(table.keys(struct), function(k)
-                    return {name = k, type = struct[k].type, offset = struct[k].offset, is = struct[k].is, fields = struct[k].fields}
-                end)
-            end
-            local fieldMeta = table.find(struct, function(f)
-                return f.name == key
-            end)
-            if not fieldMeta then
-                error("Field '" .. key .. "' not found in struct")
-                return
-            end
-            local isPointer = fieldMeta.is == "ptr"
-            local address = isPointer and cTypes.ptr.read(baseAddress + fieldMeta.offset) or
-                                (baseAddress + fieldMeta.offset)
-
-            if isPointer then
-                fieldMeta.type = fieldMeta.elementType or fieldMeta.type
-                -- If the pointer is a char pointer, we can return it as a string
-                if fieldMeta.elementType == "char" and fieldMeta.elementSize == 1 then
-                    fieldMeta.type = "string"
-                end
-            end
+            local fieldMeta, address = getFieldMetadata(struct, key, baseAddress)
+            assert(fieldMeta and address, "Field '" .. key .. "' not found in struct")
 
             if cTypes[fieldMeta.type] and cTypes[fieldMeta.type].read then
-                return cTypes[fieldMeta.type].read(address)
+                return cTypes[fieldMeta.type].read(address, fieldMeta.offset)
             elseif fieldMeta.is == "struct" then
                 return createBindStruct(address, fieldMeta.fields)
             elseif fieldMeta.is == "array" and fieldMeta.count then
@@ -1088,7 +1141,8 @@ local function createBindStruct(baseAddress, struct)
                     elseif fieldMeta.is == "struct" then
                         array[i + 1] = createBindStruct(elementAddress, fieldMeta.fields)
                     else
-                        error("Unsupported type: " .. fieldMeta.type .. " for field: " .. fieldMeta.name)
+                        error("Unsupported type: " .. fieldMeta.type .. " for field: " ..
+                                  fieldMeta.name)
                     end
                 end
                 if fieldMeta.elementType == "char" then
@@ -1098,23 +1152,19 @@ local function createBindStruct(baseAddress, struct)
                 end
                 return array
             else
-                --error("Unsupported type: " .. fieldMeta.type)
+                -- error("Unsupported type: " .. fieldMeta.type)
                 print("Unsupported type: " .. fieldMeta.type .. " for field: " .. fieldMeta.name)
             end
         end,
         __newindex = function(t, key, value)
-            local field = table.find(struct, function(f)
-                return f.name == key
-            end)
-            if not field then
-                return
-            end
-            local isPointer = field.is == "ptr"
-            local address = isPointer and cTypes.ptr.read(baseAddress + field.offset) or
-                                (baseAddress + field.offset)
-            if cTypes[field.type] and cTypes[field.type].write then
-                cTypes[field.type].write(address, value)
-            elseif field.is == "struct" then
+            local fieldMeta, address = getFieldMetadata(struct, key, baseAddress)
+            assert(fieldMeta and address, "Field '" .. key .. "' not found in struct")
+            print("Base address: " .. string.format("0x%x", baseAddress))
+            print("Writing to field: " .. key .. " at address: " .. string.format("0x%x", address))
+
+            if cTypes[fieldMeta.type] and cTypes[fieldMeta.type].write then
+                cTypes[fieldMeta.type].write(address, value, fieldMeta.offset)
+            elseif fieldMeta.is == "struct" then
                 -- If it's a struct, we can set fields directly as it will trigger the __index metamethod
                 if type(value) == "table" then
                     for k, v in pairs(value) do
@@ -1123,26 +1173,50 @@ local function createBindStruct(baseAddress, struct)
                 else
                     error("Expected a table for struct assignment")
                 end
+            elseif fieldMeta.is == "array" and fieldMeta.count then
+                if type(value) ~= "table" then
+                    error("Expected a table for array assignment")
+                end
+                for i = 1, fieldMeta.count do
+                    local elementAddress = address + (i - 1) * fieldMeta.elementSize
+                    local v = value[i]
+                    if cTypes[fieldMeta.elementType] and cTypes[fieldMeta.elementType].write then
+                        cTypes[fieldMeta.elementType].write(elementAddress, v)
+                    elseif fieldMeta.is == "struct" then
+                        if type(v) == "table" then
+                            local subStruct = createBindStruct(elementAddress, fieldMeta.fields)
+                            for k2, v2 in pairs(v) do
+                                subStruct[k2] = v2
+                            end
+                        else
+                            error("Expected a table for struct element in array assignment")
+                        end
+                    else
+                        error("Unsupported type: " .. fieldMeta.type .. " for field: " ..
+                                  fieldMeta.name)
+                    end
+                end
             else
-                error("Unsupported type: " .. field.type)
+                error("Unsupported type: " .. fieldMeta.type)
             end
         end
     })
-
     return tableStruct
 end
 
 --- Return a dump version of a binded structure table
----@param t table
----@return table
+---@generic T
+---@param t T
+---@return T
 local function dumpTable(t)
     local dump = {}
+    ---@diagnostic disable-next-line: undefined-field
     for k, v in pairs(t._struct) do
         dump[k] = t[k]
     end
-    --dump._address = t._address
-    --dump._addr = t._addr
-    --dump._struct = t._struct
+    -- dump._address = t._address
+    -- dump._addr = t._addr
+    -- dump._struct = t._struct
     return dump
 end
 
@@ -1185,7 +1259,6 @@ local dataTableStructure = {
     firstElementAddress = {type = "dword", offset = 0x34}
 }
 
-
 -- Tag data header structure
 local tagDataHeaderStructure = {
     array = {type = "dword", offset = 0x0},
@@ -1199,8 +1272,10 @@ local tagDataHeaderStructure = {
 ---@field tertiaryGroup string Tertiary group of the tag
 ---@field handle number Tag handle, used for tag references
 ---@field path string Path of the tag
----@field data number Address of the tag data
----@field indexed boolean Is tag indexed on an external map file
+---@field data number Data of the tag, it represents the actual tag data in get_object_memory
+---@field indexed boolean Is this tag indexed on an external map file
+
+-- @class tagEntry<T> : { primaryGroup: string, secondaryGroup: string, tertiaryGroup: string, handle: number, path: string, data: T, indexed: boolean }
 
 -- Tag structure
 local tagEntryStructure = {
@@ -1313,12 +1388,13 @@ end
 
 --- Create a tag object from a given address, this object can't write data to game memory
 ---@param address integer
----@return tag?
+---@return tagEntry?
 local function createTag(address)
     if address and address ~= 0 then
         -- Generate a new tag object from class
         local tag = createBindStruct(address, tagEntryStructure)
         -- Convert binding into a raw table
+
         tag = dumpTable(tag)
 
         tag.primaryGroup = integerToTagGroup(tag.primaryGroup)
@@ -1337,12 +1413,12 @@ local function createTag(address)
             error("Tag group not found for tag: " .. tag.primaryGroup)
         end
 
-        --print("tag.primaryGroup", tag.primaryGroup)
-        --print("tagStructureModuleName", tagStructureModuleName)
+        -- print("tag.primaryGroup", tag.primaryGroup)
+        -- print("tagStructureModuleName", tagStructureModuleName)
 
         local _, struct = pcall(require, "structures." .. tagStructureModuleName)
         if struct then
-            tag.data = createBindStruct(tag.data, struct)
+            tag.data = createBindStruct(tag.data --[[@as number]] , struct)
         end
 
         return tag
@@ -1353,7 +1429,7 @@ end
 --- Return a tag object given tagPath and tagClass or just tagId
 ---@param tagIdOrTagPath string | number
 ---@param tagClass? string
----@return tag?
+---@return tagEntry?
 function blam.getTagEntry(tagIdOrTagPath, tagClass, ...)
     local tagId
     local tagPath
@@ -1657,7 +1733,7 @@ end
 --- If no tag is found, it will return nil.
 ---@param keyword string
 ---@param tagGroup tagGroup
----@return tag? tag
+---@return tagEntry? tag
 function blam.tag.findTag(keyword, tagGroup)
     for tagIndex = 0, blam.tagDataHeader.count - 1 do
         local tag = blam.getTagEntry(tagIndex)

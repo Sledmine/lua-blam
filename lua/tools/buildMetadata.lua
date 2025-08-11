@@ -127,8 +127,7 @@ local function getStructMembers(structType)
             local metadata = {
                 -- name = member.name,
                 name = naming.toCamelCase(member.name),
-                offset = what == "bitfield" and math.floor(member.offset * 32 + 0.5) or
-                    member.offset,
+                offset = what == "bitfield" and ((member.offset - math.floor(member.offset)) * 8) or member.offset,
                 size = member.type.size,
                 address = string.format("0x%x", member.offset),
                 type = getNativeCType(member.type.what, member.type.unsigned, member.type.size) or
@@ -183,7 +182,7 @@ local function struct(headerString)
     -- Get struct definition
     local members = getStructMembers(args.struct)
     if not args.debug then
-        print(inspect(members, {showCycles = true}))
+        print("return " .. inspect(members, {showCycles = true}))
     end
 
     -- print("Size of struct:", ffi.sizeof(args.struct))
