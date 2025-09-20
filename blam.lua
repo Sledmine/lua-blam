@@ -16,7 +16,7 @@ local fmod = math.fmod
 local rad = math.rad
 local deg = math.deg
 
-local blam = {_VERSION = "1.15.1"}
+local blam = {_VERSION = "1.16.1"}
 
 ------------------------------------------------------------------------------
 -- Useful functions for internal usage
@@ -3509,6 +3509,18 @@ end
 function blam.getGameDifficultyIndex()
     local hscGlobals = read_dword(addressList.hscGlobalsPointer)
     return read_byte(hscGlobals + 0xe)
+end
+
+--- Set current game difficulty index
+---@param index number
+---@return boolean
+function blam.setGameDifficultyIndex(index)
+    if index >= 0 and index <= 3 then
+        local hscGlobals = read_dword(addressList.hscGlobalsPointer)
+        write_byte(hscGlobals + 0xe, index)
+        return true
+    end
+    return false
 end
 
 return blam
