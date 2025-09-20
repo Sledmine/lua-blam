@@ -1,8 +1,8 @@
+local luna = require "luna"
 local blam = require "blam"
 local objectClasses = blam.objectClasses
 local tagClasses = blam.tagClasses
 local isNull = blam.isNull
-local luna = require "luna"
 local inspect = require "inspect"
 local balltze = Balltze
 local engine = Engine

@@ -493,6 +493,13 @@ commands = {
         func = openWidget
     },
     debug_list_objects = {description = "List all objects in the map.", func = gameObjects},
+    debug_object_count = {
+        description = "Print the number of objects in the map.",
+        func = function()
+            consolePrint("Object count: " .. #table.keys(blam.getObjects()))
+            return false
+        end
+    },
     debug_tag_count = {description = "Print the number of tags in the map.", func = tagCount},
     debug_delete_object = {
         description = "<objectIndex | objectId> - Delete the specified object.",
